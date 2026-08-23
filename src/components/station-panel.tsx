@@ -27,21 +27,25 @@ function Chip({
   active,
   onClick,
   children,
+  label,
 }: {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
+  label?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-label={label}
+      title={label}
       className={cn(
-        "h-11 shrink-0 rounded-full px-3.5 text-sm font-medium transition-[transform,filter,background-color,color] duration-150 active:scale-95",
+        "flex h-9 w-full items-center justify-center overflow-hidden rounded-full px-1 text-center text-xs font-medium md:h-10",
         active ? "bg-primary text-primary-fg" : "bg-surface text-muted shadow-border hover:text-fg",
       )}
     >
-      {children}
+      <span className="block max-w-full truncate">{children}</span>
     </button>
   );
 }
@@ -51,11 +55,13 @@ export function StationPanel({ stations }: { stations: Station[] }) {
   const selectedId = useAppStore((s) => s.selectedId);
   const extra = useAppStore((s) => s.extraStations);
   const selected = allStations(extra).find((s) => s.id === selectedId);
-  if (panel === "add") return <AddStationForm />;
-  if (panel === "detail" && selected) return <Detail station={selected} />;
-  if (panel === "saved") return <SavedList />;
-  if (panel === "route") return <RoutePlanner stations={stations} />;
-  return <StationList stations={stations} />;
+  let body: React.ReactNode;
+  if (panel === "add") body = <AddStationForm />;
+  else if (panel === "detail" && selected) body = <Detail station={selected} />;
+  else if (panel === "saved") body = <SavedList />;
+  else if (panel === "route") body = <RoutePlanner stations={stations} />;
+  else body = <StationList stations={stations} />;
+  return <div className="flex h-full min-h-0 flex-1 flex-col">{body}</div>;
 }
 
 export function SearchAndFilters({ count, compact }: { count: number; compact?: boolean }) {
@@ -72,7 +78,7 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
   const hasOrigin = Boolean(findCity(query) || findCity(filters.place) || userPos);
 
   return (
-    <div className="space-y-3">
+    <div className="shrink-0 space-y-2">
       <div className="flex gap-1.5">
         <div className="min-w-0 flex-1">
           <CitySelect
@@ -124,15 +130,15 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
         </div>
       ) : (
         <>
-          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <Chip active={filters.cassette} onClick={() => setFilters({ cassette: !filters.cassette })}>Kassette</Chip>
-            <Chip active={filters.freeOnly} onClick={() => setFilters({ freeOnly: !filters.freeOnly })}>Kostenlos</Chip>
-            <Chip active={filters.openNow} onClick={() => setFilters({ openNow: !filters.openNow })}>Jetzt offen</Chip>
-            <Chip active={filters.hose} onClick={() => setFilters({ hose: !filters.hose })}>Schlauch</Chip>
-            <Chip active={filters.camperclean} onClick={() => setFilters({ camperclean: !filters.camperclean })}>Automat</Chip>
-            <Chip active={filters.campsite} onClick={() => setFilters({ campsite: !filters.campsite })}>Campingplatz</Chip>
-            <Chip active={filters.confirmed} onClick={() => setFilters({ confirmed: !filters.confirmed })}>Bestätigt</Chip>
-            <button type="button" onClick={resetFilters} className="inline-flex h-11 shrink-0 items-center px-2 text-xs text-muted hover:text-fg">Reset</button>
+          <div className="grid grid-cols-4 gap-1">
+            <Chip active={filters.cassette} onClick={() => setFilters({ cassette: !filters.cassette })} label="Kassette">Kassette</Chip>
+            <Chip active={filters.freeOnly} onClick={() => setFilters({ freeOnly: !filters.freeOnly })} label="Kostenlos">Kostenlos</Chip>
+            <Chip active={filters.openNow} onClick={() => setFilters({ openNow: !filters.openNow })} label="Jetzt offen">Offen</Chip>
+            <Chip active={filters.hose} onClick={() => setFilters({ hose: !filters.hose })} label="Schlauch">Schlauch</Chip>
+            <Chip active={filters.camperclean} onClick={() => setFilters({ camperclean: !filters.camperclean })} label="Automat">Automat</Chip>
+            <Chip active={filters.campsite} onClick={() => setFilters({ campsite: !filters.campsite })} label="Campingplatz">Camping</Chip>
+            <Chip active={filters.confirmed} onClick={() => setFilters({ confirmed: !filters.confirmed })} label="Bestätigt">Bestätigt</Chip>
+            <button type="button" onClick={resetFilters} className="flex h-9 w-full items-center justify-center rounded-full bg-surface px-1 text-xs text-muted shadow-border hover:text-fg md:h-10">Reset</button>
           </div>
           <div className="flex items-center justify-between text-xs text-muted">
             <span className="tabular-nums">{count} Stationen</span>
@@ -169,7 +175,7 @@ function StationList({ stations }: { stations: Station[] }) {
     );
   }
   return (
-    <ul className="divide-y divide-border/50">
+    <ul className="bl-scroll divide-y divide-border/50">
       {sorted.map((s) => {
         const km = userPos ? haversineKm(userPos, s) : null;
         const fav = favorites.includes(s.id);
@@ -295,7 +301,7 @@ function Detail({ station }: { station: Station }) {
           <button type="button" onClick={() => toggleFavorite(station.id)} className="inline-flex h-11 items-center rounded-xl bg-surface px-3 text-sm shadow-border transition-[transform,background-color] duration-150 hover:bg-surface-2 active:scale-95">{fav ? "Gemerkt ★" : "Merken"}</button>
         </div>
       </div>
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-1">
+      <div className="bl-scroll space-y-4 pr-1">
         <header>
           <p className="text-xs tracking-wide text-muted uppercase">{station.state} · {TYPE_LABEL[station.type]}</p>
           <h2 className="mt-1 font-display text-2xl leading-tight text-fg">{station.name}</h2>

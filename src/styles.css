@@ -89,6 +89,13 @@
 }
 
 @media (max-width: 767px) {
+  aside {
+    font-size: 13px;
+  }
+  aside h2 {
+    font-size: 1.2rem;
+    line-height: 1.2;
+  }
   input,
   select,
   textarea {
@@ -147,3 +154,26 @@
 @media (min-width: 768px) {
   .leaflet-top.leaflet-right { top: 5.25rem; }
 }
+
+.bl-scroll {
+  min-height: 0;
+  flex: 1 1 0%;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: auto;
+  scrollbar-color: var(--color-primary) var(--color-surface);
+}
+.bl-scroll::-webkit-scrollbar { width: 10px; }
+.bl-scroll::-webkit-scrollbar-track {
+  margin: 6px 0;
+  background: var(--color-surface);
+  border-radius: 99px;
+}
+.bl-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 99px;
+  border: 2px solid var(--color-bg-elevated);
+}
+.bl-scroll::-webkit-scrollbar-thumb:hover { background: var(--color-lagoon); }
