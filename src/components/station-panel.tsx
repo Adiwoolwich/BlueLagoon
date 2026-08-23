@@ -67,27 +67,25 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
   const setUserPos = useAppStore((s) => s.setUserPos);
   const panel = useAppStore((s) => s.panel);
   const userPos = useAppStore((s) => s.userPos);
-  const hasOrigin = Boolean(findCity(query) || userPos);
+  const hasOrigin = Boolean(findCity(query) || findCity(filters.place) || userPos);
 
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
-        <div className="relative min-w-0 flex-1">
-          <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted">⌕</span>
-          <input
-            value={query}
-            onChange={(e) => {
-              const v = e.target.value;
-              setQuery(v);
-              setFilters({ place: findCity(v)?.name ?? "" });
-              if (v.trim()) setUserPos(null);
+        <div className="min-w-0 flex-1">
+          <CitySelect
+            value={filters.place || query}
+            onChange={(place) => {
+              setQuery(place);
+              setFilters({ place });
+              if (place.trim()) setUserPos(null);
             }}
-            placeholder="Adresse, Stadt, PLZ …"
-            className="h-11 w-full rounded-xl bg-surface pr-3 pl-10 text-base text-fg shadow-border outline-none placeholder:text-subtle focus:ring-2 focus:ring-primary/50 md:text-sm"
+            placeholder="Stadt, Ortsteil oder PLZ …"
+            warnUnmatched={false}
           />
         </div>
         <LocateButton iconOnly />
-        <label className="relative block w-[7.25rem] shrink-0">
+        <label className="relative block w-[7.25rem] shrink-0 self-end">
           <span className="sr-only">Umkreis</span>
           <select
             value={filters.radiusKm}
