@@ -19,7 +19,7 @@ const TYPE_LABEL: Record<Station["type"], string> = {
 const FEE_LABEL: Record<Station["fee"], string> = {
   free: "Kostenlos",
   paid: "Gebühr",
-  unknown: "Preis unklar",
+  guest: "Nur Gäste / im Preis",
 };
 
 function Chip({

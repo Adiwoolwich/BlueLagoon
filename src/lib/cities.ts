@@ -1,42 +1,112 @@
+import raw from "../data/cities.json";
+
 export type City = {
   name: string;
-  state: string;
   lat: number;
   lng: number;
+  state: string;
+  aliases?: string[];
 };
 
-/** Sample cities – full list (~727) in blue-lagoon-source.zip */
-export const CITIES: City[] = [
-  { name: "Berlin", state: "Berlin", lat: 52.52, lng: 13.405 },
-  { name: "Hamburg", state: "Hamburg", lat: 53.5511, lng: 9.9937 },
-  { name: "München", state: "Bayern", lat: 48.1351, lng: 11.582 },
-  { name: "Köln", state: "Nordrhein-Westfalen", lat: 50.9375, lng: 6.9603 },
-  { name: "Frankfurt am Main", state: "Hessen", lat: 50.1109, lng: 8.6821 },
-  { name: "Stuttgart", state: "Baden-Württemberg", lat: 48.7758, lng: 9.1829 },
-  { name: "Düsseldorf", state: "Nordrhein-Westfalen", lat: 51.2277, lng: 6.7735 },
-  { name: "Leipzig", state: "Sachsen", lat: 51.3397, lng: 12.3731 },
-  { name: "Dortmund", state: "Nordrhein-Westfalen", lat: 51.5136, lng: 7.4653 },
-  { name: "Essen", state: "Nordrhein-Westfalen", lat: 51.4556, lng: 7.0116 },
-  { name: "Bremen", state: "Bremen", lat: 53.0793, lng: 8.8017 },
-  { name: "Dresden", state: "Sachsen", lat: 51.0504, lng: 13.7373 },
-  { name: "Hannover", state: "Niedersachsen", lat: 52.3759, lng: 9.732 },
-  { name: "Nürnberg", state: "Bayern", lat: 49.4521, lng: 11.0767 },
-  { name: "Duisburg", state: "Nordrhein-Westfalen", lat: 51.4344, lng: 6.7623 },
+export const CITIES: City[] = raw as City[];
+
+const POPULAR_NAMES = [
+  "Berlin",
+  "Hamburg",
+  "München",
+  "Köln",
+  "Frankfurt am Main",
+  "Stuttgart",
+  "Düsseldorf",
+  "Leipzig",
+  "Dortmund",
+  "Essen",
+  "Bremen",
+  "Dresden",
+  "Hannover",
+  "Nürnberg",
+  "Kiel",
+  "Freiburg",
+  "Rostock",
+  "Erfurt",
+  "Mainz",
+  "Augsburg",
 ];
 
+export const POPULAR_CITIES: City[] = POPULAR_NAMES.map((n) =>
+  CITIES.find((c) => c.name === n),
+).filter((c): c is City => Boolean(c));
+
+export function foldCity(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .replace(/ae/g, "a")
+    .replace(/oe/g, "o")
+    .replace(/ue/g, "u")
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "");
+}
+
+function namesOf(c: City): string[] {
+  return [c.name, ...(c.aliases ?? [])];
+}
+
 export function findCity(name: string): City | undefined {
-  if (!name.trim()) return undefined;
-  const n = name.trim().toLowerCase();
-  return (
-    CITIES.find((c) => c.name.toLowerCase() === n) ??
-    CITIES.find((c) => c.name.toLowerCase().startsWith(n))
+  const q = name.trim();
+  if (!q) return undefined;
+  const lower = q.toLowerCase();
+  const folded = foldCity(q);
+  return CITIES.find((c) =>
+    namesOf(c).some((n) => n.toLowerCase() === lower || foldCity(n) === folded),
   );
 }
 
-export function searchCities(q: string, limit = 14): City[] {
-  const t = q.trim().toLowerCase();
-  if (!t) return CITIES.slice(0, limit);
-  return CITIES.filter(
-    (c) => c.name.toLowerCase().includes(t) || c.state.toLowerCase().includes(t),
-  ).slice(0, limit);
+function levenshtein(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const row = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = i - 1;
+    row[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = row[j]!;
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      row[j] = Math.min(row[j]! + 1, row[j - 1]! + 1, prev + cost);
+      prev = tmp;
+    }
+  }
+  return row[b.length]!;
+}
+
+export function searchCities(query: string, limit = 12): City[] {
+  const q = query.trim();
+  if (!q)
+    return [...POPULAR_CITIES, ...CITIES.filter((c) => !POPULAR_CITIES.includes(c))].slice(
+      0,
+      limit,
+    );
+  const folded = foldCity(q);
+  const starts: City[] = [];
+  const contains: City[] = [];
+  for (const c of CITIES) {
+    const foldedNames = namesOf(c).map(foldCity);
+    if (foldedNames.some((n) => n.startsWith(folded))) starts.push(c);
+    else if (foldedNames.some((n) => n.includes(folded)) || foldCity(c.state).includes(folded)) {
+      contains.push(c);
+    }
+  }
+  let out = [...starts, ...contains];
+  if (out.length === 0 && folded.length >= 3) {
+    out = [...CITIES]
+      .map((c) => ({ c, d: Math.min(...namesOf(c).map((n) => levenshtein(folded, foldCity(n)))) }))
+      .filter((x) => x.d <= Math.max(2, Math.floor(folded.length / 4)))
+      .sort((a, b) => a.d - b.d)
+      .map((x) => x.c);
+  }
+  return out.slice(0, limit);
 }
