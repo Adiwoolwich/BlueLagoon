@@ -15,12 +15,20 @@ import { deriveStatus, findCity, GERMANY_CENTER, type Station } from "@/lib/stat
 import { useAppStore } from "@/lib/store";
 import { STATUS_COLOR } from "./status-badge";
 
+function dropSvg(color: string) {
+  return `<svg viewBox="0 0 24 24" class="bl-drop-icon" fill="none" aria-hidden="true">
+    <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z" fill="${color}" stroke="#e8f4f2" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.95 4.95" fill="${color}" stroke="#e8f4f2" stroke-width="1.4" stroke-linejoin="round"/>
+  </svg>`;
+}
+
 function pinIcon(color: string, selected: boolean) {
+  const size = selected ? 36 : 28;
   return L.divIcon({
     className: `bl-marker${selected ? " is-selected" : ""}`,
-    html: `<span class="bl-marker-dot" style="background:${color};--pin:${color}"></span>`,
-    iconSize: selected ? [28, 28] : [22, 22],
-    iconAnchor: selected ? [14, 14] : [11, 11],
+    html: dropSvg(color),
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size - 1],
   });
 }
 
@@ -157,8 +165,8 @@ export function StationMap({ stations }: { stations: Station[] }) {
     >
       <ZoomControl position="topright" />
       <TileLayer
-        attribution="&copy; OSM &copy; CARTO"
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
+        url="https://tile.openstreetmap.de/{z}/{x}/{y}.png"
       />
       <MapFly
         selected={selected}

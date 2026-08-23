@@ -85,7 +85,7 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
           />
         </div>
         <LocateButton iconOnly />
-        <label className="relative block w-[7.25rem] shrink-0 self-end">
+        <label className="relative block w-[5.75rem] shrink-0 self-end sm:w-[7.25rem]">
           <span className="sr-only">Umkreis</span>
           <select
             value={filters.radiusKm}
@@ -334,7 +334,7 @@ export function LocateButton({ floating, iconOnly }: { floating?: boolean; iconO
 export function RouteToggle() {
   const setPanel = useAppStore((s) => s.setPanel);
   return (
-    <button type="button" onClick={() => setPanel("route")} className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-surface text-fg shadow-border" aria-label="Route">
+    <button type="button" onClick={() => setPanel("route")} className="inline-flex size-9 items-center justify-center rounded-full text-fg hover:bg-surface-2 sm:size-10" aria-label="Route">
       ↗
     </button>
   );
