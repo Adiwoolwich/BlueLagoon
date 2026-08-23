@@ -262,8 +262,8 @@ function Detail({ station }: { station: Station }) {
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <div className="mb-3 flex shrink-0 items-center justify-between gap-2">
-        <button type="button" onClick={() => { select(null); setPanel("list"); }} className="inline-flex h-11 items-center gap-1 text-sm text-muted hover:text-fg">← Zurück</button>
-        <button type="button" onClick={() => toggleFavorite(station.id)} className="inline-flex h-11 items-center rounded-xl bg-surface px-3 text-sm shadow-border">{fav ? "Gemerkt ★" : "Merken"}</button>
+        <button type="button" onClick={() => { select(null); setPanel("list"); }} className="inline-flex h-11 items-center gap-1 text-sm text-muted transition-[transform,color] duration-150 hover:text-fg active:scale-95">← Zurück</button>
+        <button type="button" onClick={() => toggleFavorite(station.id)} className="inline-flex h-11 items-center rounded-xl bg-surface px-3 text-sm shadow-border transition-[transform,background-color] duration-150 hover:bg-surface-2 active:scale-95">{fav ? "Gemerkt ★" : "Merken"}</button>
       </div>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-1">
         <header>
@@ -286,10 +286,35 @@ function Detail({ station }: { station: Station }) {
         <section>
           <h3 className="mb-2 text-sm font-medium">Status melden</h3>
           <div className="grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => report({ stationId: station.id, status: "confirmed", at: Date.now() })} className="h-11 rounded-xl bg-surface text-sm shadow-border">Gerade genutzt</button>
-            <button type="button" onClick={() => report({ stationId: station.id, status: "broken", at: Date.now() })} className="h-11 rounded-xl bg-bad/12 text-sm text-bad">Defekt</button>
-            <button type="button" onClick={() => report({ stationId: station.id, status: "closed", at: Date.now() })} className="h-11 rounded-xl bg-surface text-sm shadow-border">Geschlossen</button>
-            <button type="button" onClick={() => report({ stationId: station.id, status: "open", at: Date.now() })} className="h-11 rounded-xl bg-surface text-sm shadow-border">Offen</button>
+            {(
+              [
+                ["ok", "Gerade genutzt", false],
+                ["broken", "Defekt", true],
+                ["closed", "Geschlossen", false],
+                ["dirty", "Unsauber", false],
+              ] as const
+            ).map(([kind, label, bad]) => {
+              const selected = reports[station.id]?.kind === kind;
+              return (
+                <button
+                  key={kind}
+                  type="button"
+                  onClick={() => report({ stationId: station.id, kind, at: new Date().toISOString() })}
+                  className={cn(
+                    "h-11 rounded-xl text-sm font-medium shadow-border transition-[transform,filter,background-color,color] duration-150 active:scale-95",
+                    selected
+                      ? bad
+                        ? "bg-bad text-fg ring-2 ring-bad/50"
+                        : "bg-primary text-primary-fg ring-2 ring-primary/40"
+                      : bad
+                        ? "bg-bad/12 text-bad hover:bg-bad/22"
+                        : "bg-surface text-fg hover:bg-surface-2",
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
         </section>
         <label className="block text-sm">
