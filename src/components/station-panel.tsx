@@ -91,7 +91,7 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
             value={filters.radiusKm}
             disabled={!hasOrigin}
             onChange={(e) => setFilters({ radiusKm: Number(e.target.value) })}
-            className="h-11 w-full appearance-none rounded-xl bg-surface py-0 pr-8 pl-3 text-base text-fg shadow-border outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 md:text-sm"
+            className="h-11 w-full appearance-none rounded-2xl bg-surface py-0 pr-8 pl-3 text-base text-fg shadow-border outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 md:text-sm"
             aria-label="Umkreis"
           >
             {RADIUS_OPTIONS.map((o) => (

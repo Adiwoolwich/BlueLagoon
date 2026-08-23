@@ -76,7 +76,7 @@ export function CitySelect({
       ) : null}
       <div
         className={cn(
-          "flex h-11 items-center gap-2 rounded-xl bg-surface px-3 shadow-border",
+          "flex h-11 items-center gap-2 rounded-2xl bg-surface px-3 shadow-border",
           open && "ring-2 ring-primary/50",
           unmatched && open === false && draft.trim() && "ring-2 ring-bad/60",
         )}

@@ -129,3 +129,8 @@
     drop-shadow(0 6px 10px rgb(0 0 0 / 0.5));
 }
 
+
+.leaflet-top.leaflet-right { top: 4.35rem; right: 10px; }
+@media (min-width: 768px) {
+  .leaflet-top.leaflet-right { top: 5.25rem; }
+}
