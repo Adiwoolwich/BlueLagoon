@@ -16,6 +16,7 @@ export type Filters = {
   hose: boolean;
   cassette: boolean;
   camperclean: boolean;
+  campsite: boolean;
   confirmed: boolean;
   place: string;
   radiusKm: number;
@@ -39,6 +40,7 @@ const defaultFilters: Filters = {
   hose: false,
   cassette: true,
   camperclean: false,
+  campsite: false,
   confirmed: false,
   place: "",
   radiusKm: 20,
@@ -146,6 +148,13 @@ export const useAppStore = create<AppState>()(
   ),
 );
 
+export function isCampsite(s: Station): boolean {
+  if (s.campsite === true) return true;
+  if (s.campsite === false) return false;
+  const n = `${s.name} ${s.description ?? ""}`.toLowerCase();
+  return /campingplatz|camping park|campingpark|\bcamping\b/.test(n);
+}
+
 export function allStations(extra: Station[] = []): Station[] {
   if (extra.length === 0) return STATIONS;
   const seen = new Set(STATIONS.map((s) => s.id));
@@ -173,6 +182,7 @@ export function applyFilters(
     if (f.freeOnly && s.fee !== "free") return false;
     if (f.hose && !s.hose) return false;
     if (f.camperclean && s.type !== "camperclean") return false;
+    if (f.campsite && !isCampsite(s)) return false;
     if (f.openNow) {
       if (!isOpenNow(s, now) || deriveStatus(s, state.reports[s.id]) === "broken") {
         return false;
