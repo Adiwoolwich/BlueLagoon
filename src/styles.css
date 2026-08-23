@@ -1,19 +1,34 @@
-/* Blue Lagoon – mobile-first styles */
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   margin: 0;
-  overscroll-behavior: none;
-}
-
-/* iOS 16px minimum to prevent zoom */
-input, select, textarea {
-  font-size: 16px;
 }
 
 .leaflet-container {
-  height: 100%;
   width: 100%;
+  height: 100%;
   z-index: 0;
+}
+
+.bl-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.bl-marker-dot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  border: 2px solid #e8f4f2;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pin) 40%, transparent);
+}
+
+.bl-marker.is-selected .bl-marker-dot {
+  width: 18px;
+  height: 18px;
 }
