@@ -1,6 +1,9 @@
 import { CITIES, findCity, type City } from "./cities";
-import partA from "../data/stations-a.json";
-import partB from "../data/stations-b.json";
+import partA1 from "../data/stations-a1.json";
+import partA2 from "../data/stations-a2.json";
+import partB1 from "../data/stations-b1.json";
+import partB2 from "../data/stations-b2.json";
+import partB3 from "../data/stations-b3.json";
 
 export { CITIES, findCity };
 export type { City };
@@ -267,5 +270,10 @@ export function searchStations(query: string, list: Station[]): Station[] {
   });
 }
 
-export const STATIONS: Station[] = [...(partA as Station[]), ...(partB as Station[])];
-
+export const STATIONS: Station[] = [
+  ...(partA1 as Station[]),
+  ...(partA2 as Station[]),
+  ...(partB1 as Station[]),
+  ...(partB2 as Station[]),
+  ...(partB3 as Station[]),
+];
