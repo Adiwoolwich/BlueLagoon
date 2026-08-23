@@ -152,7 +152,7 @@ export function isCampsite(s: Station): boolean {
   if (s.campsite === true) return true;
   if (s.campsite === false) return false;
   const n = `${s.name} ${s.description ?? ""}`.toLowerCase();
-  return /campingplatz|camping park|campingpark|\bcamping\b/.test(n);
+  return n.includes("camping");
 }
 
 export function allStations(extra: Station[] = []): Station[] {
