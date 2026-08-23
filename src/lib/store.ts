@@ -72,6 +72,8 @@ type AppState = {
   setPanel: (p: AppState["panel"]) => void;
   setSheet: (s: AppState["sheet"]) => void;
   setExtraStations: (list: Station[]) => void;
+  addStation: (station: Station) => void;
+  removeExtraStation: (id: string) => void;
 };
 
 export const useAppStore = create<AppState>()(
@@ -118,15 +120,27 @@ export const useAppStore = create<AppState>()(
         }),
       setSheet: (sheet) => set({ sheet }),
       setExtraStations: (extraStations) => set({ extraStations }),
+      addStation: (station) => {
+        const list = get().extraStations.filter((s) => s.id !== station.id);
+        set({ extraStations: [station, ...list], selectedId: station.id, panel: "detail", sheet: "full" });
+      },
+      removeExtraStation: (id) => {
+        set({
+          extraStations: get().extraStations.filter((s) => s.id !== id),
+          selectedId: get().selectedId === id ? null : get().selectedId,
+          panel: get().selectedId === id ? "list" : get().panel,
+        });
+      },
     }),
     {
-      name: "blue-lagoon-v3",
+      name: "blue-lagoon-v4",
       skipHydration: true,
       partialize: (s) => ({
         favorites: s.favorites,
         recent: s.recent,
         reports: s.reports,
         notes: s.notes,
+        extraStations: s.extraStations,
       }),
     },
   ),
