@@ -7,7 +7,7 @@ export const Route = createFileRoute('/')({
 function HomePage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center">
-      <h1 className="text-3xl font-bold text-cyan-400">Blue Lagoon</h1>
+      <h1 className="text-3xl font-bold text-cyan-400">Blue Lagune</h1>
       <p className="mt-4 max-w-md text-slate-300">
         Chemietoiletten-Entsorgungsstationen für Wohnmobile in Deutschland.
       </p>

@@ -1,4 +1,4 @@
-# Blue Lagoon
+# Blue Lagune
 
 **Chemietoiletten-Entsorgungsstationen für Wohnmobile in Deutschland**
 
@@ -22,7 +22,7 @@ npm run dev
 
 ## Domain mit dem Repo verknüpfen (empfohlen: Vercel)
 
-Blue Lagoon ist eine TanStack-Start / Vite-App → **Vercel** ist die einfachste Lösung.
+Blue Lagune ist eine TanStack-Start / Vite-App → **Vercel** ist die einfachste Lösung.
 
 ### 1. Vercel-Projekt anlegen
 1. Gehe zu [vercel.com](https://vercel.com) und melde dich mit **GitHub** an.
@@ -51,4 +51,4 @@ Blue Lagoon ist eine TanStack-Start / Vite-App → **Vercel** ist die einfachste
 
 ---
 
-*Blue Lagoon – Damit die blaue Lagune immer in Reichweite bleibt.*
+*Blue Lagune – Damit die blaue Lagune immer in Reichweite bleibt.*

@@ -64,14 +64,11 @@ export function App() {
             </svg>
           </span>
           <span className="min-w-0 text-left">
-            <span className="block truncate font-display text-lg leading-none tracking-tight">Blue Lagoon</span>
+            <span className="block truncate font-display text-lg leading-none tracking-tight">Blue Lagune</span>
             <span className="hidden text-xs tracking-wide text-muted uppercase sm:block">Entsorgungsstationen</span>
           </span>
         </button>
         <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <div className="hidden md:block">
-            <LocateButton />
-          </div>
           <RouteToggle />
           <button
             type="button"

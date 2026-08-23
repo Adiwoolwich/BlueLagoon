@@ -2,7 +2,7 @@
   "name": "blue-lagoon",
   "private": true,
   "type": "module",
-  "description": "Blue Lagoon – Chemietoiletten-Entsorgungsstationen für Wohnmobile in Deutschland",
+  "description": "Blue Lagune – Chemietoiletten-Entsorgungsstationen für Wohnmobile in Deutschland",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

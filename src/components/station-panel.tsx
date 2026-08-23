@@ -64,20 +64,43 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
   const resetFilters = useAppStore((s) => s.resetFilters);
   const setPanel = useAppStore((s) => s.setPanel);
   const setSheet = useAppStore((s) => s.setSheet);
+  const setUserPos = useAppStore((s) => s.setUserPos);
   const panel = useAppStore((s) => s.panel);
   const userPos = useAppStore((s) => s.userPos);
-  const hasOrigin = Boolean(filters.place.trim() || userPos);
+  const hasOrigin = Boolean(findCity(query) || userPos);
 
   return (
     <div className="space-y-3">
-      <div className="relative">
-        <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted">⌕</span>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Name, PLZ, Stichwort …"
-          className="h-11 w-full rounded-xl bg-surface pr-3 pl-10 text-base text-fg shadow-border outline-none placeholder:text-subtle focus:ring-2 focus:ring-primary/50 md:text-sm"
-        />
+      <div className="flex gap-2">
+        <div className="relative min-w-0 flex-1">
+          <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted">⌕</span>
+          <input
+            value={query}
+            onChange={(e) => {
+              const v = e.target.value;
+              setQuery(v);
+              setFilters({ place: findCity(v)?.name ?? "" });
+              if (v.trim()) setUserPos(null);
+            }}
+            placeholder="Adresse, Stadt, PLZ …"
+            className="h-11 w-full rounded-xl bg-surface pr-3 pl-10 text-base text-fg shadow-border outline-none placeholder:text-subtle focus:ring-2 focus:ring-primary/50 md:text-sm"
+          />
+        </div>
+        <LocateButton iconOnly />
+        <label className="relative block w-[7.25rem] shrink-0">
+          <span className="sr-only">Umkreis</span>
+          <select
+            value={filters.radiusKm}
+            disabled={!hasOrigin}
+            onChange={(e) => setFilters({ radiusKm: Number(e.target.value) })}
+            className="h-11 w-full appearance-none rounded-xl bg-surface py-0 pr-8 pl-3 text-base text-fg shadow-border outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 md:text-sm"
+            aria-label="Umkreis"
+          >
+            {RADIUS_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </label>
       </div>
       {compact ? (
         <button
@@ -90,22 +113,6 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
         </button>
       ) : (
         <>
-          <div className="grid grid-cols-[minmax(0,1fr)_7.25rem] gap-2">
-            <CitySelect label="Ort" value={filters.place} onChange={(place) => setFilters({ place })} placeholder="Stadt wählen …" />
-            <label className="relative block">
-              <span className="mb-1 block text-xs font-medium text-muted">Umkreis</span>
-              <select
-                value={filters.radiusKm}
-                disabled={!hasOrigin}
-                onChange={(e) => setFilters({ radiusKm: Number(e.target.value) })}
-                className="h-11 w-full appearance-none rounded-xl bg-surface py-0 pr-8 pl-3 text-base text-fg shadow-border outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 md:text-sm"
-              >
-                {RADIUS_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </label>
-          </div>
           <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <Chip active={filters.cassette} onClick={() => setFilters({ cassette: !filters.cassette })}>Kassette</Chip>
             <Chip active={filters.freeOnly} onClick={() => setFilters({ freeOnly: !filters.freeOnly })}>Kostenlos</Chip>
@@ -295,17 +302,20 @@ function Detail({ station }: { station: Station }) {
   );
 }
 
-export function LocateButton({ floating }: { floating?: boolean }) {
+export function LocateButton({ floating, iconOnly }: { floating?: boolean; iconOnly?: boolean }) {
   const setUserPos = useAppStore((s) => s.setUserPos);
   const setFilters = useAppStore((s) => s.setFilters);
+  const setQuery = useAppStore((s) => s.setQuery);
   const setSheet = useAppStore((s) => s.setSheet);
+  const radiusKm = useAppStore((s) => s.filters.radiusKm);
   return (
     <button
       type="button"
       onClick={() => {
         const apply = (lat: number, lng: number) => {
           setUserPos({ lat, lng });
-          setFilters({ place: "", radiusKm: 50 });
+          setQuery("");
+          setFilters({ place: "", radiusKm: radiusKm > 0 ? radiusKm : 50 });
           setSheet("mid");
         };
         if (!navigator.geolocation) { apply(50.1109, 8.6821); return; }
@@ -314,10 +324,11 @@ export function LocateButton({ floating }: { floating?: boolean }) {
           () => apply(50.1109, 8.6821),
         );
       }}
-      className={floating ? "grid size-12 place-items-center rounded-full bg-bg-elevated text-fg shadow-panel" : "inline-flex h-11 w-11 items-center justify-center rounded-xl bg-surface text-fg shadow-border sm:w-auto sm:gap-2 sm:px-3"}
-      aria-label="In der Nähe"
+      className={floating ? "grid size-12 place-items-center rounded-full bg-bg-elevated text-fg shadow-panel" : "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface text-fg shadow-border"}
+      aria-label="Mein Standort"
+      title="Mein Standort"
     >
-      ⌖{floating ? null : <span className="hidden sm:inline">In der Nähe</span>}
+      ⌖
     </button>
   );
 }

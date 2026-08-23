@@ -148,10 +148,10 @@ export function applyFilters(
   const f = state.filters;
   const routeA = state.route?.from ? findCity(state.route.from) : undefined;
   const routeB = state.route?.to ? findCity(state.route.to) : undefined;
-  const place = f.place.trim() ? findCity(f.place) : undefined;
+  const place = findCity(state.query) ?? (f.place.trim() ? findCity(f.place) : undefined);
 
   return list.filter((s) => {
-    if (q) {
+    if (q && !place) {
       const hay = `${s.name} ${s.city} ${s.postalCode} ${s.state} ${s.address}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
