@@ -130,6 +130,7 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
             <Chip active={filters.openNow} onClick={() => setFilters({ openNow: !filters.openNow })}>Jetzt offen</Chip>
             <Chip active={filters.hose} onClick={() => setFilters({ hose: !filters.hose })}>Schlauch</Chip>
             <Chip active={filters.camperclean} onClick={() => setFilters({ camperclean: !filters.camperclean })}>Automat</Chip>
+            <Chip active={filters.campsite} onClick={() => setFilters({ campsite: !filters.campsite })}>Campingplatz</Chip>
             <Chip active={filters.confirmed} onClick={() => setFilters({ confirmed: !filters.confirmed })}>Bestätigt</Chip>
             <button type="button" onClick={resetFilters} className="inline-flex h-11 shrink-0 items-center px-2 text-xs text-muted hover:text-fg">Reset</button>
           </div>
@@ -355,7 +356,7 @@ function Detail({ station }: { station: Station }) {
   );
 }
 
-function LocateButton({ iconOnly }: { iconOnly?: boolean }) {
+export function LocateButton({ iconOnly, floating }: { iconOnly?: boolean; floating?: boolean }) {
   const setUserPos = useAppStore((s) => s.setUserPos);
   const setFilters = useAppStore((s) => s.setFilters);
   const setQuery = useAppStore((s) => s.setQuery);
@@ -375,12 +376,15 @@ function LocateButton({ iconOnly }: { iconOnly?: boolean }) {
         );
       }}
       className={cn(
-        "inline-flex h-11 shrink-0 items-center justify-center rounded-2xl bg-surface text-sm shadow-border transition-[transform] active:scale-95",
-        iconOnly ? "w-11" : "px-3",
+        "inline-flex items-center justify-center text-sm shadow-border transition-[transform] active:scale-95",
+        floating
+          ? "size-11 rounded-full bg-surface/95 backdrop-blur"
+          : "h-11 shrink-0 rounded-2xl bg-surface",
+        iconOnly || floating ? "w-11" : "px-3",
       )}
       aria-label="Standort"
     >
-      {iconOnly ? "◎" : "Standort"}
+      {iconOnly || floating ? "◎" : "Standort"}
     </button>
   );
 }
