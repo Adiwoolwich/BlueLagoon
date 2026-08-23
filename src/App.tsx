@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { MapHost } from "./components/map-host";
 import {
   LocateButton,
-  RouteToggle,
   SearchAndFilters,
   StationPanel,
 } from "./components/station-panel";
@@ -78,36 +77,6 @@ export function App() {
         ) : null}
       </main>
 
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-30 px-3 pt-[max(0.45rem,env(safe-area-inset-top))] sm:px-4">
-        <div className="pointer-events-auto mx-auto flex h-12 max-w-[1100px] items-center gap-2 rounded-full bg-bg-elevated/80 px-2 shadow-panel ring-1 ring-border-strong backdrop-blur-xl md:ml-[24.5rem] md:mr-0 md:max-w-none">
-          <button type="button" className="flex min-w-0 items-center gap-2.5 pl-1.5" onClick={() => setGuide(false)}>
-            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/35">
-              <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.25">
-                <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z" />
-                <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.95 4.95" />
-              </svg>
-            </span>
-            <span className="block truncate font-display text-[1.05rem] leading-none tracking-tight">Blue Lagune</span>
-          </button>
-          <div className="ml-auto flex items-center p-0.5">
-            <RouteToggle />
-            <button
-              type="button"
-              onClick={() => setGuide((g) => !g)}
-              className="inline-flex size-9 items-center justify-center rounded-full text-fg hover:bg-surface-2 sm:size-10 sm:w-auto sm:gap-1.5 sm:px-3"
-              aria-label="Anleitung Kassette entleeren"
-            >
-              <svg viewBox="0 0 24 24" className="size-4 text-primary" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20" />
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
-                <path d="M8 7h8M8 11h8M8 15h5" />
-              </svg>
-              <span className="hidden text-sm sm:inline">Entleeren</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
       <aside
         className={cn(
           "absolute z-20 flex min-h-0 flex-col bg-bg-elevated/92 shadow-panel ring-1 ring-border backdrop-blur-xl",
@@ -128,7 +97,7 @@ export function App() {
               <StationPanel stations={stations} />
             </div>
           )}
-          <SiteFooter className="pt-1" />
+          <SiteFooter className="justify-start pt-1" onGuide={() => setGuide(true)} />
         </div>
       </aside>
 

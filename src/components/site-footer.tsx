@@ -1,6 +1,12 @@
 import { cn } from "@/lib/utils";
 
-export function SiteFooter({ className }: { className?: string }) {
+export function SiteFooter({
+  className,
+  onGuide,
+}: {
+  className?: string;
+  onGuide?: () => void;
+}) {
   return (
     <footer
       className={cn(
@@ -8,6 +14,16 @@ export function SiteFooter({ className }: { className?: string }) {
         className,
       )}
     >
+      {onGuide ? (
+        <>
+          <button type="button" onClick={onGuide} className="hover:text-fg">
+            Entleeren
+          </button>
+          <span aria-hidden className="text-subtle">
+            ·
+          </span>
+        </>
+      ) : null}
       <a href="/impressum" className="hover:text-fg">
         Impressum
       </a>
