@@ -46,6 +46,7 @@ export type Station = {
   lighting: boolean;
   covered: boolean;
   wheels: boolean;
+  campsite?: boolean;
   chemical: ChemicalRule;
   lastVerified: string;
   source: DataSource;
