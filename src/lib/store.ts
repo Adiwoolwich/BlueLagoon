@@ -92,21 +92,20 @@ export const useAppStore = create<AppState>()(
       setQuery: (query) => set({ query }),
       setFilters: (p) => set({ filters: { ...get().filters, ...p } }),
       resetFilters: () => set({ filters: defaultFilters }),
-      select: (selectedId) =>
-        set({
-          selectedId,
-          recent: selectedId
-            ? [selectedId, ...get().recent.filter((x) => x !== selectedId)].slice(0, 12)
-            : get().recent,
-          panel: selectedId ? "detail" : get().panel,
-          sheet: selectedId ? "full" : get().sheet,
-        }),
-      toggleFavorite: (id) =>
-        set({
-          favorites: get().favorites.includes(id)
-            ? get().favorites.filter((x) => x !== id)
-            : [...get().favorites, id],
-        }),
+      select: (id) => {
+        if (!id) {
+          set({ selectedId: null, panel: "list" });
+          return;
+        }
+        const recent = [id, ...get().recent.filter((x) => x !== id)].slice(0, 12);
+        set({ selectedId: id, recent, panel: "detail", sheet: "full" });
+      },
+      toggleFavorite: (id) => {
+        const favorites = get().favorites.includes(id)
+          ? get().favorites.filter((x) => x !== id)
+          : [id, ...get().favorites];
+        set({ favorites });
+      },
       setFavorites: (favorites) => set({ favorites }),
       report: (r) => set({ reports: { ...get().reports, [r.stationId]: r } }),
       setNote: (id, note) => set({ notes: { ...get().notes, [id]: note } }),
@@ -153,8 +152,7 @@ export function applyFilters(
 
   return list.filter((s) => {
     if (q) {
-      const hay =
-        `${s.name} ${s.city} ${s.postalCode} ${s.state} ${s.address}`.toLowerCase();
+      const hay = `${s.name} ${s.city} ${s.postalCode} ${s.state} ${s.address}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     if (f.cassette && !s.cassette) return false;

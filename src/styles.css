@@ -1,34 +1,68 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
-html,
-body,
-#root {
-  height: 100%;
-  margin: 0;
+@theme {
+  --color-bg: #071114;
+  --color-bg-elevated: #0d1b1f;
+  --color-surface: #122328;
+  --color-surface-2: #183036;
+  --color-fg: #e8f4f2;
+  --color-muted: #8aa3a6;
+  --color-subtle: #5e7679;
+  --color-primary: #2bb8a8;
+  --color-primary-fg: #04201c;
+  --color-lagoon: #3ecfc0;
+  --color-border: color-mix(in oklab, #e8f4f2 12%, transparent);
+  --color-border-strong: color-mix(in oklab, #e8f4f2 22%, transparent);
+  --color-ok: #3ecfc0;
+  --color-stale: #c9a45c;
+  --color-bad: #e05a4f;
+  --color-auto: #7eb6ff;
+
+  --font-sans: "Outfit", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Fraunces", "Times New Roman", serif;
+
+  --shadow-border: 0 0 0 1px color-mix(in oklab, #e8f4f2 10%, transparent);
+  --shadow-panel: 0 24px 60px -28px rgb(0 0 0 / 0.55);
+}
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3 { font-family: var(--font-display); }
+  button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
+  button, a, [role="button"], [role="option"] { touch-action: manipulation; }
 }
 
 .leaflet-container {
   width: 100%;
   height: 100%;
   z-index: 0;
+  background: #071114;
 }
-
-.bl-marker {
-  background: transparent !important;
+.leaflet-control-attribution { display: none; }
+.leaflet-bar a {
+  background: #122328 !important;
+  color: #e8f4f2 !important;
   border: none !important;
 }
-
+.bl-marker { display: grid; place-items: center; }
 .bl-marker-dot {
-  display: block;
-  width: 14px;
-  height: 14px;
-  border-radius: 9999px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
   border: 2px solid #e8f4f2;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pin) 40%, transparent);
+  box-shadow: 0 0 0 3px rgb(7 17 20 / 0.55);
 }
-
 .bl-marker.is-selected .bl-marker-dot {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
+}
+@media (max-width: 767px) {
+  input, select, textarea { font-size: 16px; }
 }
