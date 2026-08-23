@@ -93,8 +93,8 @@
   }
 
   .leaflet-top.leaflet-right {
-    top: 6px;
-    right: 8px;
+    top: 4.35rem;
+    right: 10px;
   }
 
   .leaflet-control-zoom a {
@@ -107,6 +107,12 @@
   html,
   body {
     overscroll-behavior: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .leaflet-top.leaflet-right {
+    top: 5.25rem;
   }
 }
 
