@@ -155,6 +155,14 @@ export function isCampsite(s: Station): boolean {
   return n.includes("camping");
 }
 
+/** Layer for the Kassette / Automat / Camping display toggles. */
+export function stationLayer(s: Station): "campsite" | "automat" | "cassette" | null {
+  if (isCampsite(s)) return "campsite";
+  if (s.type === "camperclean") return "automat";
+  if (s.cassette) return "cassette";
+  return null;
+}
+
 export function allStations(extra: Station[] = []): Station[] {
   if (extra.length === 0) return STATIONS;
   const seen = new Set(STATIONS.map((s) => s.id));
@@ -178,11 +186,13 @@ export function applyFilters(
       const hay = `${s.name} ${s.city} ${s.postalCode} ${s.state} ${s.address}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
-    if (f.cassette && !s.cassette) return false;
+    const layer = stationLayer(s);
+    if (layer === "campsite" && !f.campsite) return false;
+    if (layer === "automat" && !f.camperclean) return false;
+    if (layer === "cassette" && !f.cassette) return false;
+    if (layer === null) return false;
     if (f.freeOnly && s.fee !== "free") return false;
     if (f.hose && !s.hose) return false;
-    if (f.camperclean && s.type !== "camperclean") return false;
-    if (f.campsite && !isCampsite(s)) return false;
     if (f.openNow) {
       if (!isOpenNow(s, now) || deriveStatus(s, state.reports[s.id]) === "broken") {
         return false;

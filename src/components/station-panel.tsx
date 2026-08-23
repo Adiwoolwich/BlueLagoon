@@ -38,6 +38,7 @@ function Chip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       aria-label={label}
       title={label}
       className={cn(
@@ -131,12 +132,12 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
       ) : (
         <>
           <div className="grid grid-cols-4 gap-1">
-            <Chip active={filters.cassette} onClick={() => setFilters({ cassette: !filters.cassette })} label="Kassette">Kassette</Chip>
+            <Chip active={filters.cassette} onClick={() => setFilters({ cassette: !filters.cassette })} label="Kassette anzeigen">Kassette</Chip>
             <Chip active={filters.freeOnly} onClick={() => setFilters({ freeOnly: !filters.freeOnly })} label="Kostenlos">Kostenlos</Chip>
             <Chip active={filters.openNow} onClick={() => setFilters({ openNow: !filters.openNow })} label="Jetzt offen">Offen</Chip>
             <Chip active={filters.hose} onClick={() => setFilters({ hose: !filters.hose })} label="Schlauch">Schlauch</Chip>
-            <Chip active={filters.camperclean} onClick={() => setFilters({ camperclean: !filters.camperclean })} label="Automat">Automat</Chip>
-            <Chip active={filters.campsite} onClick={() => setFilters({ campsite: !filters.campsite })} label="Campingplatz">Camping</Chip>
+            <Chip active={filters.camperclean} onClick={() => setFilters({ camperclean: !filters.camperclean })} label="Automaten anzeigen">Automat</Chip>
+            <Chip active={filters.campsite} onClick={() => setFilters({ campsite: !filters.campsite })} label="Campingplätze anzeigen">Camping</Chip>
             <Chip active={filters.confirmed} onClick={() => setFilters({ confirmed: !filters.confirmed })} label="Bestätigt">Bestätigt</Chip>
             <button type="button" onClick={resetFilters} className="flex h-9 w-full items-center justify-center rounded-full bg-surface px-1 text-xs text-muted shadow-border hover:text-fg md:h-10">Reset</button>
           </div>
