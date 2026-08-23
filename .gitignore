@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+dist/
+.vercel/
+.output/
+.tanstack/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.DS_Store
+*.log
+.idea/
+.vscode/
+*.swp
+
+# Test / coverage
+coverage/
+*.lcov
+
+# Misc
+*.local
+.cache/

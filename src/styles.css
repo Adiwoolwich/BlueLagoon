@@ -1,0 +1,19 @@
+/* Blue Lagoon – mobile-first styles */
+@import "tailwindcss";
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  overscroll-behavior: none;
+}
+
+/* iOS 16px minimum to prevent zoom */
+input, select, textarea {
+  font-size: 16px;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
