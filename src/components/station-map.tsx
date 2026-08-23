@@ -12,7 +12,7 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { deriveStatus, findCity, GERMANY_CENTER, type Station } from "@/lib/stations";
-import { useAppStore } from "@/lib/store";
+import { isCampsite, useAppStore } from "@/lib/store";
 import { STATUS_COLOR } from "./status-badge";
 
 function dropSvg(color: string) {
@@ -204,7 +204,8 @@ export function StationMap({ stations }: { stations: Station[] }) {
       ) : null}
       {stations.map((s) => {
         const status = deriveStatus(s, reports[s.id]);
-        const color = STATUS_COLOR[status];
+        // Campingplätze: grüne Tropfen; sonst Statusfarbe
+        const color = isCampsite(s) ? "#22c55e" : STATUS_COLOR[status];
         return (
           <Marker
             key={s.id}
