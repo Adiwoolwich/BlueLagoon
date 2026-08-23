@@ -6,6 +6,8 @@ import {
   SearchAndFilters,
   StationPanel,
 } from "./components/station-panel";
+import { SiteFooter } from "./components/site-footer";
+import { DatenschutzPage, ImpressumPage } from "./components/legal-pages";
 import { STATIONS } from "./lib/stations";
 import { allStations, applyFilters, useAppStore } from "./lib/store";
 import { cn } from "./lib/utils";
@@ -31,6 +33,10 @@ function useFilteredStations() {
 }
 
 export function App() {
+  const path = window.location.pathname.replace(/\/+$/, "") || "/";
+  if (path === "/impressum") return <ImpressumPage />;
+  if (path === "/datenschutz") return <DatenschutzPage />;
+
   const stations = useFilteredStations();
   const panel = useAppStore((s) => s.panel);
   const sheet = useAppStore((s) => s.sheet);
@@ -122,6 +128,7 @@ export function App() {
               <StationPanel stations={stations} />
             </div>
           )}
+          <SiteFooter className="pt-1" />
         </div>
       </aside>
 
@@ -148,6 +155,7 @@ function GuideOverlay({ onClose }: { onClose: () => void }) {
           <li><span className="font-medium text-fg">5. Status melden.</span> Wenn die Station defekt ist, in der App als Defekt markieren.</li>
         </ol>
       </div>
+      <SiteFooter className="mt-auto px-4 pb-4" />
     </div>
   );
 }
