@@ -71,7 +71,7 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
         <div className="min-w-0 flex-1">
           <CitySelect
             value={filters.place || query}
@@ -85,19 +85,20 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
           />
         </div>
         <LocateButton iconOnly />
-        <label className="relative block w-[5.75rem] shrink-0 self-end sm:w-[7.25rem]">
+        <label className="relative block w-[4.5rem] shrink-0 self-end">
           <span className="sr-only">Umkreis</span>
           <select
             value={filters.radiusKm}
             disabled={!hasOrigin}
             onChange={(e) => setFilters({ radiusKm: Number(e.target.value) })}
-            className="h-11 w-full appearance-none rounded-2xl bg-surface py-0 pr-8 pl-3 text-base text-fg shadow-border outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 md:text-sm"
+            className="h-11 w-full appearance-none rounded-2xl bg-surface py-0 pr-6 pl-2 text-sm text-fg shadow-border outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
             aria-label="Umkreis"
           >
             {RADIUS_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
+          <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 border-x-4 border-t-[5px] border-x-transparent border-t-muted" />
         </label>
       </div>
       {compact ? (

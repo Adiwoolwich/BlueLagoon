@@ -22,15 +22,15 @@ export type Filters = {
 };
 
 export const RADIUS_OPTIONS: { value: number; label: string }[] = [
-  { value: 0, label: "Ganzer Ort" },
-  { value: 5, label: "+ 5 km" },
-  { value: 10, label: "+ 10 km" },
-  { value: 20, label: "+ 20 km" },
-  { value: 30, label: "+ 30 km" },
-  { value: 50, label: "+ 50 km" },
-  { value: 100, label: "+ 100 km" },
-  { value: 150, label: "+ 150 km" },
-  { value: 200, label: "+ 200 km" },
+  { value: 0, label: "Ort" },
+  { value: 5, label: "5 km" },
+  { value: 10, label: "10 km" },
+  { value: 20, label: "20 km" },
+  { value: 30, label: "30 km" },
+  { value: 50, label: "50 km" },
+  { value: 100, label: "100 km" },
+  { value: 150, label: "150 km" },
+  { value: 200, label: "200 km" },
 ];
 
 const defaultFilters: Filters = {
