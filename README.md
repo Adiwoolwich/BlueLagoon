@@ -17,22 +17,31 @@ Blue Lagoon hilft Wohnmobil- und Camper-Fahrern, schnell und zuverlässig geeign
 - **Favoriten, Bewertungen (1–3 Sterne) und Community-Beiträge** (nach Login)
 - **Account** mit Google / X / E-Mail (Better Auth)
 
+## Aktueller Stand im Repo
+
+Der Code wird schrittweise aus dem Workspace-Export hochgeladen.
+
+**Bereits vorhanden:**
+- Grundstruktur (`package.json`, `tsconfig`, `vite`-Basis, `.gitignore`)
+- Router & Root-Layout
+- Google-Maps-Deep-Link (`src/lib/maps.ts` + Button)
+- Map-Host, Status-Badge, Auth-Slot
+- Geo-Helfer, Utils, Styles
+
+**Als Nächstes:** station-map, station-panel, Städte-/Stations-Datenkataloge, Store, Auth, etc.
+
 ## Tech-Stack
 
 | Technologie          | Verwendung                          |
 |----------------------|-------------------------------------|
 | TanStack Start       | Full-Stack React-Framework          |
 | React 19             | UI                                  |
-| Vite 8               | Build / Dev-Server                  |
+| Vite                 | Build / Dev-Server                  |
 | Tailwind CSS v4      | Styling                             |
 | Zustand (persist)    | Client-State                        |
 | Leaflet + react-leaflet | Karte                            |
 | Better Auth          | Authentifizierung                   |
 | Neon / PGLite        | Datenbank                           |
-
-## Status
-
-Das Repository wurde initial angelegt. Der vollständige Quellcode der App wird schrittweise hochgeladen.
 
 ## Lizenz
 
