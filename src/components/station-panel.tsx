@@ -36,7 +36,7 @@ function Chip({
       type="button"
       onClick={onClick}
       className={cn(
-        "h-11 shrink-0 rounded-full px-3.5 text-sm font-medium transition-colors duration-150",
+        "h-11 shrink-0 rounded-full px-3.5 text-sm font-medium transition-[transform,filter,background-color,color] duration-150 active:scale-95",
         active ? "bg-primary text-primary-fg" : "bg-surface text-muted shadow-border hover:text-fg",
       )}
     >
@@ -160,7 +160,7 @@ function StationList({ stations }: { stations: Station[] }) {
         const km = userPos ? haversineKm(userPos, s) : null;
         return (
           <li key={s.id}>
-            <button type="button" onClick={() => select(s.id)} className={cn("w-full rounded-xl p-3 text-left shadow-border", s.id === selectedId ? "bg-surface-2" : "bg-surface hover:bg-surface-2")}>
+            <button type="button" onClick={() => select(s.id)} className={cn("w-full rounded-xl p-3 text-left shadow-border transition-[transform,filter,background-color] duration-150 active:scale-[0.98]", s.id === selectedId ? "bg-surface-2" : "bg-surface hover:bg-surface-2")}>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate font-medium text-fg">{s.name}</p>
@@ -196,13 +196,13 @@ function SavedList() {
       <section>
         <h3 className="mb-2 font-display text-lg">Merkliste</h3>
         {favs.length === 0 ? <p className="text-sm text-muted">Noch keine Station gemerkt.</p> : (
-          <ul className="space-y-2">{favs.map((s) => (<li key={s.id}><button type="button" onClick={() => select(s.id)} className="w-full rounded-xl bg-surface p-3 text-left shadow-border"><p className="font-medium">{s.name}</p><p className="text-xs text-muted">{s.city}</p></button></li>))}</ul>
+          <ul className="space-y-2">{favs.map((s) => (<li key={s.id}><button type="button" onClick={() => select(s.id)} className="w-full rounded-xl bg-surface p-3 text-left shadow-border transition-[transform,filter,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98]"><p className="font-medium">{s.name}</p><p className="text-xs text-muted">{s.city}</p></button></li>))}</ul>
         )}
       </section>
       <section>
         <h3 className="mb-2 font-display text-lg">Zuletzt angesehen</h3>
         {recents.length === 0 ? <p className="text-sm text-muted">Noch keine Station geöffnet.</p> : (
-          <ul className="space-y-2">{recents.map((s) => (<li key={s.id}><button type="button" onClick={() => select(s.id)} className="w-full rounded-xl bg-surface p-3 text-left shadow-border"><p className="font-medium">{s.name}</p><p className="text-xs text-muted">{s.city}</p></button></li>))}</ul>
+          <ul className="space-y-2">{recents.map((s) => (<li key={s.id}><button type="button" onClick={() => select(s.id)} className="w-full rounded-xl bg-surface p-3 text-left shadow-border transition-[transform,filter,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98]"><p className="font-medium">{s.name}</p><p className="text-xs text-muted">{s.city}</p></button></li>))}</ul>
         )}
       </section>
     </div>
@@ -239,7 +239,7 @@ function RoutePlanner({ stations }: { stations: Station[] }) {
       {route && fromCity && toCity ? <p className="text-xs text-muted">Korridor {fromCity.name} → {toCity.name} · {stations.length} Stationen · {CITIES.length} Städte</p> : null}
       <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto">
         {stations.map((s) => (
-          <li key={s.id}><button type="button" onClick={() => select(s.id)} className="w-full rounded-xl bg-surface p-3 text-left shadow-border"><p className="font-medium">{s.name}</p><p className="text-xs text-muted">{s.city} · {TYPE_LABEL[s.type]}</p></button></li>
+          <li key={s.id}><button type="button" onClick={() => select(s.id)} className="w-full rounded-xl bg-surface p-3 text-left shadow-border transition-[transform,filter,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98]"><p className="font-medium">{s.name}</p><p className="text-xs text-muted">{s.city} · {TYPE_LABEL[s.type]}</p></button></li>
         ))}
       </ul>
     </div>
