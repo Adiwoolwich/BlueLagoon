@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import {
+  Circle,
   CircleMarker,
   MapContainer,
   Marker,
@@ -28,13 +29,18 @@ function MapFly({
   userPos,
   place,
   sheet,
+  stations,
+  radiusKm,
 }: {
   selected?: Station;
   userPos: { lat: number; lng: number } | null;
   place: { lat: number; lng: number } | null;
   sheet: "peek" | "mid" | "full";
+  stations: Station[];
+  radiusKm: number;
 }) {
   const map = useMap();
+  const stationKey = stations.map((s) => s.id).join(",");
 
   useEffect(() => {
     map.invalidateSize();
@@ -57,14 +63,41 @@ function MapFly({
 
   useEffect(() => {
     if (selected) return;
-    if (place) {
-      map.setView([place.lat, place.lng], 9);
+    const origin = place ?? userPos;
+    const padBottom = window.innerWidth < 768 ? (sheet === "full" ? 280 : sheet === "mid" ? 200 : 110) : 48;
+    const fit = (bounds: L.LatLngBoundsExpression) => {
+      map.fitBounds(bounds, {
+        paddingTopLeft: [36, 72],
+        paddingBottomRight: [36, padBottom],
+        maxZoom: 13,
+        animate: true,
+        duration: 0.55,
+      });
+    };
+    if (stations.length >= 2) {
+      const b = L.latLngBounds(stations.map((s) => [s.lat, s.lng] as [number, number]));
+      if (origin) b.extend([origin.lat, origin.lng]);
+      fit(b);
       return;
     }
-    if (userPos) {
-      map.setView([userPos.lat, userPos.lng], 9);
+    if (stations.length === 1) {
+      const s = stations[0]!;
+      const b = L.latLngBounds([[s.lat, s.lng], [s.lat, s.lng]]);
+      if (origin) b.extend([origin.lat, origin.lng]);
+      b.extend([s.lat + 0.01, s.lng + 0.01]);
+      b.extend([s.lat - 0.01, s.lng - 0.01]);
+      fit(b);
+      return;
     }
-  }, [userPos, place, selected, map]);
+    if (!origin) return;
+    const km = radiusKm > 0 ? radiusKm : 8;
+    const dLat = km / 111;
+    const dLng = km / (111 * Math.max(0.2, Math.cos((origin.lat * Math.PI) / 180)));
+    fit([
+      [origin.lat - dLat, origin.lng - dLng],
+      [origin.lat + dLat, origin.lng + dLng],
+    ]);
+  }, [userPos, place, selected, map, sheet, stationKey, radiusKm, stations]);
   return null;
 }
 
@@ -97,8 +130,11 @@ export function StationMap({ stations }: { stations: Station[] }) {
   const route = useAppStore((s) => s.route);
   const sheet = useAppStore((s) => s.sheet);
   const placeName = useAppStore((s) => s.filters.place);
+  const query = useAppStore((s) => s.query);
+  const radiusKm = useAppStore((s) => s.filters.radiusKm);
   const selected = stations.find((s) => s.id === selectedId);
-  const place = findCity(placeName) ?? null;
+  const place = findCity(placeName) ?? findCity(query) ?? null;
+  const searchOrigin = place ?? userPos;
 
   const routeLine = useMemo(() => {
     if (!route) return null;
@@ -124,8 +160,22 @@ export function StationMap({ stations }: { stations: Station[] }) {
         attribution="&copy; OSM &copy; CARTO"
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
-      <MapFly selected={selected} userPos={userPos} place={place} sheet={sheet} />
+      <MapFly
+        selected={selected}
+        userPos={userPos}
+        place={place}
+        sheet={sheet}
+        stations={stations}
+        radiusKm={radiusKm}
+      />
       <MapClickPeek />
+      {searchOrigin && radiusKm > 0 ? (
+        <Circle
+          center={[searchOrigin.lat, searchOrigin.lng]}
+          radius={radiusKm * 1000}
+          pathOptions={{ color: "#3ecfc0", weight: 1, opacity: 0.45, fillColor: "#3ecfc0", fillOpacity: 0.07 }}
+        />
+      ) : null}
       {routeLine ? (
         <Polyline
           positions={routeLine}

@@ -47,6 +47,8 @@ const EXTRA_ALIASES: Record<string, string[]> = {
   "Ludwigshafen am Rhein": ["Ludwigshafen"],
   "Mülheim an der Ruhr": ["Mülheim", "Muelheim"],
   Westerland: ["Sylt"],
+  "Neumarkt in der Oberpfalz": ["Neumarkt/Opf.", "Neumarkt i.d.OPf.", "Neumarkt Opf", "Neumarkt"],
+  "Isny im Allgäu": ["Isny"],
 };
 
 export const CITIES: City[] = data.p.map(([name, code, lat, lng]) => ({
