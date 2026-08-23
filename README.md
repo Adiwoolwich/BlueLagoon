@@ -1,51 +1,53 @@
 # Blue Lagoon
 
-**Die App für Chemietoiletten-Entsorgungsstationen in Deutschland**  
-*(Inspiriert von Tesla Superchargern – finde, plane & navigiere zu Entsorgungspunkten für Wohnmobile)*
+**Chemietoiletten-Entsorgungsstationen für Wohnmobile in Deutschland**
 
-## Überblick
+## Was ist schon im Repo?
 
-Blue Lagoon hilft Wohnmobil- und Camper-Fahrern, schnell und zuverlässig geeignete Entsorgungsstationen für Chemietoiletten (Kassettentoiletten / Thetford / Dometic) zu finden.
+- Karte (Leaflet) + StationMap
+- Zustand-Store (Filter, Favoriten, Bottom-Sheet, Route)
+- Städte- & Stations-Daten (Beispiel-Daten; voller Katalog in `blue-lagoon-source.zip`)
+- Google-Maps Deep-Link (App öffnen)
+- Hours-Table, Status-Badge, Auth-Slot
+- Geo-Helfer, Styles, Router
 
-### Kernfunktionen
-- **Interaktive Karte** (Leaflet) mit allen bekannten Stationen in Deutschland
-- **Stationen entlang der Route** – Stadt-/Ortsauswahl mit Fuzzy-Suche (~727 Städte)
-- **Umkreis-Suche** im Kleinanzeigen-Stil (Radius filterbar)
-- **Genaue Öffnungszeiten** pro Station (Wochentage + Confidence-Badges)
-- **Google Maps Deep-Link** – öffnet direkt die Google Maps App (iOS/Android), Fallback auf Web
-- **Mobile-First Bottom-Sheet UI** (Peek / Mid / Full) optimiert für Smartphones
-- **Favoriten, Bewertungen (1–3 Sterne) und Community-Beiträge** (nach Login)
-- **Account** mit Google / X / E-Mail (Better Auth)
+Vollständiger Original-Code inkl. aller ~192 Stationen und ~727 Städte: siehe Release/Zip oder lokale `blue-lagoon-source.zip`.
 
-## Aktueller Stand im Repo
+## Lokal starten
 
-Der Code wird schrittweise aus dem Workspace-Export hochgeladen.
+```bash
+npm install
+npm run dev
+```
 
-**Bereits vorhanden:**
-- Grundstruktur (`package.json`, `tsconfig`, `vite`-Basis, `.gitignore`)
-- Router & Root-Layout
-- Google-Maps-Deep-Link (`src/lib/maps.ts` + Button)
-- Map-Host, Status-Badge, Auth-Slot
-- Geo-Helfer, Utils, Styles
+## Domain mit dem Repo verknüpfen (empfohlen: Vercel)
 
-**Als Nächstes:** station-map, station-panel, Städte-/Stations-Datenkataloge, Store, Auth, etc.
+Blue Lagoon ist eine TanStack-Start / Vite-App → **Vercel** ist die einfachste Lösung.
 
-## Tech-Stack
+### 1. Vercel-Projekt anlegen
+1. Gehe zu [vercel.com](https://vercel.com) und melde dich mit **GitHub** an.
+2. **Add New Project** → wähle das Repo `Adiwoolwich/BlueLagoon`.
+3. Framework Preset: **Vite** (oder Other). Root Directory: `.`
+4. Deploy klicken. Du bekommst eine URL wie `blue-lagoon-xxx.vercel.app`.
 
-| Technologie          | Verwendung                          |
-|----------------------|-------------------------------------|
-| TanStack Start       | Full-Stack React-Framework          |
-| React 19             | UI                                  |
-| Vite                 | Build / Dev-Server                  |
-| Tailwind CSS v4      | Styling                             |
-| Zustand (persist)    | Client-State                        |
-| Leaflet + react-leaflet | Karte                            |
-| Better Auth          | Authentifizierung                   |
-| Neon / PGLite        | Datenbank                           |
+### 2. Eigene Domain verbinden
+1. In Vercel: Project → **Settings** → **Domains**.
+2. Domain eingeben (z. B. `bluelagoon.app` oder `entsorgung.deine-domain.de`).
+3. Vercel zeigt dir die DNS-Einträge:
+   - **Apex-Domain** (`example.com`): A-Record auf `76.76.21.21` **oder** CNAME auf `cname.vercel-dns.com`
+   - **Subdomain** (`app.example.com`): CNAME → `cname.vercel-dns.com`
+4. Bei deinem Domain-Anbieter (IONOS, Strato, Cloudflare, Namecheap …) die DNS-Einträge setzen.
+5. Warten (oft 5–30 Min, max. 48 h). Vercel zeigt „Valid Configuration“ wenn es klappt.
 
-## Lizenz
+### Alternative Hosts
+- **Netlify**: gleiche Schritte (GitHub importieren → Domain in Site settings).
+- **Cloudflare Pages**: Repo verbinden → Custom domain.
+- **GitHub Pages**: nur für reine Static-Sites sinnvoll – für TanStack Start/SSR eher nicht ideal.
 
-Privat / All rights reserved (Adiwoolwich)
+### Tipps
+- SSL (HTTPS) kommt bei Vercel/Netlify/Cloudflare automatisch.
+- Nach jedem `git push` auf `main` deployt Vercel neu.
+- Environment Variables (z. B. Auth-Keys) unter Project → Settings → Environment Variables setzen.
 
 ---
 
