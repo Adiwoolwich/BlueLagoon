@@ -58,7 +58,7 @@ export function App() {
     sheet === "peek" ? "11.25rem" : sheet === "full" ? "auto" : "min(52dvh, 32rem)";
 
   return (
-    <div className="relative h-dvh overflow-hidden bg-bg text-fg">
+    <div className="relative h-dvh overflow-hidden bg-bg text-fg" data-chrome="map">
       <section className="sr-only">
         <h1>Blue Lagune – Chemietoilette und Kassette entsorgen in Deutschland</h1>
         <p>
