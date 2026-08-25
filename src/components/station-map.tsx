@@ -6,6 +6,7 @@ import {
   Marker,
   Polyline,
   TileLayer,
+  Tooltip,
   ZoomControl,
   useMap,
 } from "react-leaflet";
@@ -16,19 +17,23 @@ import { isCampsite, useAppStore } from "@/lib/store";
 import { STATUS_COLOR } from "./status-badge";
 
 function dropSvg(color: string) {
-  return `<svg viewBox="0 0 24 24" class="bl-drop-icon" fill="none" aria-hidden="true">
-    <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z" fill="${color}" stroke="#e8f4f2" stroke-width="1.4" stroke-linejoin="round"/>
-    <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.95 4.95" fill="${color}" stroke="#e8f4f2" stroke-width="1.4" stroke-linejoin="round"/>
-  </svg>`;
+  return `<span class="bl-drop" style="--pin:${color}">
+    <svg viewBox="0 0 24 32" width="100%" height="100%" aria-hidden="true">
+      <path fill="${color}" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"
+        d="M12 1.5C12 1.5 3.5 12.2 3.5 19.2a8.5 8.5 0 0 0 17 0C20.5 12.2 12 1.5 12 1.5z"/>
+      <circle cx="12" cy="19" r="3.2" fill="#ffffff"/>
+    </svg>
+  </span>`;
 }
 
 function pinIcon(color: string, selected: boolean) {
-  const size = selected ? 36 : 28;
+  const w = selected ? 32 : 24;
+  const h = selected ? 42 : 32;
   return L.divIcon({
     className: `bl-marker${selected ? " is-selected" : ""}`,
     html: dropSvg(color),
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size - 1],
+    iconSize: [w, h],
+    iconAnchor: [w / 2, h - 1],
   });
 }
 
@@ -72,7 +77,8 @@ function MapFly({
   useEffect(() => {
     if (selected) return;
     const origin = place ?? userPos;
-    const padBottom = window.innerWidth < 768 ? (sheet === "full" ? 280 : sheet === "mid" ? 200 : 110) : 48;
+    const padBottom =
+      window.innerWidth < 768 ? (sheet === "full" ? 280 : sheet === "mid" ? 200 : 110) : 48;
     const fit = (bounds: L.LatLngBoundsExpression) => {
       map.fitBounds(bounds, {
         paddingTopLeft: [36, 72],
@@ -90,7 +96,10 @@ function MapFly({
     }
     if (stations.length === 1) {
       const s = stations[0]!;
-      const b = L.latLngBounds([[s.lat, s.lng], [s.lat, s.lng]]);
+      const b = L.latLngBounds([
+        [s.lat, s.lng],
+        [s.lat, s.lng],
+      ]);
       if (origin) b.extend([origin.lat, origin.lng]);
       b.extend([s.lat + 0.01, s.lng + 0.01]);
       b.extend([s.lat - 0.01, s.lng - 0.01]);
@@ -166,7 +175,7 @@ export function StationMap({ stations }: { stations: Station[] }) {
       <ZoomControl position="topright" />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
-        url="https://tile.openstreetmap.de/{z}/{x}/{y}.png"
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
       />
       <MapFly
         selected={selected}
@@ -181,31 +190,29 @@ export function StationMap({ stations }: { stations: Station[] }) {
         <Circle
           center={[searchOrigin.lat, searchOrigin.lng]}
           radius={radiusKm * 1000}
-          pathOptions={{ color: "#3ecfc0", weight: 1, opacity: 0.45, fillColor: "#3ecfc0", fillOpacity: 0.07 }}
+          pathOptions={{
+            color: "#0a7a70",
+            weight: 1,
+            opacity: 0.45,
+            fillColor: "#0a7a70",
+            fillOpacity: 0.07,
+          }}
         />
       ) : null}
       {routeLine ? (
-        <Polyline
-          positions={routeLine}
-          pathOptions={{ color: "#3ecfc0", weight: 3, opacity: 0.7 }}
-        />
+        <Polyline positions={routeLine} pathOptions={{ color: "#0a7a70", weight: 3, opacity: 0.65 }} />
       ) : null}
       {userPos ? (
         <CircleMarker
           center={[userPos.lat, userPos.lng]}
           radius={8}
-          pathOptions={{
-            color: "#e8f4f2",
-            fillColor: "#2bb8a8",
-            fillOpacity: 1,
-            weight: 2,
-          }}
+          pathOptions={{ color: "#ffffff", fillColor: "#0a7a70", fillOpacity: 1, weight: 2 }}
         />
       ) : null}
       {stations.map((s) => {
         const status = deriveStatus(s, reports[s.id]);
-        // Campingplätze: grüne Tropfen; sonst Statusfarbe
-        const color = isCampsite(s) ? "#22c55e" : STATUS_COLOR[status];
+        const color = isCampsite(s) ? "#16a34a" : STATUS_COLOR[status];
+        const placeLabel = [s.postalCode, s.city].filter(Boolean).join(" ");
         return (
           <Marker
             key={s.id}
@@ -218,7 +225,12 @@ export function StationMap({ stations }: { stations: Station[] }) {
               },
             }}
             zIndexOffset={s.id === selectedId ? 1000 : 0}
-          />
+          >
+            <Tooltip direction="top" offset={[0, -14]} opacity={1} className="bl-map-tooltip">
+              <span className="bl-map-tooltip-name">{s.name}</span>
+              {placeLabel ? <span className="bl-map-tooltip-place">{placeLabel}</span> : null}
+            </Tooltip>
+          </Marker>
         );
       })}
       {routeLine
@@ -227,7 +239,7 @@ export function StationMap({ stations }: { stations: Station[] }) {
               key={c!.name}
               center={[c!.lat, c!.lng]}
               radius={6}
-              pathOptions={{ color: "#e8f4f2", fillColor: "#7eb6ff", fillOpacity: 1 }}
+              pathOptions={{ color: "#ffffff", fillColor: "#2563a8", fillOpacity: 1 }}
             />
           ))
         : null}
