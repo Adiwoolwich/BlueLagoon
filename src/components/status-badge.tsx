@@ -2,11 +2,11 @@ import { deriveStatus, STATUS_LABEL, type LocalReport, type Station, type TrustS
 import { cn } from "@/lib/utils";
 
 const tone: Record<TrustStatus, string> = {
-  confirmed: "bg-ok/15 text-ok",
-  stale: "bg-stale/15 text-stale",
-  broken: "bg-bad/15 text-bad",
-  closed: "bg-muted/15 text-muted",
-  unknown: "bg-subtle/20 text-muted",
+  confirmed: "bg-ok/12 text-ok ring-1 ring-ok/25",
+  stale: "bg-stale/12 text-stale ring-1 ring-stale/25",
+  broken: "bg-bad/12 text-bad ring-1 ring-bad/25",
+  closed: "bg-muted/10 text-muted ring-1 ring-border",
+  unknown: "bg-surface-2 text-muted ring-1 ring-border",
 };
 
 export function StatusBadge({
@@ -24,7 +24,7 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium tracking-wide",
+        "inline-flex h-7 items-center rounded-full px-2.5 text-xs font-semibold tracking-wide",
         tone[resolved],
         className,
       )}
@@ -35,11 +35,11 @@ export function StatusBadge({
 }
 
 export const STATUS_COLOR: Record<string, string> = {
-  confirmed: "#2bb8a8",
-  stale: "#c9a45c",
-  broken: "#e05a4f",
-  closed: "#8aa3a6",
-  unknown: "#5e7679",
-  open: "#34d399",
-  limited: "#fbbf24",
+  confirmed: "#0a7a70",
+  stale: "#a67c1a",
+  broken: "#c43c31",
+  closed: "#5c747a",
+  unknown: "#5c747a",
+  open: "#0a7a70",
+  limited: "#a67c1a",
 };
