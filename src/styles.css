@@ -2,28 +2,30 @@
 @import "leaflet/dist/leaflet.css";
 
 @theme {
-  --color-bg: #071114;
-  --color-bg-elevated: #0d1b1f;
-  --color-surface: #122328;
-  --color-surface-2: #183036;
-  --color-fg: #e8f4f2;
-  --color-muted: #8aa3a6;
-  --color-subtle: #5e7679;
-  --color-primary: #2bb8a8;
-  --color-primary-fg: #04201c;
-  --color-lagoon: #3ecfc0;
-  --color-border: color-mix(in oklab, #e8f4f2 12%, transparent);
-  --color-border-strong: color-mix(in oklab, #e8f4f2 22%, transparent);
-  --color-ok: #3ecfc0;
-  --color-stale: #c9a45c;
-  --color-bad: #e05a4f;
-  --color-auto: #7eb6ff;
+  --color-bg: #eef3f4;
+  --color-bg-elevated: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-2: #e3ecee;
+  --color-fg: #152a2e;
+  --color-muted: #3d555c;
+  --color-subtle: #5c747a;
+  --color-primary: #0a7a70;
+  --color-primary-fg: #ffffff;
+  --color-lagoon: #0d9488;
+  --color-border: color-mix(in oklab, #152a2e 14%, transparent);
+  --color-border-strong: color-mix(in oklab, #152a2e 26%, transparent);
+  --color-ok: #0a7a70;
+  --color-stale: #a67c1a;
+  --color-bad: #c43c31;
+  --color-auto: #2563a8;
 
   --font-sans: "Outfit", "Segoe UI", system-ui, sans-serif;
   --font-display: "Fraunces", "Times New Roman", serif;
 
-  --shadow-border: 0 0 0 1px color-mix(in oklab, #e8f4f2 10%, transparent);
-  --shadow-panel: 0 24px 60px -28px rgb(0 0 0 / 0.55);
+  --shadow-border: 0 0 0 1px color-mix(in oklab, #152a2e 12%, transparent);
+  --shadow-panel: 0 8px 28px -8px rgb(21 42 46 / 0.18), 0 2px 8px -2px rgb(21 42 46 / 0.08);
+  --shadow-btn: 0 1px 2px rgb(21 42 46 / 0.08);
+  --shadow-btn-hover: 0 4px 12px -2px rgb(10 122 112 / 0.28);
 }
 
 @layer base {
@@ -34,15 +36,19 @@
     color: var(--color-fg);
     font-family: var(--font-sans);
   }
-  h1, h2, h3 { font-family: var(--font-display); }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; }
   button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
   button, a, [role="button"], [role="option"] { touch-action: manipulation; }
+  :focus-visible {
+    outline: 3px solid color-mix(in oklab, var(--color-primary) 70%, #152a2e);
+    outline-offset: 2px;
+  }
   aside button {
     -webkit-tap-highlight-color: color-mix(in oklab, var(--color-primary) 22%, transparent);
     transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 120ms ease, background-color 150ms ease, color 150ms ease;
   }
-  aside button:hover:not(:disabled) { filter: brightness(1.1); }
-  aside button:active:not(:disabled) { transform: scale(0.97); filter: brightness(1.18); }
+  aside button:hover:not(:disabled) { filter: brightness(0.97); }
+  aside button:active:not(:disabled) { transform: scale(0.97); }
   aside button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 }
 
@@ -50,12 +56,8 @@
   width: 100%;
   height: 100%;
   z-index: 0;
-  background: #071114;
+  background: #dce8ea;
   font-family: var(--font-sans);
-}
-
-.leaflet-tile-pane {
-  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9) saturate(0.45);
 }
 
 .leaflet-div-icon,
@@ -64,70 +66,42 @@
   border: none !important;
 }
 
-.leaflet-marker-shadow {
-  display: none !important;
-}
+.leaflet-marker-shadow { display: none !important; }
 
 .leaflet-control-attribution {
-  background: color-mix(in oklab, #071114 80%, transparent) !important;
-  color: #8aa3a6 !important;
-  font-size: 10px !important;
+  background: color-mix(in oklab, #ffffff 90%, transparent) !important;
+  color: #5c747a !important;
+  font-size: 11px !important;
 }
-
-.leaflet-control-attribution a {
-  color: #3ecfc0 !important;
-}
+.leaflet-control-attribution a { color: #0a7a70 !important; }
 
 .leaflet-bar a {
-  background: #122328 !important;
-  color: #e8f4f2 !important;
+  background: #ffffff !important;
+  color: #152a2e !important;
   border: none !important;
+  width: 40px !important;
+  height: 40px !important;
+  line-height: 40px !important;
 }
-
-.leaflet-bar a:hover {
-  background: #183036 !important;
-}
+.leaflet-bar a:hover { background: #e3ecee !important; color: #0a7a70 !important; }
 
 @media (max-width: 767px) {
-  aside {
-    font-size: 13px;
-  }
-  aside h2 {
-    font-size: 1.2rem;
-    line-height: 1.2;
-  }
-  input,
-  select,
-  textarea {
-    font-size: 16px;
-  }
-
-  .leaflet-control-attribution {
-    display: none;
-  }
-
-  .leaflet-top.leaflet-right {
-    top: 10px;
-    right: 10px;
-  }
-
+  aside { font-size: 13px; }
+  aside h2 { font-size: 1.2rem; line-height: 1.2; }
+  input, select, textarea { font-size: 16px !important; }
+  .leaflet-control-attribution { display: none; }
+  .leaflet-top.leaflet-right { top: 10px; right: 10px; }
   .leaflet-control-zoom a {
-    width: 40px !important;
-    height: 40px !important;
-    line-height: 40px !important;
+    width: 44px !important;
+    height: 44px !important;
+    line-height: 44px !important;
     border-radius: 12px !important;
   }
-
-  html,
-  body {
-    overscroll-behavior: none;
-  }
+  html, body { overscroll-behavior: none; }
 }
 
 @media (min-width: 768px) {
-  .leaflet-top.leaflet-right {
-    top: 12px;
-  }
+  .leaflet-top.leaflet-right { top: 12px; }
 }
 
 .bl-marker {
@@ -137,18 +111,35 @@
   border: none !important;
 }
 
-.bl-drop-icon {
-  width: 100%;
-  height: 100%;
+.bl-drop {
   display: block;
-  filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.45));
+  line-height: 0;
+  filter: drop-shadow(0 2px 3px rgb(21 42 46 / 0.38));
 }
-
-.bl-marker.is-selected .bl-drop-icon {
-  filter: drop-shadow(0 0 8px color-mix(in oklab, var(--color-primary) 55%, transparent))
-    drop-shadow(0 6px 10px rgb(0 0 0 / 0.5));
+.bl-marker.is-selected .bl-drop {
+  filter:
+    drop-shadow(0 0 0 3px color-mix(in oklab, var(--pin, #0a7a70) 42%, transparent))
+    drop-shadow(0 4px 10px rgb(21 42 46 / 0.4));
 }
+.bl-drop svg { display: block; overflow: visible; }
 
+.leaflet-tooltip.bl-map-tooltip {
+  background: #ffffff;
+  color: #152a2e;
+  border: 1px solid color-mix(in oklab, #152a2e 16%, transparent);
+  border-radius: 10px;
+  padding: 0.45rem 0.7rem;
+  box-shadow: 0 6px 18px -4px rgb(21 42 46 / 0.22);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  white-space: normal;
+  max-width: 16rem;
+  pointer-events: none;
+}
+.leaflet-tooltip.bl-map-tooltip::before { border-top-color: #ffffff; }
+.bl-map-tooltip-name { display: block; font-weight: 650; color: #152a2e; }
+.bl-map-tooltip-place { display: block; margin-top: 0.15rem; font-size: 0.8125rem; font-weight: 500; color: #3d555c; }
 
 .leaflet-top.leaflet-right { top: 4.35rem; right: 10px; }
 @media (min-width: 768px) {
@@ -177,3 +168,80 @@
   border: 2px solid var(--color-bg-elevated);
 }
 .bl-scroll::-webkit-scrollbar-thumb:hover { background: var(--color-lagoon); }
+
+/* Landing flush */
+.bl-flush-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: min(14rem, 100%);
+  min-height: 3.25rem;
+  padding: 0.9rem 1.5rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
+  font-size: 1.05rem;
+  font-weight: 650;
+  box-shadow: var(--shadow-btn-hover);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.bl-flush-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px -4px rgb(10 122 112 / 0.45);
+}
+.bl-flush-btn:active:not(:disabled) { transform: scale(0.97); }
+.bl-flush-label {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.bl-flush-water {
+  position: absolute;
+  inset: auto 0 -100% 0;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, #ffffff 35%, var(--color-lagoon)),
+    color-mix(in oklab, #0a7a70 70%, #043d38)
+  );
+  z-index: 1;
+  transition: inset 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.bl-flush-btn.is-flushing .bl-flush-water { inset: 0; }
+.bl-flush-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  overflow: hidden;
+}
+.bl-flush-wave {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: -20%;
+  height: 140%;
+  background:
+    radial-gradient(ellipse at 50% 0%, color-mix(in oklab, var(--color-primary) 55%, transparent), transparent 60%),
+    linear-gradient(180deg, transparent 0%, color-mix(in oklab, var(--color-primary) 40%, #ffffff) 40%, var(--color-primary) 100%);
+  animation: bl-flush-rise 0.9s ease-in forwards;
+}
+@keyframes bl-flush-rise {
+  from { transform: translateY(70%); opacity: 0.4; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bl-flush-water, .bl-flush-wave { animation: none !important; transition: none !important; }
+  .bl-flush-btn.is-flushing .bl-flush-water { inset: 0; }
+}
+@media (hover: none) {
+  .bl-flush-btn:hover:not(:disabled) {
+    transform: none;
+    box-shadow: var(--shadow-btn-hover);
+  }
+}
