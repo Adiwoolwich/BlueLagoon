@@ -8,15 +8,26 @@ import {
   type LocalReport,
   type Station,
 } from "./stations";
-import { distanceToSegmentKm, haversineKm } from "./geo";
+import {
+  distanceToPolylineKm,
+  distanceToSegmentKm,
+  haversineKm,
+  type MapBounds,
+} from "./geo";
+import type { RoutePath } from "./osrm";
 
 export type Filters = {
-  freeOnly: boolean;
-  openNow: boolean;
-  hose: boolean;
   cassette: boolean;
   camperclean: boolean;
   campsite: boolean;
+  greywater: boolean;
+  freshwater: boolean;
+  feeFree: boolean;
+  feePaid: boolean;
+  feeGuest: boolean;
+  openNow: boolean;
+  h24: boolean;
+  hose: boolean;
   confirmed: boolean;
   place: string;
   radiusKm: number;
@@ -34,19 +45,33 @@ export const RADIUS_OPTIONS: { value: number; label: string }[] = [
   { value: 200, label: "200 km" },
 ];
 
-const defaultFilters: Filters = {
-  freeOnly: false,
-  openNow: false,
-  hose: false,
+export const CORRIDOR_OPTIONS: { value: number; label: string }[] = [
+  { value: 15, label: "15 km" },
+  { value: 25, label: "25 km" },
+  { value: 40, label: "40 km" },
+  { value: 60, label: "60 km" },
+];
+
+export const defaultFilters: Filters = {
   cassette: true,
   camperclean: false,
   campsite: false,
+  greywater: false,
+  freshwater: false,
+  feeFree: false,
+  feePaid: false,
+  feeGuest: false,
+  openNow: false,
+  h24: false,
+  hose: false,
   confirmed: false,
   place: "",
   radiusKm: 20,
 };
 
 type RouteEnds = { from: string; to: string } | null;
+
+export type MapView = { lat: number; lng: number; zoom: number };
 
 type AppState = {
   query: string;
@@ -58,6 +83,10 @@ type AppState = {
   notes: Record<string, string>;
   userPos: { lat: number; lng: number } | null;
   route: RouteEnds;
+  routePath: RoutePath | null;
+  corridorKm: number;
+  bounds: MapBounds | null;
+  mapView: MapView;
   panel: "list" | "detail" | "saved" | "route" | "add";
   extraStations: Station[];
   sheet: "peek" | "mid" | "full";
@@ -71,6 +100,10 @@ type AppState = {
   setNote: (id: string, note: string) => void;
   setUserPos: (pos: { lat: number; lng: number } | null) => void;
   setRoute: (r: RouteEnds) => void;
+  setRoutePath: (p: RoutePath | null) => void;
+  setCorridorKm: (km: number) => void;
+  setBounds: (b: MapBounds | null) => void;
+  setMapView: (v: MapView) => void;
   setPanel: (p: AppState["panel"]) => void;
   setSheet: (s: AppState["sheet"]) => void;
   setExtraStations: (list: Station[]) => void;
@@ -90,6 +123,10 @@ export const useAppStore = create<AppState>()(
       notes: {},
       userPos: null,
       route: null,
+      routePath: null,
+      corridorKm: 25,
+      bounds: null,
+      mapView: { lat: 51.16, lng: 10.45, zoom: 6 },
       panel: "list",
       extraStations: [],
       sheet: "mid",
@@ -102,7 +139,13 @@ export const useAppStore = create<AppState>()(
           return;
         }
         const recent = [id, ...get().recent.filter((x) => x !== id)].slice(0, 12);
-        set({ selectedId: id, recent, panel: "detail", sheet: "full" });
+        const mobile = typeof window !== "undefined" && window.innerWidth < 768;
+        set({
+          selectedId: id,
+          recent,
+          panel: "detail",
+          sheet: mobile ? "mid" : "full",
+        });
       },
       toggleFavorite: (id) => {
         const favorites = get().favorites.includes(id)
@@ -114,17 +157,27 @@ export const useAppStore = create<AppState>()(
       report: (r) => set({ reports: { ...get().reports, [r.stationId]: r } }),
       setNote: (id, note) => set({ notes: { ...get().notes, [id]: note } }),
       setUserPos: (userPos) => set({ userPos }),
-      setRoute: (route) => set({ route }),
+      setRoute: (route) => set({ route, routePath: route ? get().routePath : null }),
+      setRoutePath: (routePath) => set({ routePath }),
+      setCorridorKm: (corridorKm) => set({ corridorKm }),
+      setBounds: (bounds) => set({ bounds }),
+      setMapView: (mapView) => set({ mapView }),
       setPanel: (panel) =>
         set({
           panel,
           sheet: panel === "list" ? "mid" : "full",
+          selectedId: panel === "list" ? get().selectedId : get().selectedId,
         }),
       setSheet: (sheet) => set({ sheet }),
       setExtraStations: (extraStations) => set({ extraStations }),
       addStation: (station) => {
         const list = get().extraStations.filter((s) => s.id !== station.id);
-        set({ extraStations: [station, ...list], selectedId: station.id, panel: "detail", sheet: "full" });
+        set({
+          extraStations: [station, ...list],
+          selectedId: station.id,
+          panel: "detail",
+          sheet: "full",
+        });
       },
       removeExtraStation: (id) => {
         set({
@@ -171,7 +224,7 @@ export function allStations(extra: Station[] = []): Station[] {
 
 export function applyFilters(
   list: Station[],
-  state: Pick<AppState, "query" | "filters" | "reports" | "userPos" | "route">,
+  state: Pick<AppState, "query" | "filters" | "reports" | "userPos" | "route" | "routePath" | "corridorKm">,
   opts?: { now?: Date },
 ): Station[] {
   const now = opts?.now ?? new Date();
@@ -180,6 +233,8 @@ export function applyFilters(
   const routeA = state.route?.from ? findCity(state.route.from) : undefined;
   const routeB = state.route?.to ? findCity(state.route.to) : undefined;
   const place = findCity(state.query) ?? (f.place.trim() ? findCity(f.place) : undefined);
+  const feeOn = f.feeFree || f.feePaid || f.feeGuest;
+  const routed = Boolean(state.routePath?.coords.length || (routeA && routeB));
 
   return list.filter((s) => {
     if (q && !place) {
@@ -191,8 +246,17 @@ export function applyFilters(
     if (layer === "automat" && !f.camperclean) return false;
     if (layer === "cassette" && !f.cassette) return false;
     if (layer === null) return false;
-    if (f.freeOnly && s.fee !== "free") return false;
+    if (f.greywater && !s.greywater) return false;
+    if (f.freshwater && !s.freshwater) return false;
+    if (feeOn) {
+      const ok =
+        (s.fee === "free" && f.feeFree) ||
+        (s.fee === "paid" && f.feePaid) ||
+        (s.fee === "guest" && f.feeGuest);
+      if (!ok) return false;
+    }
     if (f.hose && !s.hose) return false;
+    if (f.h24 && s.hours !== "24h") return false;
     if (f.openNow) {
       if (!isOpenNow(s, now) || deriveStatus(s, state.reports[s.id]) === "broken") {
         return false;
@@ -201,18 +265,19 @@ export function applyFilters(
     if (f.confirmed && deriveStatus(s, state.reports[s.id]) !== "confirmed") {
       return false;
     }
-    if (place) {
+    if (state.routePath && state.routePath.coords.length >= 2) {
+      if (distanceToPolylineKm(s, state.routePath.coords) > state.corridorKm) return false;
+    } else if (routeA && routeB) {
+      if (distanceToSegmentKm(s, routeA, routeB) > state.corridorKm) return false;
+    } else if (place) {
       if (f.radiusKm === 0) {
         const same = s.city.toLowerCase() === place.name.toLowerCase();
         if (!same && haversineKm(place, s) > 4) return false;
       } else if (haversineKm(place, s) > f.radiusKm) {
         return false;
       }
-    } else if (state.userPos && f.radiusKm > 0 && !routeA) {
+    } else if (state.userPos && f.radiusKm > 0 && !routed) {
       if (haversineKm(state.userPos, s) > f.radiusKm) return false;
-    }
-    if (routeA && routeB) {
-      if (distanceToSegmentKm(s, routeA, routeB) > 28) return false;
     }
     return true;
   });

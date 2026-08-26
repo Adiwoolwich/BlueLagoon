@@ -222,7 +222,7 @@ export function AddStationForm() {
           onClick={useMyLocation}
           className="h-11 rounded-xl bg-surface text-sm font-medium text-muted shadow-border transition-[transform] active:scale-95"
         >
-          📍 Meinen Standort verwenden
+          Meinen Standort verwenden
         </button>
 
         <Field label="Typ">

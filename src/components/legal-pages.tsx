@@ -6,7 +6,7 @@ function Shell({ title, kicker, children }: { title: string; kicker: string; chi
   return (
     <div className="min-h-dvh bg-bg text-fg">
       <header className="mx-auto flex max-w-3xl items-center gap-3 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
-        <a href="/" className="inline-flex h-11 items-center gap-2 rounded-full bg-surface px-3 text-sm shadow-border">
+        <a href="/" className="inline-flex h-11 items-center gap-2 rounded-lg bg-surface px-3 text-sm ring-1 ring-border">
           ← Karte
         </a>
         <div className="ml-auto font-display text-lg text-primary">Blue Lagune</div>

@@ -18,7 +18,7 @@ export function HoursTable({ station }: { station: Station }) {
   const week = resolveWeeklyHours(station);
   const today = JS_DAY_TO_KEY[new Date().getDay()];
   return (
-    <section className="rounded-xl bg-surface p-3 shadow-border">
+    <section className="rounded-lg bg-surface p-3 ring-1 ring-border">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-[11px] tracking-wide text-muted uppercase">Öffnungszeiten</p>

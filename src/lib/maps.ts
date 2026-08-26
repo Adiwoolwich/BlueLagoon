@@ -1,10 +1,11 @@
 /** Navigation helpers: mobile app chooser, desktop web fallback */
 
+import { fullAddress, hasPreciseCoords, hasStreetAddress } from "./stations";
+
 export function isMobileDevice(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
   if (/Android|iPhone|iPad|iPod/i.test(ua)) return true;
-  // iPadOS 13+ reports as Mac with touch
   if (navigator.maxTouchPoints > 1 && /Macintosh/i.test(ua)) return true;
   return false;
 }
@@ -85,7 +86,6 @@ export function navTargets(lat: number, lng: number, label?: string): NavTarget[
     href: wazeUrl(lat, lng),
   });
 
-  // Fallback geo on iOS if no specific handler preferred
   if (isIOS()) {
     targets.push({
       id: "geo",
@@ -105,4 +105,53 @@ export function openNavigationWeb(lat: number, lng: number, label?: string) {
 /** @deprecated use openNavigationWeb or mobile sheet */
 export function openGoogleMapsApp(lat: number, lng: number, label?: string) {
   openNavigationWeb(lat, lng, label);
+}
+
+export function geoAddressUrl(address: string) {
+  return `geo:0,0?q=${encodeURIComponent(address)}`;
+}
+
+export function appleMapsAddressUrl(address: string) {
+  return `https://maps.apple.com/?daddr=${encodeURIComponent(address)}&dirflg=d`;
+}
+
+export function googleMapsAddressUrl(address: string) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}&travelmode=driving&dir_action=navigate`;
+}
+
+export function navTargetsAddress(address: string): NavTarget[] {
+  const targets: NavTarget[] = [];
+  if (isAndroid()) {
+    targets.push({ id: "system", label: "Installierte Navi-App wählen", href: geoAddressUrl(address) });
+  }
+  if (isIOS()) {
+    targets.push({ id: "apple", label: "Apple Karten", href: appleMapsAddressUrl(address) });
+  }
+  targets.push({ id: "google", label: "Google Maps", href: googleMapsAddressUrl(address) });
+  if (isIOS()) {
+    targets.push({ id: "geo", label: "Andere installierte App", href: geoAddressUrl(address) });
+  }
+  return targets;
+}
+
+export function openNavigationAddress(address: string) {
+  window.open(googleMapsAddressUrl(address), "_blank", "noopener,noreferrer");
+}
+
+/** Precise coords preferred. Address-only if the street can be resolved. Never invents city-centroid coords. */
+export function navTargetsForPlace(place: {
+  lat?: number;
+  lng?: number;
+  name?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+}): NavTarget[] {
+  if (hasPreciseCoords(place)) {
+    return navTargets(place.lat as number, place.lng as number, place.name);
+  }
+  if (hasStreetAddress(place)) {
+    return navTargetsAddress(fullAddress(place));
+  }
+  return [];
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Circle,
   CircleMarker,
@@ -11,62 +11,120 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
+import Supercluster from "supercluster";
 import "leaflet/dist/leaflet.css";
-import { deriveStatus, findCity, GERMANY_CENTER, type Station } from "@/lib/stations";
-import { isCampsite, useAppStore } from "@/lib/store";
+import {
+  deriveStatus,
+  findCity,
+  GERMANY_CENTER,
+  hasPreciseCoords,
+  type Station,
+} from "@/lib/stations";
+import { isCampsite, useAppStore, type MapView } from "@/lib/store";
+import { replaceUrl } from "@/lib/url-state";
 import { STATUS_COLOR } from "./status-badge";
 
-function dropSvg(color: string) {
-  return `<span class="bl-drop" style="--pin:${color}">
-    <svg viewBox="0 0 24 32" width="100%" height="100%" aria-hidden="true">
-      <path fill="${color}" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"
-        d="M12 1.5C12 1.5 3.5 12.2 3.5 19.2a8.5 8.5 0 0 0 17 0C20.5 12.2 12 1.5 12 1.5z"/>
-      <circle cx="12" cy="19" r="3.2" fill="#ffffff"/>
-    </svg>
-  </span>`;
-}
+type StationProps = { id: string };
+
+const iconCache = new Map<string, L.DivIcon>();
 
 function pinIcon(color: string, selected: boolean) {
-  const w = selected ? 32 : 24;
-  const h = selected ? 42 : 32;
-  return L.divIcon({
+  const key = `dot-${color}-${selected ? "s" : "n"}`;
+  const hit = iconCache.get(key);
+  if (hit) return hit;
+  const size = selected ? 18 : 12;
+  const icon = L.divIcon({
     className: `bl-marker${selected ? " is-selected" : ""}`,
-    html: dropSvg(color),
-    iconSize: [w, h],
-    iconAnchor: [w / 2, h - 1],
+    html: `<span class="bl-dot" style="--pin:${color};width:${size}px;height:${size}px"></span>`,
+    iconSize: [size + 8, size + 8],
+    iconAnchor: [(size + 8) / 2, (size + 8) / 2],
   });
+  iconCache.set(key, icon);
+  return icon;
 }
 
-function MapFly({
-  selected,
-  userPos,
-  place,
-  sheet,
+function clusterIcon(count: number) {
+  const key = `c-${count}`;
+  const hit = iconCache.get(key);
+  if (hit) return hit;
+  const size = count >= 100 ? 44 : count >= 20 ? 38 : 32;
+  const icon = L.divIcon({
+    className: "bl-marker bl-cluster",
+    html: `<span class="bl-cluster-dot" style="width:${size}px;height:${size}px">${count}</span>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+  iconCache.set(key, icon);
+  return icon;
+}
+
+function MapChrome({
   stations,
-  radiusKm,
+  initialView,
 }: {
-  selected?: Station;
-  userPos: { lat: number; lng: number } | null;
-  place: { lat: number; lng: number } | null;
-  sheet: "peek" | "mid" | "full";
   stations: Station[];
-  radiusKm: number;
+  initialView?: MapView;
 }) {
   const map = useMap();
-  const stationKey = stations.map((s) => s.id).join(",");
+  const selectedId = useAppStore((s) => s.selectedId);
+  const select = useAppStore((s) => s.select);
+  const setPanel = useAppStore((s) => s.setPanel);
+  const setSheet = useAppStore((s) => s.setSheet);
+  const setBounds = useAppStore((s) => s.setBounds);
+  const setMapView = useAppStore((s) => s.setMapView);
+  const filters = useAppStore((s) => s.filters);
+  const query = useAppStore((s) => s.query);
+  const userPos = useAppStore((s) => s.userPos);
+  const routePath = useAppStore((s) => s.routePath);
+  const sheet = useAppStore((s) => s.sheet);
+  const radiusKm = filters.radiusKm;
+  const selected = stations.find((s) => s.id === selectedId);
+  const place = findCity(filters.place) ?? findCity(query) ?? null;
+
+  useEffect(() => {
+    const publish = () => {
+      const b = map.getBounds();
+      const c = map.getCenter();
+      const zoom = map.getZoom();
+      setBounds({ west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() });
+      setMapView({ lat: c.lat, lng: c.lng, zoom });
+      replaceUrl({
+        lat: c.lat,
+        lng: c.lng,
+        zoom,
+        id: selectedId,
+        filters,
+        query,
+      });
+    };
+    map.on("moveend", publish);
+    publish();
+    return () => {
+      map.off("moveend", publish);
+    };
+  }, [map, selectedId, filters, query, setBounds, setMapView]);
 
   useEffect(() => {
     map.invalidateSize();
   }, [sheet, map]);
 
+  const didInit = useRef(false);
   useEffect(() => {
-    if (!selected) return;
-    const zoom = Math.max(map.getZoom(), 11);
-    map.flyTo([selected.lat, selected.lng], zoom, { duration: 0.55 });
+    if (didInit.current) return;
+    didInit.current = true;
+    if (initialView && (initialView.zoom !== 6 || Math.abs(initialView.lat - GERMANY_CENTER.lat) > 0.05)) {
+      map.setView([initialView.lat, initialView.lng], initialView.zoom, { animate: false });
+    }
+  }, [map, initialView]);
+
+  useEffect(() => {
+    if (!selected || !hasPreciseCoords(selected)) return;
+    const zoom = Math.max(map.getZoom(), 12);
+    map.flyTo([selected.lat, selected.lng], zoom, { duration: 0.45 });
     const shift = () => {
       if (window.innerWidth >= 768) return;
-      const fraction = sheet === "full" ? 0.32 : sheet === "mid" ? 0.22 : 0.1;
-      map.panBy([0, map.getSize().y * fraction], { animate: true, duration: 0.35 });
+      const fraction = sheet === "full" ? 0.28 : sheet === "mid" ? 0.18 : 0.08;
+      map.panBy([0, map.getSize().y * fraction], { animate: true, duration: 0.3 });
     };
     map.once("moveend", shift);
     return () => {
@@ -74,59 +132,47 @@ function MapFly({
     };
   }, [selected, map, sheet]);
 
+  const fitKey = `${place?.name ?? ""}|${userPos?.lat ?? ""}:${userPos?.lng ?? ""}|${routePath?.from ?? ""}>${routePath?.to ?? ""}:${routePath?.source ?? ""}`;
+  const prevFit = useRef("");
   useEffect(() => {
     if (selected) return;
-    const origin = place ?? userPos;
+    if (!fitKey || fitKey === "||>") return;
+    if (fitKey === prevFit.current) return;
+    prevFit.current = fitKey;
     const padBottom =
       window.innerWidth < 768 ? (sheet === "full" ? 280 : sheet === "mid" ? 200 : 110) : 48;
-    const fit = (bounds: L.LatLngBoundsExpression) => {
+    const fit = (bounds: L.LatLngBoundsExpression, maxZoom = 13) => {
       map.fitBounds(bounds, {
         paddingTopLeft: [36, 72],
         paddingBottomRight: [36, padBottom],
-        maxZoom: 13,
+        maxZoom,
         animate: true,
-        duration: 0.55,
+        duration: 0.5,
       });
     };
-    if (stations.length >= 2) {
-      const b = L.latLngBounds(stations.map((s) => [s.lat, s.lng] as [number, number]));
-      if (origin) b.extend([origin.lat, origin.lng]);
-      fit(b);
+    if (routePath && routePath.coords.length >= 2) {
+      fit(L.latLngBounds(routePath.coords.map((p) => [p.lat, p.lng] as [number, number])), 12);
       return;
     }
-    if (stations.length === 1) {
-      const s = stations[0]!;
-      const b = L.latLngBounds([
-        [s.lat, s.lng],
-        [s.lat, s.lng],
+    const origin = place ?? userPos;
+    if (origin && radiusKm > 0) {
+      const dLat = radiusKm / 111;
+      const dLng = radiusKm / (111 * Math.max(0.2, Math.cos((origin.lat * Math.PI) / 180)));
+      fit([
+        [origin.lat - dLat, origin.lng - dLng],
+        [origin.lat + dLat, origin.lng + dLng],
       ]);
-      if (origin) b.extend([origin.lat, origin.lng]);
-      b.extend([s.lat + 0.01, s.lng + 0.01]);
-      b.extend([s.lat - 0.01, s.lng - 0.01]);
-      fit(b);
       return;
     }
-    if (!origin) return;
-    const km = radiusKm > 0 ? radiusKm : 8;
-    const dLat = km / 111;
-    const dLng = km / (111 * Math.max(0.2, Math.cos((origin.lat * Math.PI) / 180)));
-    fit([
-      [origin.lat - dLat, origin.lng - dLng],
-      [origin.lat + dLat, origin.lng + dLng],
-    ]);
-  }, [userPos, place, selected, map, sheet, stationKey, radiusKm, stations]);
-  return null;
-}
+    if (origin) {
+      map.flyTo([origin.lat, origin.lng], 11, { duration: 0.45 });
+    }
+  }, [fitKey, selected, map, sheet, radiusKm, place, userPos, routePath]);
 
-function MapClickPeek() {
-  const map = useMap();
-  const select = useAppStore((s) => s.select);
-  const setSheet = useAppStore((s) => s.setSheet);
-  const setPanel = useAppStore((s) => s.setPanel);
   useEffect(() => {
     const onClick = (e: L.LeafletMouseEvent) => {
       const t = e.originalEvent?.target as HTMLElement | undefined;
-      if (t?.closest(".leaflet-marker-icon, .bl-marker")) return;
+      if (t?.closest(".leaflet-marker-icon, .bl-marker, .bl-cluster")) return;
       select(null);
       setPanel("list");
       if (window.innerWidth < 768) setSheet("peek");
@@ -136,38 +182,156 @@ function MapClickPeek() {
       map.off("click", onClick);
     };
   }, [map, select, setSheet, setPanel]);
+
   return null;
 }
 
-export function StationMap({ stations }: { stations: Station[] }) {
+function ClusterLayer({ stations }: { stations: Station[] }) {
+  const map = useMap();
   const selectedId = useAppStore((s) => s.selectedId);
   const select = useAppStore((s) => s.select);
   const reports = useAppStore((s) => s.reports);
+  const [, setTick] = useState(0);
+
+  const pinned = useMemo(() => stations.filter(hasPreciseCoords), [stations]);
+  const byId = useMemo(() => new Map(pinned.map((s) => [s.id, s])), [pinned]);
+
+  const index = useMemo(() => {
+    const sc = new Supercluster<StationProps>({
+      radius: 56,
+      maxZoom: 14,
+      minPoints: 2,
+    });
+    sc.load(
+      pinned.map((s) => ({
+        type: "Feature" as const,
+        properties: { id: s.id },
+        geometry: { type: "Point" as const, coordinates: [s.lng, s.lat] as [number, number] },
+      })),
+    );
+    return sc;
+  }, [pinned]);
+
+  useEffect(() => {
+    const bump = () => setTick((n) => n + 1);
+    map.on("moveend zoomend", bump);
+    return () => {
+      map.off("moveend zoomend", bump);
+    };
+  }, [map]);
+
+  const b = map.getBounds();
+  const zoom = Math.round(map.getZoom());
+  const clusters = index.getClusters([b.getWest(), b.getSouth(), b.getEast(), b.getNorth()], zoom);
+
+  const selected = selectedId ? byId.get(selectedId) : undefined;
+  let selectedInView = false;
+
+  const nodes = clusters.map((f) => {
+    const [lng, lat] = f.geometry.coordinates;
+    const props = f.properties as StationProps & { cluster?: boolean; cluster_id?: number; point_count?: number };
+    if (props.cluster && props.cluster_id != null) {
+      const count = props.point_count ?? 0;
+      const cid = props.cluster_id;
+      return (
+        <Marker
+          key={`c-${cid}`}
+          position={[lat, lng]}
+          icon={clusterIcon(count)}
+          eventHandlers={{
+            click: (e) => {
+              L.DomEvent.stopPropagation(e.originalEvent);
+              const exp = index.getClusterExpansionZoom(cid);
+              map.setView([lat, lng], exp, { animate: true });
+            },
+          }}
+        >
+          <Tooltip direction="top" offset={[0, -8]} opacity={1} className="bl-map-tooltip">
+            <span className="bl-map-tooltip-name">{count} Stationen</span>
+          </Tooltip>
+        </Marker>
+      );
+    }
+    const s = byId.get(props.id);
+    if (!s) return null;
+    if (s.id === selectedId) selectedInView = true;
+    const status = deriveStatus(s, reports[s.id]);
+    const color = isCampsite(s) ? "#16a34a" : STATUS_COLOR[status];
+    const placeLabel = [s.postalCode, s.city].filter(Boolean).join(" ");
+    return (
+      <Marker
+        key={s.id}
+        position={[s.lat, s.lng]}
+        icon={pinIcon(color, s.id === selectedId)}
+        eventHandlers={{
+          click: (e) => {
+            L.DomEvent.stopPropagation(e.originalEvent);
+            select(s.id);
+          },
+        }}
+        zIndexOffset={s.id === selectedId ? 1000 : 0}
+      >
+        <Tooltip direction="top" offset={[0, -14]} opacity={1} className="bl-map-tooltip">
+          <span className="bl-map-tooltip-name">{s.name}</span>
+          {placeLabel ? <span className="bl-map-tooltip-place">{placeLabel}</span> : null}
+        </Tooltip>
+      </Marker>
+    );
+  });
+
+  if (selected && hasPreciseCoords(selected) && !selectedInView) {
+    const status = deriveStatus(selected, reports[selected.id]);
+    const color = isCampsite(selected) ? "#16a34a" : STATUS_COLOR[status];
+    nodes.push(
+      <Marker
+        key={`sel-${selected.id}`}
+        position={[selected.lat, selected.lng]}
+        icon={pinIcon(color, true)}
+        eventHandlers={{
+          click: (e) => {
+            L.DomEvent.stopPropagation(e.originalEvent);
+            select(selected.id);
+          },
+        }}
+        zIndexOffset={2000}
+      >
+        <Tooltip direction="top" offset={[0, -14]} opacity={1} className="bl-map-tooltip" permanent>
+          <span className="bl-map-tooltip-name">{selected.name}</span>
+        </Tooltip>
+      </Marker>,
+    );
+  }
+
+  return <>{nodes}</>;
+}
+
+export function StationMap({
+  stations,
+  initialView,
+}: {
+  stations: Station[];
+  initialView?: MapView;
+}) {
   const userPos = useAppStore((s) => s.userPos);
-  const route = useAppStore((s) => s.route);
-  const sheet = useAppStore((s) => s.sheet);
+  const routePath = useAppStore((s) => s.routePath);
   const placeName = useAppStore((s) => s.filters.place);
   const query = useAppStore((s) => s.query);
   const radiusKm = useAppStore((s) => s.filters.radiusKm);
-  const selected = stations.find((s) => s.id === selectedId);
   const place = findCity(placeName) ?? findCity(query) ?? null;
   const searchOrigin = place ?? userPos;
-
+  const center: [number, number] = initialView
+    ? [initialView.lat, initialView.lng]
+    : [GERMANY_CENTER.lat, GERMANY_CENTER.lng];
+  const zoom = initialView?.zoom ?? 6;
   const routeLine = useMemo(() => {
-    if (!route) return null;
-    const a = findCity(route.from);
-    const b = findCity(route.to);
-    if (!a || !b) return null;
-    return [
-      [a.lat, a.lng] as [number, number],
-      [b.lat, b.lng] as [number, number],
-    ];
-  }, [route]);
+    if (!routePath?.coords.length) return null;
+    return routePath.coords.map((p) => [p.lat, p.lng] as [number, number]);
+  }, [routePath]);
 
   return (
     <MapContainer
-      center={[GERMANY_CENTER.lat, GERMANY_CENTER.lng]}
-      zoom={6}
+      center={center}
+      zoom={zoom}
       className="h-full w-full"
       zoomControl={false}
       attributionControl
@@ -175,32 +339,31 @@ export function StationMap({ stations }: { stations: Station[] }) {
       <ZoomControl position="topright" />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
-      <MapFly
-        selected={selected}
-        userPos={userPos}
-        place={place}
-        sheet={sheet}
-        stations={stations}
-        radiusKm={radiusKm}
-      />
-      <MapClickPeek />
-      {searchOrigin && radiusKm > 0 ? (
+      <MapChrome stations={stations} initialView={initialView} />
+      {searchOrigin && radiusKm > 0 && !routeLine ? (
         <Circle
           center={[searchOrigin.lat, searchOrigin.lng]}
           radius={radiusKm * 1000}
           pathOptions={{
             color: "#0a7a70",
             weight: 1,
-            opacity: 0.45,
+            opacity: 0.4,
             fillColor: "#0a7a70",
-            fillOpacity: 0.07,
+            fillOpacity: 0.06,
           }}
         />
       ) : null}
       {routeLine ? (
-        <Polyline positions={routeLine} pathOptions={{ color: "#0a7a70", weight: 3, opacity: 0.65 }} />
+        <Polyline
+          positions={routeLine}
+          pathOptions={{
+            color: routePath?.source === "straight" ? "#a67c1a" : "#0a7a70",
+            weight: 4,
+            opacity: 0.75,
+          }}
+        />
       ) : null}
       {userPos ? (
         <CircleMarker
@@ -209,40 +372,7 @@ export function StationMap({ stations }: { stations: Station[] }) {
           pathOptions={{ color: "#ffffff", fillColor: "#0a7a70", fillOpacity: 1, weight: 2 }}
         />
       ) : null}
-      {stations.map((s) => {
-        const status = deriveStatus(s, reports[s.id]);
-        const color = isCampsite(s) ? "#16a34a" : STATUS_COLOR[status];
-        const placeLabel = [s.postalCode, s.city].filter(Boolean).join(" ");
-        return (
-          <Marker
-            key={s.id}
-            position={[s.lat, s.lng]}
-            icon={pinIcon(color, s.id === selectedId)}
-            eventHandlers={{
-              click: (e) => {
-                if (e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
-                select(s.id);
-              },
-            }}
-            zIndexOffset={s.id === selectedId ? 1000 : 0}
-          >
-            <Tooltip direction="top" offset={[0, -14]} opacity={1} className="bl-map-tooltip">
-              <span className="bl-map-tooltip-name">{s.name}</span>
-              {placeLabel ? <span className="bl-map-tooltip-place">{placeLabel}</span> : null}
-            </Tooltip>
-          </Marker>
-        );
-      })}
-      {routeLine
-        ? [findCity(route?.from ?? ""), findCity(route?.to ?? "")].filter(Boolean).map((c) => (
-            <CircleMarker
-              key={c!.name}
-              center={[c!.lat, c!.lng]}
-              radius={6}
-              pathOptions={{ color: "#ffffff", fillColor: "#2563a8", fillOpacity: 1 }}
-            />
-          ))
-        : null}
+      <ClusterLayer stations={stations} />
     </MapContainer>
   );
 }

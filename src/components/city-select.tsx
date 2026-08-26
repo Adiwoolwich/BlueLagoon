@@ -76,8 +76,8 @@ export function CitySelect({
       ) : null}
       <div
         className={cn(
-          "flex h-11 items-center gap-2 rounded-2xl bg-surface px-3 shadow-border",
-          open && "ring-2 ring-primary/50",
+          "flex h-11 items-center gap-2 rounded-lg bg-surface px-3 ring-1 ring-border",
+          open && "ring-2 ring-fg/25",
           unmatched && open === false && draft.trim() && "ring-2 ring-bad/60",
         )}
       >
@@ -157,7 +157,7 @@ export function CitySelect({
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-50 mt-1 max-h-[min(18rem,42dvh)] w-full overflow-y-auto rounded-xl bg-bg-elevated py-1 shadow-panel ring-1 ring-border-strong"
+          className="absolute z-50 mt-1 max-h-[min(18rem,42dvh)] w-full overflow-y-auto rounded-lg bg-bg-elevated py-1 shadow-panel ring-1 ring-border"
         >
           {matches.length === 0 ? (
             <li className="px-3 py-3 text-sm text-muted">
