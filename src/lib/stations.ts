@@ -1,4 +1,5 @@
 import { CITIES, findCity, type City } from "./cities";
+import { isFiniteLatLng } from "./geo";
 import partA from "../data/stations-a.json";
 import partB from "../data/stations-b.json";
 
@@ -269,3 +270,39 @@ export function searchStations(query: string, list: Station[]): Station[] {
 }
 
 export const STATIONS: Station[] = [...(partA as Station[]), ...(partB as Station[])];
+
+
+const STREET_RE =
+  /\d|straße|strasse|str\.|weg|platz|allee|ufer|ring|gasse|damm|chaussee|promenade|deich|hafen|kai|hof|park/i;
+
+/** Real coordinates only — never treat missing/zero as a pin. */
+export function hasPreciseCoords(s: { lat?: number; lng?: number }): boolean {
+  return isFiniteLatLng(s.lat, s.lng);
+}
+
+/** Street-level address that a maps app can resolve. Not city-only. */
+export function hasStreetAddress(s: { address?: string; city?: string }): boolean {
+  const a = (s.address ?? "").trim();
+  if (a.length < 3) return false;
+  if (s.city && a.toLowerCase() === s.city.toLowerCase()) return false;
+  return STREET_RE.test(a);
+}
+
+export function canNavigateTo(s: {
+  lat?: number;
+  lng?: number;
+  address?: string;
+  city?: string;
+}): boolean {
+  return hasPreciseCoords(s) || hasStreetAddress(s);
+}
+
+export function fullAddress(s: {
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  name?: string;
+}): string {
+  const line = [s.address, [s.postalCode, s.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  return line || (s.name ?? "");
+}

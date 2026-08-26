@@ -1,43 +1,68 @@
 import { useMemo, useState } from "react";
 import {
   isMobileDevice,
-  navTargets,
+  navTargetsForPlace,
+  openNavigationAddress,
   openNavigationWeb,
   type NavTarget,
 } from "../lib/maps";
+import { canNavigateTo, fullAddress, hasPreciseCoords } from "../lib/stations";
 
 export function GoogleMapsButton({
   lat,
   lng,
   label,
+  address,
+  city,
+  postalCode,
 }: {
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   label?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
 }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const mobile = useMemo(() => isMobileDevice(), []);
-  const targets = useMemo(() => navTargets(lat, lng, label), [lat, lng, label]);
+  const place = { lat, lng, name: label, address, city, postalCode };
+  const navigable = canNavigateTo(place);
+  const precise = hasPreciseCoords(place);
+  const targets = useMemo(() => navTargetsForPlace(place), [lat, lng, label, address, city, postalCode]);
+
+  if (!navigable || targets.length === 0) {
+    return (
+      <p className="rounded-xl bg-surface px-3 py-2.5 text-sm text-muted ring-1 ring-border">
+        Keine genaue Position – Navigation nicht möglich.
+      </p>
+    );
+  }
 
   function openDesktop(e: React.MouseEvent) {
     e.preventDefault();
-    openNavigationWeb(lat, lng, label);
+    if (precise && lat != null && lng != null) {
+      openNavigationWeb(lat, lng, label);
+      return;
+    }
+    openNavigationAddress(fullAddress(place));
   }
 
   function pick(target: NavTarget) {
     setSheetOpen(false);
-    // geo: and app schemes must use location.href (not window.open)
     window.location.href = target.href;
   }
+
+  const cls =
+    "inline-flex h-12 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-fg shadow-btn transition-[transform,filter] active:scale-[0.98]";
 
   if (!mobile) {
     return (
       <a
-        href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`}
+        href={targets.find((t) => t.id === "google")?.href ?? "#"}
         onClick={openDesktop}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-fg shadow-border transition-[transform,filter] active:scale-95"
+        className={cls}
       >
         Navigation starten
       </a>
@@ -46,17 +71,13 @@ export function GoogleMapsButton({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setSheetOpen(true)}
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-fg shadow-border transition-[transform,filter] active:scale-95"
-      >
+      <button type="button" onClick={() => setSheetOpen(true)} className={cls}>
         Navigation starten
       </button>
 
       {sheetOpen ? (
         <div
-          className="fixed inset-0 z-[80] flex flex-col justify-end bg-black/55 p-3 backdrop-blur-[2px]"
+          className="fixed inset-0 z-[80] flex flex-col justify-end bg-black/50 p-3"
           role="dialog"
           aria-modal="true"
           aria-label="Navigations-App wählen"
@@ -68,9 +89,7 @@ export function GoogleMapsButton({
           >
             <div className="border-b border-border px-4 py-3">
               <p className="text-sm font-semibold text-fg">Navigation öffnen mit</p>
-              <p className="mt-0.5 text-xs text-muted">
-                Wähle eine installierte App auf deinem Smartphone
-              </p>
+              <p className="mt-0.5 text-xs text-muted">Wähle eine installierte App auf deinem Smartphone</p>
             </div>
             <ul className="divide-y divide-border/60">
               {targets.map((t) => (
@@ -78,7 +97,7 @@ export function GoogleMapsButton({
                   <button
                     type="button"
                     onClick={() => pick(t)}
-                    className="flex h-12 w-full items-center px-4 text-left text-sm font-medium text-fg transition-[background-color] hover:bg-surface-2 active:bg-surface"
+                    className="flex h-12 w-full items-center px-4 text-left text-sm font-medium text-fg hover:bg-surface-2"
                   >
                     {t.label}
                   </button>

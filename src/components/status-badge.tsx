@@ -14,17 +14,20 @@ export function StatusBadge({
   station,
   report,
   className,
+  compact,
 }: {
   status?: TrustStatus;
   station?: Station;
   report?: LocalReport;
   className?: string;
+  compact?: boolean;
 }) {
   const resolved = status ?? (station ? deriveStatus(station, report) : "unknown");
   return (
     <span
       className={cn(
-        "inline-flex h-7 items-center rounded-full px-2.5 text-xs font-semibold tracking-wide",
+        "inline-flex items-center rounded-full font-semibold tracking-wide",
+        compact ? "h-5 px-1.5 text-[10px]" : "h-7 px-2.5 text-xs",
         tone[resolved],
         className,
       )}
