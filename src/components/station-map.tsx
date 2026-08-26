@@ -32,7 +32,7 @@ function pinIcon(color: string, selected: boolean) {
   const key = `dot-${color}-${selected ? "s" : "n"}`;
   const hit = iconCache.get(key);
   if (hit) return hit;
-  const size = selected ? 18 : 12;
+  const size = selected ? 22 : 16;
   const icon = L.divIcon({
     className: `bl-marker${selected ? " is-selected" : ""}`,
     html: `<span class="bl-dot" style="--pin:${color};width:${size}px;height:${size}px"></span>`,
@@ -339,7 +339,8 @@ export function StationMap({
       <ZoomControl position="topright" />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maxZoom={19}
       />
       <MapChrome stations={stations} initialView={initialView} />
       {searchOrigin && radiusKm > 0 && !routeLine ? (
@@ -347,10 +348,10 @@ export function StationMap({
           center={[searchOrigin.lat, searchOrigin.lng]}
           radius={radiusKm * 1000}
           pathOptions={{
-            color: "#0a7a70",
+            color: "#5eead4",
             weight: 1,
             opacity: 0.4,
-            fillColor: "#0a7a70",
+            fillColor: "#5eead4",
             fillOpacity: 0.06,
           }}
         />
@@ -359,7 +360,7 @@ export function StationMap({
         <Polyline
           positions={routeLine}
           pathOptions={{
-            color: routePath?.source === "straight" ? "#a67c1a" : "#0a7a70",
+            color: routePath?.source === "straight" ? "#fbbf24" : "#5eead4",
             weight: 4,
             opacity: 0.75,
           }}
@@ -369,7 +370,7 @@ export function StationMap({
         <CircleMarker
           center={[userPos.lat, userPos.lng]}
           radius={8}
-          pathOptions={{ color: "#ffffff", fillColor: "#0a7a70", fillOpacity: 1, weight: 2 }}
+          pathOptions={{ color: "#ffffff", fillColor: "#5eead4", fillOpacity: 1, weight: 2 }}
         />
       ) : null}
       <ClusterLayer stations={stations} />

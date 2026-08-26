@@ -38,11 +38,11 @@ export function StatusBadge({
 }
 
 export const STATUS_COLOR: Record<string, string> = {
-  confirmed: "#0a7a70",
-  stale: "#a67c1a",
-  broken: "#c43c31",
-  closed: "#5c747a",
-  unknown: "#5c747a",
-  open: "#0a7a70",
-  limited: "#a67c1a",
+  confirmed: "#5eead4",
+  stale: "#fbbf24",
+  broken: "#f87171",
+  closed: "#a1a1aa",
+  unknown: "#a1a1aa",
+  open: "#5eead4",
+  limited: "#fbbf24",
 };
