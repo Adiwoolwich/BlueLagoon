@@ -59,6 +59,33 @@ export const CITIES: City[] = data.p.map(([name, code, lat, lng]) => ({
   aliases: EXTRA_ALIASES[name],
 }));
 
+const SEEDED: City[] = [
+  { name: "Schwandorf", lat: 49.3264, lng: 12.1097, state: "Bayern", postalCode: "92421" },
+];
+
+function indexCity(c: City) {
+  addIndex(byLower, c.name.toLowerCase(), c);
+  addIndex(byFold, foldCity(c.name), c);
+  byLabel.set(`${c.name}, ${c.state}`.toLowerCase(), c);
+  if (c.postalCode) byZip.set(c.postalCode, c);
+  for (const a of c.aliases ?? []) {
+    addIndex(byLower, a.toLowerCase(), c);
+    addIndex(byFold, foldCity(a), c);
+  }
+}
+
+export function registerCity(c: City): City {
+  const existing = findCity(c.postalCode ? `${c.postalCode} ${c.name}` : c.name);
+  if (existing) return existing;
+  CITIES.push(c);
+  indexCity(c);
+  return c;
+}
+
+for (const c of SEEDED) {
+  if (!CITIES.some((x) => x.name.toLowerCase() === c.name.toLowerCase())) CITIES.push(c);
+}
+
 const nameCount = new Map<string, number>();
 for (const c of CITIES) nameCount.set(c.name, (nameCount.get(c.name) ?? 0) + 1);
 
@@ -102,6 +129,7 @@ for (const c of CITIES) {
   addIndex(byFold, foldCity(c.name), c);
   byLabel.set(`${c.name}, ${c.state}`.toLowerCase(), c);
   byLabel.set(c.name.toLowerCase() + ", " + foldCity(c.state), c);
+  if (c.postalCode) byZip.set(c.postalCode, c);
   for (const a of c.aliases ?? []) {
     addIndex(byLower, a.toLowerCase(), c);
     addIndex(byFold, foldCity(a), c);

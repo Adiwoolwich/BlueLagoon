@@ -29,15 +29,16 @@ type StationProps = { id: string };
 const iconCache = new Map<string, L.DivIcon>();
 
 function pinIcon(color: string, selected: boolean) {
-  const key = `dot-${color}-${selected ? "s" : "n"}`;
+  const key = `drop-${color}-${selected ? "s" : "n"}`;
   const hit = iconCache.get(key);
   if (hit) return hit;
-  const size = selected ? 18 : 12;
+  const w = selected ? 28 : 22;
+  const h = selected ? 38 : 30;
   const icon = L.divIcon({
     className: `bl-marker${selected ? " is-selected" : ""}`,
-    html: `<span class="bl-dot" style="--pin:${color};width:${size}px;height:${size}px"></span>`,
-    iconSize: [size + 8, size + 8],
-    iconAnchor: [(size + 8) / 2, (size + 8) / 2],
+    html: `<span class="bl-drop" style="--pin:${color}"><svg viewBox="0 0 24 32" width="${w}" height="${h}" aria-hidden="true"><path fill="${color}" d="M12 1.5C12 1.5 3.5 12.2 3.5 19.2a8.5 8.5 0 0 0 17 0C20.5 12.2 12 1.5 12 1.5z"/><circle cx="12" cy="19.2" r="3.2" fill="#0b0b0c"/></svg></span>`,
+    iconSize: [w, h],
+    iconAnchor: [w / 2, h - 2],
   });
   iconCache.set(key, icon);
   return icon;
@@ -339,7 +340,8 @@ export function StationMap({
       <ZoomControl position="topright" />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maxZoom={19}
       />
       <MapChrome stations={stations} initialView={initialView} />
       {searchOrigin && radiusKm > 0 && !routeLine ? (
@@ -347,10 +349,10 @@ export function StationMap({
           center={[searchOrigin.lat, searchOrigin.lng]}
           radius={radiusKm * 1000}
           pathOptions={{
-            color: "#0a7a70",
+            color: "#5eead4",
             weight: 1,
             opacity: 0.4,
-            fillColor: "#0a7a70",
+            fillColor: "#5eead4",
             fillOpacity: 0.06,
           }}
         />
@@ -359,7 +361,7 @@ export function StationMap({
         <Polyline
           positions={routeLine}
           pathOptions={{
-            color: routePath?.source === "straight" ? "#a67c1a" : "#0a7a70",
+            color: routePath?.source === "straight" ? "#fbbf24" : "#5eead4",
             weight: 4,
             opacity: 0.75,
           }}
@@ -369,7 +371,7 @@ export function StationMap({
         <CircleMarker
           center={[userPos.lat, userPos.lng]}
           radius={8}
-          pathOptions={{ color: "#ffffff", fillColor: "#0a7a70", fillOpacity: 1, weight: 2 }}
+          pathOptions={{ color: "#ffffff", fillColor: "#5eead4", fillOpacity: 1, weight: 2 }}
         />
       ) : null}
       <ClusterLayer stations={stations} />
