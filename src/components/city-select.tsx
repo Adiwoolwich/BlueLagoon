@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, MapPin, X } from "lucide-react";
-import { findCity, searchCities, CITIES, cityKey, type City } from "@/lib/cities";
+import { findCity, searchCities, CITIES, cityKey, registerCity, type City } from "@/lib/cities";
+import { searchNominatimDe } from "@/lib/nominatim";
 import { cn } from "@/lib/utils";
 
 export function CitySelect({
@@ -39,11 +40,54 @@ export function CitySelect({
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  const matches = useMemo(() => searchCities(draft, 14), [draft]);
+  const local = useMemo(() => searchCities(draft, 14), [draft]);
+  const [remote, setRemote] = useState<City[]>([]);
+  useEffect(() => {
+    const q = draft.trim();
+    if (q.length < 2) {
+      setRemote([]);
+      return;
+    }
+    if (local.length >= 8) {
+      setRemote([]);
+      return;
+    }
+    let alive = true;
+    const timer = window.setTimeout(() => {
+      void searchNominatimDe(q, 8).then((hits) => {
+        if (!alive) return;
+        setRemote(
+          hits.map((h) => ({
+            name: h.name,
+            lat: h.lat,
+            lng: h.lng,
+            state: h.state || "Deutschland",
+            postalCode: h.postalCode,
+          })),
+        );
+      });
+    }, 220);
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
+  }, [draft, local.length]);
+  const matches = useMemo(() => {
+    const out: City[] = [...local];
+    const seen = new Set(local.map((c) => c.name.toLowerCase()));
+    for (const c of remote) {
+      const k = c.name.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(c);
+    }
+    return out.slice(0, 14);
+  }, [local, remote]);
   const unmatched = draft.trim().length > 0 && !findCity(draft);
 
   function pick(city: City) {
-    const next = cityKey(city);
+    const saved = registerCity(city);
+    const next = cityKey(saved);
     onChange(next);
     setDraft(city.postalCode ? `${city.postalCode} ${city.name}` : next);
     setOpen(false);

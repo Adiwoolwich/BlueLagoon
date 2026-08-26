@@ -29,15 +29,16 @@ type StationProps = { id: string };
 const iconCache = new Map<string, L.DivIcon>();
 
 function pinIcon(color: string, selected: boolean) {
-  const key = `dot-${color}-${selected ? "s" : "n"}`;
+  const key = `drop-${color}-${selected ? "s" : "n"}`;
   const hit = iconCache.get(key);
   if (hit) return hit;
-  const size = selected ? 22 : 16;
+  const w = selected ? 28 : 22;
+  const h = selected ? 38 : 30;
   const icon = L.divIcon({
     className: `bl-marker${selected ? " is-selected" : ""}`,
-    html: `<span class="bl-dot" style="--pin:${color};width:${size}px;height:${size}px"></span>`,
-    iconSize: [size + 8, size + 8],
-    iconAnchor: [(size + 8) / 2, (size + 8) / 2],
+    html: `<span class="bl-drop" style="--pin:${color}"><svg viewBox="0 0 24 32" width="${w}" height="${h}" aria-hidden="true"><path fill="${color}" d="M12 1.5C12 1.5 3.5 12.2 3.5 19.2a8.5 8.5 0 0 0 17 0C20.5 12.2 12 1.5 12 1.5z"/><circle cx="12" cy="19.2" r="3.2" fill="#0b0b0c"/></svg></span>`,
+    iconSize: [w, h],
+    iconAnchor: [w / 2, h - 2],
   });
   iconCache.set(key, icon);
   return icon;
