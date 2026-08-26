@@ -114,8 +114,10 @@ function Landing({ onDone }: { onDone: () => void }) {
             </li>
             <li className="bl-tile">
               <span className="bl-float bl-float-2 text-primary" aria-hidden>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C12 2 5 11.2 5 16a7 7 0 0 0 14 0C19 11.2 12 2 12 2z" />
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path fill="currentColor" d="M12 2C12 2 5 11.2 5 16a7 7 0 0 0 14 0C19 11.2 12 2 12 2z" />
+                  <circle className="bl-drip" cx="12" cy="8.2" r="1.35" fill="#04151c" />
+                  <ellipse className="bl-icon-ripple" cx="12" cy="20" rx="4.2" ry="1.15" stroke="currentColor" strokeWidth="1.2" />
                 </svg>
               </span>
               <p className="text-[13px] leading-tight font-medium">Wasser &amp; Kassette</p>
