@@ -2,6 +2,7 @@ import { CITIES, findCity, type City } from "./cities";
 import { isFiniteLatLng } from "./geo";
 import partA from "../data/stations-a.json";
 import partB from "../data/stations-b.json";
+import partC from "../data/stations-c.json";
 
 export { CITIES, findCity };
 export type { City };
@@ -269,7 +270,7 @@ export function searchStations(query: string, list: Station[]): Station[] {
   });
 }
 
-export const STATIONS: Station[] = [...(partA as Station[]), ...(partB as Station[])];
+export const STATIONS: Station[] = [...(partA as Station[]), ...(partB as Station[]), ...(partC as Station[])];
 
 
 const STREET_RE =
