@@ -4,7 +4,7 @@
 
 Live: [https://blue-lagune.com](https://blue-lagune.com)
 
-Karte mit 1014+ Entsorgungsstationen. Headline: „Kassettentoilette entsorgen – ohne Sucherei.“
+Karte mit 1147+ Entsorgungsstationen. Headline: „Kassettentoilette entsorgen – ohne Sucherei.“
 
 ## Stack
 
