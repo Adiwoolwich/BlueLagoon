@@ -53,11 +53,27 @@ function Landing({ onDone }: { onDone: () => void }) {
     onDone();
   }
   return (
-    <div className="relative min-h-dvh overflow-x-hidden bg-bg text-fg">
+    <div className="bl-landing relative min-h-dvh overflow-hidden text-fg">
+      <div className="bl-landing-glow" aria-hidden />
+      <svg className="bl-waves" viewBox="0 0 1440 320" preserveAspectRatio="none" aria-hidden>
+        <path
+          className="bl-wave-a"
+          fill="#2ee0c5"
+          fillOpacity="0.16"
+          d="M0,192L80,176C160,160 320,128 480,133C640,139 800,181 960,181C1120,181 1280,139 1360,128L1440,117L1440,320L0,320Z"
+        />
+        <path
+          className="bl-wave-b"
+          fill="#2ee0c5"
+          fillOpacity="0.22"
+          d="M0,256L80,245C160,235 320,213 480,208C640,203 800,213 960,218C1120,224 1280,229 1360,232L1440,235L1440,320L0,320Z"
+        />
+      </svg>
       <div className="relative mx-auto flex min-h-dvh max-w-lg flex-col px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:max-w-xl sm:px-8">
         <header className="flex items-center gap-3">
-          <span className="grid size-11 place-items-center rounded-2xl bg-primary text-primary-fg sm:size-12">
-            <svg viewBox="0 0 24 32" width="22" height="28" aria-hidden>
+          <span className="bl-mark">
+            <span className="bl-ripple" aria-hidden />
+            <svg className="bl-drop-bob" viewBox="0 0 24 32" width="22" height="28" aria-hidden>
               <path
                 fill="currentColor"
                 d="M12 1.5C12 1.5 3.5 12.2 3.5 19.2a8.5 8.5 0 0 0 17 0C20.5 12.2 12 1.5 12 1.5z"
@@ -65,29 +81,46 @@ function Landing({ onDone }: { onDone: () => void }) {
             </svg>
           </span>
           <div>
-            <p className="text-xl leading-none font-semibold sm:text-2xl">Blue Lagune</p>
-            <p className="mt-1 text-sm text-muted">Entsorgungsstationen für Camper</p>
+            <p className="font-display text-xl leading-none font-semibold sm:text-2xl">Blue Lagune</p>
+            <p className="mt-1 text-sm text-muted">Entsorgungsstationen fürs Wohnmobil</p>
           </div>
         </header>
-        <main className="mt-6 flex flex-1 flex-col sm:mt-10">
-          <h1 className="text-[1.4rem] leading-snug font-semibold sm:text-3xl">
+        <main className="mt-7 flex flex-1 flex-col sm:mt-12">
+          <h1 className="text-[1.55rem] leading-snug font-semibold sm:text-3xl">
             Kassettentoilette entsorgen – ohne Sucherei.
           </h1>
           <p className="mt-3 text-base leading-relaxed text-muted sm:text-lg">
             Finde verlässliche Stationen in Deutschland, navigiere dorthin und halte die Karte gemeinsam aktuell.
           </p>
-          <ul className="mt-5 space-y-2.5 sm:mt-8">
-            <li className="rounded-2xl bg-surface p-3 ring-1 ring-border">
-              <p className="font-medium">Stationen finden &amp; navigieren</p>
-              <p className="text-sm text-muted">Karte, Ortssuche, GPX</p>
+          <ul className="mt-6 grid grid-cols-3 gap-2 sm:mt-8 sm:gap-3">
+            <li className="bl-tile">
+              <span className="bl-float text-primary" aria-hidden>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z" stroke="currentColor" strokeWidth="1.7" />
+                  <circle cx="12" cy="9.8" r="2.2" fill="currentColor" />
+                </svg>
+              </span>
+              <p className="text-[13px] leading-tight font-medium">Finden &amp; fahren</p>
+              <p className="text-[11px] leading-snug text-muted">Karte, Suche, GPX</p>
             </li>
-            <li className="rounded-2xl bg-surface p-3 ring-1 ring-border">
-              <p className="font-medium">Community hält sie aktuell</p>
-              <p className="text-sm text-muted">Eintragen und melden</p>
+            <li className="bl-tile">
+              <span className="bl-float bl-float-2 text-primary" aria-hidden>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C12 2 5 11.2 5 16a7 7 0 0 0 14 0C19 11.2 12 2 12 2z" />
+                </svg>
+              </span>
+              <p className="text-[13px] leading-tight font-medium">Wasser &amp; Kassette</p>
+              <p className="text-[11px] leading-snug text-muted">V+E, Filter</p>
             </li>
-            <li className="rounded-2xl bg-surface p-3 ring-1 ring-border">
-              <p className="font-medium">Merkliste &amp; Notizen</p>
-              <p className="text-sm text-muted">Wichtige Stellen speichern</p>
+            <li className="bl-tile">
+              <span className="bl-float bl-float-3 text-primary" aria-hidden>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 16.5V8.8c0-.7.5-1.3 1.2-1.4L12 6l6.8 1.4c.7.1 1.2.7 1.2 1.4v7.7" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+                  <path d="M4 16.5c1.6 0 2.2 1.5 4 1.5s2.4-1.5 4-1.5 2.2 1.5 4 1.5 2.4-1.5 4-1.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                </svg>
+              </span>
+              <p className="text-[13px] leading-tight font-medium">Merken</p>
+              <p className="text-[11px] leading-snug text-muted">Liste &amp; Notizen</p>
             </li>
           </ul>
           <p className="mt-6 text-center text-sm tabular-nums text-muted">Aktuell {n}+ Stationen</p>
@@ -95,7 +128,7 @@ function Landing({ onDone }: { onDone: () => void }) {
             <button
               type="button"
               onClick={() => go(true)}
-              className="h-12 w-full max-w-sm rounded-full bg-primary text-base font-semibold text-primary-fg shadow-btn"
+              className="bl-cta h-12 w-full max-w-sm rounded-full bg-primary text-base font-semibold text-primary-fg shadow-btn"
             >
               Zur Karte
             </button>

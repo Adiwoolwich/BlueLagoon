@@ -339,8 +339,8 @@ export function StationMap({
     >
       <ZoomControl position="topright" />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende, <a href="https://openstreetmap.de/">OSM DE</a>'
+        url="https://tile.openstreetmap.de/{z}/{x}/{y}.png"
         maxZoom={19}
       />
       <MapChrome stations={stations} initialView={initialView} />
@@ -349,10 +349,10 @@ export function StationMap({
           center={[searchOrigin.lat, searchOrigin.lng]}
           radius={radiusKm * 1000}
           pathOptions={{
-            color: "#5eead4",
+            color: "#2ee0c5",
             weight: 1,
             opacity: 0.4,
-            fillColor: "#5eead4",
+            fillColor: "#2ee0c5",
             fillOpacity: 0.06,
           }}
         />
@@ -371,7 +371,7 @@ export function StationMap({
         <CircleMarker
           center={[userPos.lat, userPos.lng]}
           radius={8}
-          pathOptions={{ color: "#ffffff", fillColor: "#5eead4", fillOpacity: 1, weight: 2 }}
+          pathOptions={{ color: "#ffffff", fillColor: "#2ee0c5", fillOpacity: 1, weight: 2 }}
         />
       ) : null}
       <ClusterLayer stations={stations} />
