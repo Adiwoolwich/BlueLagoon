@@ -42,6 +42,15 @@ function useFilteredStations() {
 
 function Landing({ onDone }: { onDone: () => void }) {
   const n = STATIONS.length;
+  const [visitors, setVisitors] = useState<number | null>(null);
+  useEffect(() => {
+    fetch("/api/visitors")
+      .then((r) => r.json())
+      .then((d: { count?: number }) => {
+        if (typeof d.count === "number") setVisitors(d.count);
+      })
+      .catch(() => {});
+  }, []);
   function go(persist: boolean) {
     if (persist) {
       try {
@@ -123,7 +132,10 @@ function Landing({ onDone }: { onDone: () => void }) {
               <p className="text-[11px] leading-snug text-muted">Liste &amp; Notizen</p>
             </li>
           </ul>
-          <p className="mt-6 text-center text-sm tabular-nums text-muted">Aktuell {n}+ Stationen</p>
+          <p className="mt-6 text-center text-sm tabular-nums text-muted">
+            Aktuell {n}+ Stationen
+            {visitors != null ? ` · ${visitors.toLocaleString("de-DE")} Besucher` : ""}
+          </p>
           <div className="mt-auto flex flex-col items-center pt-8">
             <button
               type="button"
@@ -178,6 +190,7 @@ function MapApp() {
   }, [stations, bounds]);
 
   useEffect(() => {
+    fetch("/api/visitors").catch(() => {});
     void useAppStore.persist.rehydrate();
     const s = useAppStore.getState();
     if (Object.keys(initial.filters).length) s.setFilters(initial.filters);

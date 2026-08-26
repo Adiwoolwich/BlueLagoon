@@ -22,6 +22,7 @@ Repo: [Adiwoolwich/BlueLagune](https://github.com/Adiwoolwich/BlueLagune)
 - Route Start→Ziel über den öffentlichen OSRM-Router, Stationen im Korridor; Fallback Luftlinie
 - Deep-Link / Teilen: URL mit Zentrum, Zoom, Station-ID und abweichenden Filtern
 - Community-Meldungen, Merkliste, Zuletzt geöffnet, Notizen, GPX-Export
+- Unique-Besucher auf der Startseite (gehashte IPs im Cloudflare Worker, kein Klartext-Log)
 - Umkreis um Ort oder Standort. Saisonale Stationen im Detail gekennzeichnet
 
 ## Deep-Link
