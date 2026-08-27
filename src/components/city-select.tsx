@@ -2,13 +2,14 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, MapPin, X } from "lucide-react";
 import { findCity, searchCities, CITIES, cityKey, registerCity, type City } from "@/lib/cities";
 import { searchNominatimDe } from "@/lib/nominatim";
+import { t, useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export function CitySelect({
   value,
   onChange,
   label,
-  placeholder = "Stadt, Ort oder PLZ (DE / NL) …",
+  placeholder,
   allowEmpty = true,
   warnUnmatched = true,
 }: {
@@ -19,6 +20,8 @@ export function CitySelect({
   allowEmpty?: boolean;
   warnUnmatched?: boolean;
 }) {
+  useLang();
+  const ph = placeholder ?? t("cityPh");
   const id = useId();
   const listId = `${id}-list`;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -134,7 +137,7 @@ export function CitySelect({
           aria-controls={listId}
           aria-autocomplete="list"
           value={draft}
-          placeholder={placeholder}
+          placeholder={ph}
           autoComplete="off"
           spellCheck={false}
           onFocus={() => {
@@ -174,7 +177,7 @@ export function CitySelect({
             onMouseDown={(e) => e.preventDefault()}
             onClick={clear}
             className="grid size-7 place-items-center rounded-md text-muted hover:text-fg"
-            aria-label="Ort löschen"
+            aria-label={t("clearPlace")}
           >
             <X className="size-3.5" />
           </button>
@@ -187,15 +190,13 @@ export function CitySelect({
             inputRef.current?.focus();
           }}
           className="grid size-8 place-items-center rounded-md bg-surface-2 text-muted hover:text-fg"
-          aria-label="Städte anzeigen"
+          aria-label={t("showCities")}
         >
           <ChevronDown className={cn("size-4 transition-transform duration-150", open && "rotate-180")} />
         </button>
       </div>
       {warnUnmatched && unmatched && !open ? (
-        <p className="mt-1 text-xs text-bad">
-          Kein Ort gefunden. Stadt, Ortsteil oder PLZ eingeben.
-        </p>
+        <p className="mt-1 text-xs text-bad">{t("noCity")}</p>
       ) : null}
       {open ? (
         <ul
@@ -205,18 +206,14 @@ export function CitySelect({
         >
           {matches.length === 0 ? (
             <li className="px-3 py-3 text-sm text-muted">
-              Keine Treffer in {CITIES.length} Orten. Stadt, Ortsteil oder PLZ versuchen.
+              {t("noCityHits", { n: CITIES.length.toLocaleString(undefined) })}
             </li>
           ) : (
             <>
               {unmatched ? (
-                <li className="px-3 py-1.5 text-[11px] tracking-wide text-stale uppercase">
-                  Meintest du …
-                </li>
+                <li className="px-3 py-1.5 text-[11px] tracking-wide text-stale uppercase">{t("didYouMean")}</li>
               ) : !draft.trim() ? (
-                <li className="px-3 py-1.5 text-[11px] tracking-wide text-muted uppercase">
-                  Häufige Ziele
-                </li>
+                <li className="px-3 py-1.5 text-[11px] tracking-wide text-muted uppercase">{t("popular")}</li>
               ) : null}
               {matches.map((c, i) => {
                 const selected = cityKey(c) === (resolved ? cityKey(resolved) : value);
@@ -246,7 +243,7 @@ export function CitySelect({
                 );
               })}
               <li className="border-t border-border px-3 py-1.5 text-[11px] text-subtle">
-                {CITIES.length.toLocaleString("de-DE")} Orte · DE + NL
+                {t("placesFooter", { n: CITIES.length.toLocaleString(undefined) })}
               </li>
             </>
           )}
