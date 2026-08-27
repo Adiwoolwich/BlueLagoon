@@ -5,6 +5,15 @@
 export interface Env {
   ASSETS: Fetcher;
   VISITORS: DurableObjectNamespace;
+  EMAIL: {
+    send: (msg: {
+      to: string;
+      from: { name: string; email: string };
+      replyTo?: string;
+      subject: string;
+      text: string;
+    }) => Promise<{ messageId: string }>;
+  };
 }
 
 export class VisitorCounter {
@@ -45,6 +54,20 @@ export class VisitorCounter {
       }
       return Response.json({ count });
     }
+    if (url.pathname === "/feedback-rl" && request.method === "POST") {
+      const hash = (await request.text()).trim();
+      if (!/^[0-9a-f]{64}$/.test(hash)) return Response.json({ ok: true });
+      const now = Date.now();
+      const key = `fb:${hash}`;
+      const rec = await this.state.storage.get<{ n: number; t: number }>(key);
+      if (rec && now - rec.t < 60 * 60 * 1000) {
+        if (rec.n >= 5) return Response.json({ ok: false }, { status: 429 });
+        await this.state.storage.put(key, { n: rec.n + 1, t: rec.t });
+      } else {
+        await this.state.storage.put(key, { n: 1, t: now });
+      }
+      return Response.json({ ok: true });
+    }
     return new Response("not found", { status: 404 });
   }
 }
@@ -76,6 +99,79 @@ function isSitePage(url: URL): boolean {
   return !/\.(js|css|png|jpe?g|svg|ico|webp|woff2?|map|json|txt)$/i.test(url.pathname);
 }
 
+
+const FEEDBACK_TO = "bluelagune.feedback@gmail.com";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function corsHeaders(): Record<string, string> {
+  return {
+    "Access-Control-Allow-Origin": "https://blue-lagune.com",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+}
+
+function json(data: unknown, status = 200): Response {
+  return Response.json(data, { status, headers: { "Cache-Control": "no-store", ...corsHeaders() } });
+}
+
+function escapeText(s: string): string {
+  return s.replace(/\r/g, "").slice(0, 4000);
+}
+
+async function allowFeedback(env: Env, ip: string | null): Promise<boolean> {
+  if (!ip) return true;
+  const stub = env.VISITORS.get(env.VISITORS.idFromName("global"));
+  const saltRes = await stub.fetch("https://visitors/salt");
+  const salt = saltRes.ok ? await saltRes.text() : "bluelagune";
+  const hash = await sha256Hex(`${salt}\n${ip}`);
+  const res = await stub.fetch("https://visitors/feedback-rl", { method: "POST", body: hash });
+  return res.ok;
+}
+
+async function handleFeedback(request: Request, env: Env): Promise<Response> {
+  let body: { name?: string; email?: string; message?: string; company?: string };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return json({ ok: false, error: "invalid" }, 400);
+  }
+  if (typeof body.company === "string" && body.company.trim()) {
+    return json({ ok: true });
+  }
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  const email = typeof body.email === "string" ? body.email.trim() : "";
+  const message = typeof body.message === "string" ? body.message.trim() : "";
+  if (name.length < 2 || name.length > 80) return json({ ok: false, error: "name" }, 400);
+  if (!EMAIL_RE.test(email) || email.length > 120) return json({ ok: false, error: "email" }, 400);
+  if (message.length < 10 || message.length > 4000) return json({ ok: false, error: "message" }, 400);
+
+  const ip = request.headers.get("CF-Connecting-IP");
+  if (!(await allowFeedback(env, ip))) return json({ ok: false, error: "rate" }, 429);
+
+  const text = [
+    "Neues Feedback von blue-lagune.com",
+    "",
+    `Name: ${escapeText(name)}`,
+    `E-Mail: ${escapeText(email)}`,
+    "",
+    escapeText(message),
+  ].join("\n");
+
+  try {
+    await env.EMAIL.send({
+      to: FEEDBACK_TO,
+      from: { name: "Blue Lagune", email: "feedback@blue-lagune.com" },
+      replyTo: email,
+      subject: `Feedback: ${escapeText(name).slice(0, 60)}`,
+      text,
+    });
+  } catch {
+    return json({ ok: false, error: "mail" }, 502);
+  }
+  return json({ ok: true });
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -87,6 +183,13 @@ export default {
         { count },
         { headers: { "Cache-Control": "no-store" } },
       );
+    }
+
+    if (url.pathname === "/api/feedback" && request.method === "POST") {
+      return handleFeedback(request, env);
+    }
+    if (url.pathname === "/api/feedback" && request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders() });
     }
 
     if (request.method === "GET" && isSitePage(url)) {

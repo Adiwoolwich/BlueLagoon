@@ -8,6 +8,7 @@ import {
 } from "./components/station-panel";
 import { SiteFooter } from "./components/site-footer";
 import { DatenschutzPage, ImpressumPage } from "./components/legal-pages";
+import { FeedbackPage } from "./components/feedback-form";
 import { hasPreciseCoords, STATIONS } from "./lib/stations";
 import { allStations, applyFilters, useAppStore } from "./lib/store";
 import { inBounds } from "./lib/geo";
@@ -154,6 +155,7 @@ function Landing({ onDone }: { onDone: () => void }) {
             >
               Nur diesmal zur Karte
             </button>
+            <SiteFooter className="mt-8" />
           </div>
         </main>
       </div>
@@ -165,6 +167,7 @@ export function App() {
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   if (path === "/impressum") return <ImpressumPage />;
   if (path === "/datenschutz") return <DatenschutzPage />;
+  if (path === "/feedback") return <FeedbackPage />;
   return <MapApp />;
 }
 
