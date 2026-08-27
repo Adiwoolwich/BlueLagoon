@@ -1,4 +1,4 @@
-import { GERMANY_CENTER } from "./stations";
+import { MAP_CENTER } from "./stations";
 import { defaultFilters, type Filters } from "./store";
 
 export type UrlView = {
@@ -36,8 +36,8 @@ export function parseUrl(search = typeof window === "undefined" ? "" : window.lo
     lat = num(a ?? null);
     lng = num(b ?? null);
   }
-  lat = lat ?? GERMANY_CENTER.lat;
-  lng = lng ?? GERMANY_CENTER.lng;
+  lat = lat ?? MAP_CENTER.lat;
+  lng = lng ?? MAP_CENTER.lng;
   const zoom = num(p.get("z")) ?? 6;
   const id = p.get("id")?.trim() || p.get("s")?.trim() || null;
   const query = p.get("q")?.trim() || undefined;
@@ -71,7 +71,7 @@ export function parseUrl(search = typeof window === "undefined" ? "" : window.lo
   if (query) filters.place = query;
   return {
     lat: Math.min(55.2, Math.max(47.2, lat)),
-    lng: Math.min(15.1, Math.max(5.8, lng)),
+    lng: Math.min(15.1, Math.max(3.2, lng)),
     zoom: Math.min(18, Math.max(4, zoom)),
     id,
     filters,
