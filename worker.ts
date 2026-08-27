@@ -1,3 +1,5 @@
+import { EmailMessage } from "cloudflare:email";
+
 /**
  * Unique-IP counter. IPs are SHA-256 hashed with a random salt inside the
  * Durable Object. The raw IP is never stored or logged.
@@ -158,16 +160,37 @@ async function handleFeedback(request: Request, env: Env): Promise<Response> {
     escapeText(message),
   ].join("\n");
 
+  const fromAddr = "feedback@blue-lagune.com";
+  const subject = `Feedback: ${escapeText(name).slice(0, 60)}`;
   try {
     await env.EMAIL.send({
       to: FEEDBACK_TO,
-      from: { name: "Blue Lagune", email: "feedback@blue-lagune.com" },
+      from: { name: "Blue Lagune", email: fromAddr },
       replyTo: email,
-      subject: `Feedback: ${escapeText(name).slice(0, 60)}`,
+      subject,
       text,
     });
-  } catch {
-    return json({ ok: false, error: "mail" }, 502);
+  } catch (first) {
+    try {
+      const subj = `=?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`;
+      const raw = [
+        `From: Blue Lagune <${fromAddr}>`,
+        `To: ${FEEDBACK_TO}`,
+        `Reply-To: ${email}`,
+        `Subject: ${subj}`,
+        "MIME-Version: 1.0",
+        "Content-Type: text/plain; charset=utf-8",
+        "",
+        text,
+      ].join("\r\n");
+      await env.EMAIL.send(new EmailMessage(fromAddr, FEEDBACK_TO, raw) as never);
+    } catch (second) {
+      const code = (first as { code?: string; message?: string })?.code
+        || (first as { message?: string })?.message
+        || "mail";
+      console.error(JSON.stringify({ feedbackMail: String(code) }));
+      return json({ ok: false, error: "mail" }, 502);
+    }
   }
   return json({ ok: true });
 }
