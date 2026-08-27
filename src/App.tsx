@@ -13,6 +13,7 @@ import { hasPreciseCoords, STATIONS } from "./lib/stations";
 import { allStations, applyFilters, useAppStore } from "./lib/store";
 import { inBounds } from "./lib/geo";
 import { hasMapDeepLink, parseUrl } from "./lib/url-state";
+import { t, useLang } from "./lib/i18n";
 import { cn } from "./lib/utils";
 
 const SKIP_KEY = "bl-skip-landing";
@@ -42,6 +43,7 @@ function useFilteredStations() {
 }
 
 function Landing({ onDone }: { onDone: () => void }) {
+  const lang = useLang();
   const n = STATIONS.length;
   const [visitors, setVisitors] = useState<number | null>(null);
   useEffect(() => {
@@ -92,16 +94,12 @@ function Landing({ onDone }: { onDone: () => void }) {
           </span>
           <div>
             <p className="font-display text-xl leading-none font-semibold sm:text-2xl">Blue Lagune</p>
-            <p className="mt-1 text-sm text-muted">Entsorgungsstationen fürs Wohnmobil</p>
+            <p className="mt-1 text-sm text-muted">{t("landingKicker")}</p>
           </div>
         </header>
         <main className="mt-7 flex flex-1 flex-col sm:mt-12">
-          <h1 className="text-[1.55rem] leading-snug font-semibold sm:text-3xl">
-            Kassettentoilette entsorgen – ohne Sucherei.
-          </h1>
-          <p className="mt-3 text-base leading-relaxed text-muted sm:text-lg">
-            Finde verlässliche Stationen in Deutschland und den Niederlanden, navigiere dorthin und halte die Karte gemeinsam aktuell.
-          </p>
+          <h1 className="text-[1.55rem] leading-snug font-semibold sm:text-3xl">{t("landingH1")}</h1>
+          <p className="mt-3 text-base leading-relaxed text-muted sm:text-lg">{t("landingLead")}</p>
           <ul className="mt-6 grid grid-cols-3 gap-2 sm:mt-8 sm:gap-3">
             <li className="bl-tile">
               <span className="bl-float text-primary" aria-hidden>
@@ -110,8 +108,8 @@ function Landing({ onDone }: { onDone: () => void }) {
                   <circle cx="12" cy="9.8" r="2.2" fill="currentColor" />
                 </svg>
               </span>
-              <p className="text-[13px] leading-tight font-medium">Finden & fahren</p>
-              <p className="text-[11px] leading-snug text-muted">Karte, Suche, GPX</p>
+              <p className="text-[13px] leading-tight font-medium">{t("landingTileFind")}</p>
+              <p className="text-[11px] leading-snug text-muted">{t("landingTileFindSub")}</p>
             </li>
             <li className="bl-tile">
               <span className="bl-float bl-float-2 text-primary" aria-hidden>
@@ -121,8 +119,8 @@ function Landing({ onDone }: { onDone: () => void }) {
                   <ellipse className="bl-icon-ripple" cx="12" cy="20" rx="4.2" ry="1.15" stroke="currentColor" strokeWidth="1.2" />
                 </svg>
               </span>
-              <p className="text-[13px] leading-tight font-medium">Wasser & Kassette</p>
-              <p className="text-[11px] leading-snug text-muted">V+E, Filter</p>
+              <p className="text-[13px] leading-tight font-medium">{t("landingTileWater")}</p>
+              <p className="text-[11px] leading-snug text-muted">{t("landingTileWaterSub")}</p>
             </li>
             <li className="bl-tile">
               <span className="bl-float bl-float-3 text-primary" aria-hidden>
@@ -131,13 +129,15 @@ function Landing({ onDone }: { onDone: () => void }) {
                   <path d="M4 16.5c1.6 0 2.2 1.5 4 1.5s2.4-1.5 4-1.5 2.2 1.5 4 1.5 2.4-1.5 4-1.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
                 </svg>
               </span>
-              <p className="text-[13px] leading-tight font-medium">Merken</p>
-              <p className="text-[11px] leading-snug text-muted">Liste & Notizen</p>
+              <p className="text-[13px] leading-tight font-medium">{t("landingTileSave")}</p>
+              <p className="text-[11px] leading-snug text-muted">{t("landingTileSaveSub")}</p>
             </li>
           </ul>
           <p className="mt-6 text-center text-sm tabular-nums text-muted">
-            Aktuell {n}+ Stationen
-            {visitors != null ? ` · ${visitors.toLocaleString("de-DE")} Besucher` : ""}
+            {t("landingCount", { n })}
+            {visitors != null
+              ? ` \u00b7 ${t("landingVisitors", { n: visitors.toLocaleString(lang === "en" ? "en-GB" : "de-DE") })}`
+              : ""}
           </p>
           <div className="mt-auto flex flex-col items-center pt-8">
             <button
@@ -145,15 +145,15 @@ function Landing({ onDone }: { onDone: () => void }) {
               onClick={() => go(true)}
               className="bl-cta h-12 w-full max-w-sm rounded-full bg-primary text-base font-semibold text-primary-fg shadow-btn"
             >
-              Zur Karte
+              {t("landingCta")}
             </button>
-            <p className="mt-3 text-center text-xs text-subtle">Nächstes Mal direkt zur Karte.</p>
+            <p className="mt-3 text-center text-xs text-subtle">{t("landingNext")}</p>
             <button
               type="button"
               onClick={() => go(false)}
               className="mt-4 text-sm font-medium text-primary underline-offset-2 hover:underline"
             >
-              Nur diesmal zur Karte
+              {t("landingOnce")}
             </button>
             <SiteFooter className="mt-8" />
           </div>
@@ -172,6 +172,7 @@ export function App() {
 }
 
 function MapApp() {
+  useLang();
   const initial = useMemo(() => parseUrl(), []);
   const [showLanding, setShowLanding] = useState(() => {
     if (hasMapDeepLink()) return false;
@@ -222,10 +223,8 @@ function MapApp() {
   return (
     <div className="relative h-dvh overflow-hidden bg-bg text-fg" data-chrome="map">
       <section className="sr-only">
-        <h1>Blue Lagune – Chemietoilette und Kassette entsorgen in Deutschland und den Niederlanden</h1>
-        <p>
-          Interaktive Karte mit Entsorgungsstationen für Chemietoiletten und Kassettentoiletten in Deutschland und den Niederlanden.
-        </p>
+        <h1>{t("srTitle")}</h1>
+        <p>{t("srLead")}</p>
       </section>
 
       <main className="absolute inset-0">
@@ -255,16 +254,14 @@ function MapApp() {
           type="button"
           onClick={cycleSheet}
           className="flex h-7 shrink-0 items-center justify-center md:hidden"
-          aria-label="Liste größer oder kleiner"
+          aria-label={t("sheetResize")}
         >
           <span className="h-1 w-10 rounded-full bg-border-strong" />
         </button>
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] md:p-4">
           {panel === "list" ? <SearchAndFilters count={inViewCount} compact={sheet === "peek"} /> : null}
           {routePath?.source === "straight" && panel === "list" && sheet !== "peek" ? (
-            <p className="shrink-0 rounded-lg bg-stale/10 px-2.5 py-1.5 text-xs text-stale">
-              Straßenroute nicht verfügbar – Luftlinie mit Korridor.
-            </p>
+            <p className="shrink-0 rounded-lg bg-stale/10 px-2.5 py-1.5 text-xs text-stale">{t("routeAir")}</p>
           ) : null}
           {sheet === "peek" && panel === "list" ? null : (
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -281,30 +278,31 @@ function MapApp() {
 }
 
 function GuideOverlay({ onClose }: { onClose: () => void }) {
+  useLang();
   return (
     <div className="absolute inset-0 z-40 flex flex-col bg-bg p-5">
       <div className="mx-auto w-full max-w-lg overflow-y-auto">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-semibold">Kassette entleeren</h2>
+          <h2 className="text-2xl font-semibold">{t("guideTitle")}</h2>
           <button type="button" onClick={onClose} className="h-11 rounded-xl bg-surface px-3 text-sm ring-1 ring-border">
-            Schließen
+            {t("close")}
           </button>
         </div>
         <ol className="space-y-3 text-sm leading-relaxed text-muted">
           <li>
-            <span className="font-medium text-fg">1. Station finden.</span> Ort + Umkreis oder Standort.
+            <span className="font-medium text-fg">{t("guide1t")}</span> {t("guide1")}
           </li>
           <li>
-            <span className="font-medium text-fg">2. Öffnungszeiten prüfen.</span>
+            <span className="font-medium text-fg">{t("guide2t")}</span>
           </li>
           <li>
-            <span className="font-medium text-fg">3. Nur gekennzeichnete Grube.</span>
+            <span className="font-medium text-fg">{t("guide3t")}</span>
           </li>
           <li>
-            <span className="font-medium text-fg">4. Nachspülen.</span>
+            <span className="font-medium text-fg">{t("guide4t")}</span>
           </li>
           <li>
-            <span className="font-medium text-fg">5. Status melden.</span> Bei Defekt in der App markieren.
+            <span className="font-medium text-fg">{t("guide5t")}</span> {t("guide5")}
           </li>
         </ol>
       </div>
