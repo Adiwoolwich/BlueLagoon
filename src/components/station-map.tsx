@@ -22,6 +22,7 @@ import {
 } from "@/lib/stations";
 import { isCampsite, useAppStore, type MapView } from "@/lib/store";
 import { replaceUrl } from "@/lib/url-state";
+import { t, useLang } from "@/lib/i18n";
 import { STATUS_COLOR } from "./status-badge";
 
 type StationProps = { id: string };
@@ -172,8 +173,8 @@ function MapChrome({
 
   useEffect(() => {
     const onClick = (e: L.LeafletMouseEvent) => {
-      const t = e.originalEvent?.target as HTMLElement | undefined;
-      if (t?.closest(".leaflet-marker-icon, .bl-marker, .bl-cluster")) return;
+      const el = e.originalEvent?.target as HTMLElement | undefined;
+      if (el?.closest(".leaflet-marker-icon, .bl-marker, .bl-cluster")) return;
       select(null);
       setPanel("list");
       if (window.innerWidth < 768) setSheet("peek");
@@ -188,6 +189,7 @@ function MapChrome({
 }
 
 function ClusterLayer({ stations }: { stations: Station[] }) {
+  useLang();
   const map = useMap();
   const selectedId = useAppStore((s) => s.selectedId);
   const select = useAppStore((s) => s.select);
@@ -248,7 +250,7 @@ function ClusterLayer({ stations }: { stations: Station[] }) {
           }}
         >
           <Tooltip direction="top" offset={[0, -8]} opacity={1} className="bl-map-tooltip">
-            <span className="bl-map-tooltip-name">{count} Stationen</span>
+            <span className="bl-map-tooltip-name">{t("clusterN", { n: count })}</span>
           </Tooltip>
         </Marker>
       );
