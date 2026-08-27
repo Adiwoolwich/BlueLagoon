@@ -7,6 +7,16 @@ import {
   type NavTarget,
 } from "../lib/maps";
 import { canNavigateTo, fullAddress, hasPreciseCoords } from "../lib/stations";
+import { t, useLang } from "../lib/i18n";
+
+function targetLabel(id: string, fallback: string) {
+  if (id === "system") return t("navSystem");
+  if (id === "apple") return t("navApple");
+  if (id === "google") return t("navGoogle");
+  if (id === "waze") return t("navWaze");
+  if (id === "geo") return t("navOther");
+  return fallback;
+}
 
 export function GoogleMapsButton({
   lat,
@@ -23,6 +33,7 @@ export function GoogleMapsButton({
   city?: string;
   postalCode?: string;
 }) {
+  useLang();
   const [sheetOpen, setSheetOpen] = useState(false);
   const mobile = useMemo(() => isMobileDevice(), []);
   const place = { lat, lng, name: label, address, city, postalCode };
@@ -33,7 +44,7 @@ export function GoogleMapsButton({
   if (!navigable || targets.length === 0) {
     return (
       <p className="rounded-xl bg-surface px-3 py-2.5 text-sm text-muted ring-1 ring-border">
-        Keine genaue Position – Navigation nicht möglich.
+        {t("navMissing")}
       </p>
     );
   }
@@ -58,13 +69,13 @@ export function GoogleMapsButton({
   if (!mobile) {
     return (
       <a
-        href={targets.find((t) => t.id === "google")?.href ?? "#"}
+        href={targets.find((x) => x.id === "google")?.href ?? "#"}
         onClick={openDesktop}
         target="_blank"
         rel="noopener noreferrer"
         className={cls}
       >
-        Navigation starten
+        {t("navStart")}
       </a>
     );
   }
@@ -72,7 +83,7 @@ export function GoogleMapsButton({
   return (
     <>
       <button type="button" onClick={() => setSheetOpen(true)} className={cls}>
-        Navigation starten
+        {t("navStart")}
       </button>
 
       {sheetOpen ? (
@@ -80,7 +91,7 @@ export function GoogleMapsButton({
           className="fixed inset-0 z-[80] flex flex-col justify-end bg-black/50 p-3"
           role="dialog"
           aria-modal="true"
-          aria-label="Navigations-App wählen"
+          aria-label={t("navChoose")}
           onClick={() => setSheetOpen(false)}
         >
           <div
@@ -88,18 +99,18 @@ export function GoogleMapsButton({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="border-b border-border px-4 py-3">
-              <p className="text-sm font-semibold text-fg">Navigation öffnen mit</p>
-              <p className="mt-0.5 text-xs text-muted">Wähle eine installierte App auf deinem Smartphone</p>
+              <p className="text-sm font-semibold text-fg">{t("navOpenWith")}</p>
+              <p className="mt-0.5 text-xs text-muted">{t("navPick")}</p>
             </div>
             <ul className="divide-y divide-border/60">
-              {targets.map((t) => (
-                <li key={t.id}>
+              {targets.map((x) => (
+                <li key={x.id}>
                   <button
                     type="button"
-                    onClick={() => pick(t)}
+                    onClick={() => pick(x)}
                     className="flex h-12 w-full items-center px-4 text-left text-sm font-medium text-fg hover:bg-surface-2"
                   >
-                    {t.label}
+                    {targetLabel(x.id, x.label)}
                   </button>
                 </li>
               ))}
@@ -109,7 +120,7 @@ export function GoogleMapsButton({
               onClick={() => setSheetOpen(false)}
               className="flex h-12 w-full items-center justify-center border-t border-border text-sm text-muted hover:bg-surface-2 hover:text-fg"
             >
-              Abbrechen
+              {t("navCancel")}
             </button>
           </div>
         </div>
