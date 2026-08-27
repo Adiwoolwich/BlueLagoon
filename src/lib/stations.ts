@@ -4,6 +4,7 @@ import partA from "../data/stations-a.json";
 import partB from "../data/stations-b.json";
 import partC from "../data/stations-c.json";
 import partD from "../data/stations-d.json";
+import partNl from "../data/stations-nl.json";
 
 export { CITIES, findCity };
 export type { City };
@@ -273,7 +274,13 @@ export function searchStations(query: string, list: Station[]): Station[] {
   });
 }
 
-export const STATIONS: Station[] = [...(partA as Station[]), ...(partB as Station[]), ...(partC as Station[]), ...(partD as Station[])];
+export const STATIONS: Station[] = [
+  ...(partA as Station[]),
+  ...(partB as Station[]),
+  ...(partC as Station[]),
+  ...(partD as Station[]),
+  ...(partNl as Station[]),
+];
 
 const STREET_RE =
   /\d|straße|strasse|str\.|weg|platz|allee|ufer|ring|gasse|damm|chaussee|promenade|deich|hafen|kai|hof|park|straat|laan|kade|dijk|plein|gracht|singel|steeg|haven|kaai|brug|pad|baan/i;
