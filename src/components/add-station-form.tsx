@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ChemicalRule, FeeKind, HoursKind, Station, StationType } from "../lib/stations";
 import { useAppStore } from "../lib/store";
+import { chemLabel, feeLabel, hoursKindLabel, t, typeLabel, useLang } from "../lib/i18n";
 import { cn } from "../lib/utils";
 
 const STATES = [
@@ -20,34 +21,24 @@ const STATES = [
   "Sachsen-Anhalt",
   "Schleswig-Holstein",
   "Thüringen",
+  "Groningen",
+  "Friesland",
+  "Drenthe",
+  "Overijssel",
+  "Flevoland",
+  "Gelderland",
+  "Utrecht",
+  "Noord-Holland",
+  "Zuid-Holland",
+  "Zeeland",
+  "Noord-Brabant",
+  "Limburg",
 ];
 
-const TYPE_OPTS: { value: StationType; label: string }[] = [
-  { value: "combo", label: "Kombi V+E" },
-  { value: "cassette", label: "Kassette" },
-  { value: "camperclean", label: "CamperClean" },
-  { value: "municipal", label: "Kommunal" },
-  { value: "greywater", label: "Nur Grauwasser" },
-];
-
-const FEE_OPTS: { value: FeeKind; label: string }[] = [
-  { value: "free", label: "Kostenlos" },
-  { value: "paid", label: "Gebühr" },
-  { value: "guest", label: "Nur Gäste / im Preis" },
-];
-
-const HOURS_OPTS: { value: HoursKind; label: string }[] = [
-  { value: "24h", label: "Rund um die Uhr" },
-  { value: "daytime", label: "Tagsüber" },
-  { value: "seasonal", label: "Saisonal" },
-  { value: "limited", label: "Eingeschränkt" },
-];
-
-const CHEM_OPTS: { value: ChemicalRule; label: string }[] = [
-  { value: "none", label: "Keine Einschränkung" },
-  { value: "green-only", label: "Nur grüne Zusätze" },
-  { value: "banned", label: "Chemie verboten" },
-];
+const TYPE_OPTS: StationType[] = ["combo", "cassette", "camperclean", "municipal", "greywater"];
+const FEE_OPTS: FeeKind[] = ["free", "paid", "guest"];
+const HOURS_OPTS: HoursKind[] = ["24h", "daytime", "seasonal", "limited"];
+const CHEM_OPTS: ChemicalRule[] = ["none", "green-only", "banned"];
 
 function Field({
   label,
@@ -79,6 +70,7 @@ function slugify(s: string) {
 }
 
 export function AddStationForm() {
+  useLang();
   const addStation = useAppStore((s) => s.addStation);
   const setPanel = useAppStore((s) => s.setPanel);
   const userPos = useAppStore((s) => s.userPos);
@@ -88,8 +80,8 @@ export function AddStationForm() {
   const [postalCode, setPostalCode] = useState("");
   const [state, setState] = useState("Bayern");
   const [address, setAddress] = useState("");
-  const [lat, setLat] = useState("");
-  const [lng, setLng] = useState("");
+  const [lat, setLat] = useState(userPos ? userPos.lat.toFixed(5) : "");
+  const [lng, setLng] = useState(userPos ? userPos.lng.toFixed(5) : "");
   const [type, setType] = useState<StationType>("combo");
   const [fee, setFee] = useState<FeeKind>("free");
   const [feeNote, setFeeNote] = useState("");
@@ -108,7 +100,7 @@ export function AddStationForm() {
 
   function useMyLocation() {
     if (!navigator.geolocation) {
-      setError("Geolocation nicht verfügbar");
+      setError(t("errGeoOff"));
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -117,7 +109,7 @@ export function AddStationForm() {
         setLng(pos.coords.longitude.toFixed(5));
         setError("");
       },
-      () => setError("Standort konnte nicht ermittelt werden"),
+      () => setError(t("errGeoFail")),
       { enableHighAccuracy: true, timeout: 10000 },
     );
   }
@@ -128,15 +120,15 @@ export function AddStationForm() {
     const latN = parseFloat(lat);
     const lngN = parseFloat(lng);
     if (!name.trim() || !city.trim() || !postalCode.trim() || !address.trim()) {
-      setError("Name, Stadt, PLZ und Adresse sind Pflicht.");
+      setError(t("errRequired"));
       return;
     }
     if (Number.isNaN(latN) || Number.isNaN(lngN)) {
-      setError("Gültige Koordinaten (Lat/Lng) erforderlich.");
+      setError(t("errCoords"));
       return;
     }
-    if (latN < 47 || latN > 55.5 || lngN < 5.5 || lngN > 15.5) {
-      setError("Koordinaten liegen außerhalb Deutschlands.");
+    if (latN < 47 || latN > 55.6 || lngN < 3.2 || lngN > 15.5) {
+      setError(t("errBounds"));
       return;
     }
     const id = `user-${slugify(name)}-${Date.now().toString(36).slice(-4)}`;
@@ -164,7 +156,7 @@ export function AddStationForm() {
       chemical,
       lastVerified: new Date().toISOString().slice(0, 10),
       source: "community",
-      description: description.trim() || "Community-Eintrag",
+      description: description.trim() || t("communityEntry"),
       rating: 0,
       reviewCount: 0,
     };
@@ -179,24 +171,24 @@ export function AddStationForm() {
           onClick={() => setPanel("list")}
           className="inline-flex h-11 items-center rounded-xl px-3 text-sm text-muted shadow-border transition-[transform,background-color] active:scale-95 hover:bg-surface"
         >
-          ← Zurück
+          {t("back")}
         </button>
-        <h2 className="text-base font-semibold">Örtlichkeit hinzufügen</h2>
+        <h2 className="text-base font-semibold">{t("addTitle")}</h2>
       </div>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4 p-4 pb-24">
-        <Field label="Name *">
-          <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="z. B. Wohnmobilstellplatz XY" required />
+        <Field label={t("fieldName")}>
+          <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("namePh")} required />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Stadt *">
-            <input className={inputCls} value={city} onChange={(e) => setCity(e.target.value)} placeholder="München" required />
+          <Field label={t("fieldCity")}>
+            <input className={inputCls} value={city} onChange={(e) => setCity(e.target.value)} required />
           </Field>
-          <Field label="PLZ *">
-            <input className={inputCls} value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="80331" required />
+          <Field label={t("fieldZip")}>
+            <input className={inputCls} value={postalCode} onChange={(e) => setPostalCode(e.target.value)} required />
           </Field>
         </div>
-        <Field label="Bundesland">
+        <Field label={t("fieldState")}>
           <select className={selectCls} value={state} onChange={(e) => setState(e.target.value)}>
             {STATES.map((s) => (
               <option key={s} value={s}>
@@ -205,15 +197,15 @@ export function AddStationForm() {
             ))}
           </select>
         </Field>
-        <Field label="Adresse *">
-          <input className={inputCls} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Straße und Hausnummer" required />
+        <Field label={t("fieldAddress")}>
+          <input className={inputCls} value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t("addrPh")} required />
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Latitude *">
+          <Field label={t("fieldLat")}>
             <input className={inputCls} value={lat} onChange={(e) => setLat(e.target.value)} placeholder="48.13715" inputMode="decimal" />
           </Field>
-          <Field label="Longitude *">
+          <Field label={t("fieldLng")}>
             <input className={inputCls} value={lng} onChange={(e) => setLng(e.target.value)} placeholder="11.57538" inputMode="decimal" />
           </Field>
         </div>
@@ -222,64 +214,64 @@ export function AddStationForm() {
           onClick={useMyLocation}
           className="h-11 rounded-xl bg-surface text-sm font-medium text-muted shadow-border transition-[transform] active:scale-95"
         >
-          Meinen Standort verwenden
+          {t("useMyPos")}
         </button>
 
-        <Field label="Typ">
+        <Field label={t("fieldType")}>
           <select className={selectCls} value={type} onChange={(e) => setType(e.target.value as StationType)}>
             {TYPE_OPTS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
+              <option key={o} value={o}>
+                {typeLabel(o)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Gebühr">
+        <Field label={t("fieldFee")}>
           <select className={selectCls} value={fee} onChange={(e) => setFee(e.target.value as FeeKind)}>
             {FEE_OPTS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
+              <option key={o} value={o}>
+                {feeLabel(o)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Gebühren-Hinweis">
-          <input className={inputCls} value={feeNote} onChange={(e) => setFeeNote(e.target.value)} placeholder="z. B. 2 € Münze" />
+        <Field label={t("fieldFeeNote")}>
+          <input className={inputCls} value={feeNote} onChange={(e) => setFeeNote(e.target.value)} placeholder={t("feePh")} />
         </Field>
-        <Field label="Öffnungszeiten">
+        <Field label={t("fieldHours")}>
           <select className={selectCls} value={hours} onChange={(e) => setHours(e.target.value as HoursKind)}>
             {HOURS_OPTS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
+              <option key={o} value={o}>
+                {hoursKindLabel(o)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Öffnungszeiten-Hinweis">
-          <input className={inputCls} value={hoursNote} onChange={(e) => setHoursNote(e.target.value)} placeholder="z. B. 8–20 Uhr, Winter zu" />
+        <Field label={t("fieldHoursNote")}>
+          <input className={inputCls} value={hoursNote} onChange={(e) => setHoursNote(e.target.value)} placeholder={t("hoursPh")} />
         </Field>
-        <Field label="Chemie-Regel">
+        <Field label={t("fieldChem")}>
           <select className={selectCls} value={chemical} onChange={(e) => setChemical(e.target.value as ChemicalRule)}>
             {CHEM_OPTS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
+              <option key={o} value={o}>
+                {chemLabel(o)}
               </option>
             ))}
           </select>
         </Field>
 
         <fieldset>
-          <legend className="mb-2 text-sm text-muted">Ausstattung</legend>
+          <legend className="mb-2 text-sm text-muted">{t("fieldGear")}</legend>
           <div className="grid grid-cols-2 gap-2">
             {(
               [
-                ["Kassette", cassette, setCassette],
-                ["Grauwasser", greywater, setGreywater],
-                ["Frischwasser", freshwater, setFreshwater],
-                ["Schlauch", hose, setHose],
-                ["Beleuchtung", lighting, setLighting],
-                ["Überdacht", covered, setCovered],
-                ["Rollen/Räder", wheels, setWheels],
+                [t("chipCassette"), cassette, setCassette],
+                [t("chipGrey"), greywater, setGreywater],
+                [t("chipFresh"), freshwater, setFreshwater],
+                [t("chipHose"), hose, setHose],
+                [t("light"), lighting, setLighting],
+                [t("covered"), covered, setCovered],
+                [t("wheels"), wheels, setWheels],
               ] as const
             ).map(([label, val, setVal]) => (
               <button
@@ -297,13 +289,13 @@ export function AddStationForm() {
           </div>
         </fieldset>
 
-        <Field label="Beschreibung">
+        <Field label={t("fieldDesc")}>
           <textarea
             className="w-full resize-none rounded-xl bg-surface p-3 text-sm shadow-border outline-none focus:ring-2 focus:ring-primary/50"
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Zufahrt, Hinweise, Öffnungszeiten …"
+            placeholder={t("descPh")}
           />
         </Field>
 
@@ -313,11 +305,9 @@ export function AddStationForm() {
           type="submit"
           className="h-12 w-full rounded-xl bg-primary text-sm font-semibold text-primary-fg transition-[transform,filter] active:scale-[0.98]"
         >
-          Station speichern
+          {t("saveStation")}
         </button>
-        <p className="text-center text-xs text-muted">
-          Wird nur auf diesem Gerät gespeichert (Community-Eintrag).
-        </p>
+        <p className="text-center text-xs text-muted">{t("saveLocal")}</p>
       </form>
     </div>
   );
