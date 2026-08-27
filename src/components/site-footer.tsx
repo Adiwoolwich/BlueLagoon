@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { setLang, t, useLang } from "@/lib/i18n";
 
 export function SiteFooter({
   className,
@@ -7,6 +8,7 @@ export function SiteFooter({
   className?: string;
   onGuide?: () => void;
 }) {
+  const lang = useLang();
   return (
     <footer
       className={cn(
@@ -17,7 +19,7 @@ export function SiteFooter({
       {onGuide ? (
         <>
           <button type="button" onClick={onGuide} className="hover:text-fg">
-            Entleeren
+            {t("footerEmpty")}
           </button>
           <span aria-hidden className="text-subtle">
             ·
@@ -25,19 +27,41 @@ export function SiteFooter({
         </>
       ) : null}
       <a href="/impressum" className="hover:text-fg">
-        Impressum
+        {t("footerImprint")}
       </a>
       <span aria-hidden className="text-subtle">
         ·
       </span>
       <a href="/feedback" className="hover:text-fg">
-        Feedback
+        {t("footerFeedback")}
       </a>
       <span aria-hidden className="text-subtle">
         ·
       </span>
+      <span className="inline-flex items-center gap-1" role="group" aria-label={t("langToggle")}>
+        <button
+          type="button"
+          onClick={() => setLang("de")}
+          className={lang === "de" ? "font-semibold text-fg" : "hover:text-fg"}
+          aria-pressed={lang === "de"}
+        >
+          {t("langDe")}
+        </button>
+        <span aria-hidden>/</span>
+        <button
+          type="button"
+          onClick={() => setLang("en")}
+          className={lang === "en" ? "font-semibold text-fg" : "hover:text-fg"}
+          aria-pressed={lang === "en"}
+        >
+          {t("langEn")}
+        </button>
+      </span>
+      <span aria-hidden className="text-subtle">
+        ·
+      </span>
       <a href="/datenschutz" className="hover:text-fg">
-        Datenschutz
+        {t("footerPrivacy")}
       </a>
     </footer>
   );

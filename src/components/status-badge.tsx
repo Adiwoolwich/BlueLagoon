@@ -1,4 +1,5 @@
-import { deriveStatus, STATUS_LABEL, type LocalReport, type Station, type TrustStatus } from "@/lib/stations";
+import { deriveStatus, type LocalReport, type Station, type TrustStatus } from "@/lib/stations";
+import { statusLabel, useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const tone: Record<TrustStatus, string> = {
@@ -22,6 +23,7 @@ export function StatusBadge({
   className?: string;
   compact?: boolean;
 }) {
+  useLang();
   const resolved = status ?? (station ? deriveStatus(station, report) : "unknown");
   return (
     <span
@@ -32,7 +34,7 @@ export function StatusBadge({
         className,
       )}
     >
-      {STATUS_LABEL[resolved]}
+      {statusLabel(resolved)}
     </span>
   );
 }

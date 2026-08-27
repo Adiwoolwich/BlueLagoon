@@ -1,28 +1,28 @@
 import {
-  CERTAINTY_LABEL,
   DAY_ORDER,
-  DAY_SHORT,
   formatDayHours,
   getHoursCertainty,
-  hoursSummary,
   resolveWeeklyHours,
   type DayKey,
   type Station,
 } from "@/lib/stations";
+import { certaintyLabel, dayShort, fmtSlot, hoursLine, t, useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const JS_DAY_TO_KEY: DayKey[] = ["su", "mo", "tu", "we", "th", "fr", "sa"];
 
 export function HoursTable({ station }: { station: Station }) {
+  useLang();
   const certainty = getHoursCertainty(station);
   const week = resolveWeeklyHours(station);
   const today = JS_DAY_TO_KEY[new Date().getDay()];
+  const summary = hoursLine(station);
   return (
     <section className="rounded-lg bg-surface p-3 ring-1 ring-border">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-[11px] tracking-wide text-muted uppercase">Öffnungszeiten</p>
-          <p className="mt-1 text-sm text-fg">{hoursSummary(station)}</p>
+          <p className="text-[11px] tracking-wide text-muted uppercase">{t("hoursOpen")}</p>
+          <p className="mt-1 text-sm text-fg">{summary}</p>
         </div>
         <span
           className={cn(
@@ -32,7 +32,7 @@ export function HoursTable({ station }: { station: Station }) {
             certainty === "unknown" && "bg-bad/12 text-bad",
           )}
         >
-          {CERTAINTY_LABEL[certainty]}
+          {certaintyLabel(certainty)}
         </span>
       </div>
       <ul className="mt-3 space-y-1 text-xs">
@@ -45,21 +45,19 @@ export function HoursTable({ station }: { station: Station }) {
             )}
           >
             <span className="flex min-w-14 items-baseline gap-1 tabular-nums">
-              {DAY_SHORT[d]}
-              {d === today ? <span className="text-xs text-primary">heute</span> : null}
+              {dayShort(d)}
+              {d === today ? <span className="text-xs text-primary">{t("today")}</span> : null}
             </span>
-            <span className={cn("tabular-nums", d === today && "text-fg")}>{formatDayHours(week[d])}</span>
+            <span className={cn("tabular-nums", d === today && "text-fg")}>{fmtSlot(week[d])}</span>
           </li>
         ))}
       </ul>
-      {station.hoursNote && !hoursSummary(station).includes(station.hoursNote) ? (
+      {station.hoursNote && !summary.includes(station.hoursNote) ? (
         <p className="mt-2 text-xs text-muted">{station.hoursNote}</p>
       ) : null}
-      {certainty !== "exact" ? (
-        <p className="mt-2 text-xs text-stale">
-          Vor der Anfahrt Zeiten prüfen – Angaben können saisonal abweichen.
-        </p>
-      ) : null}
+      {certainty !== "exact" ? <p className="mt-2 text-xs text-stale">{t("hoursCheck")}</p> : null}
     </section>
   );
 }
+
+void formatDayHours;
