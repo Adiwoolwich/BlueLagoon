@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { SiteFooter } from "@/components/site-footer";
+import { t, useLang } from "@/lib/i18n";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export function FeedbackPage() {
+  useLang();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -17,17 +19,17 @@ export function FeedbackPage() {
     setError("");
     const n = name.trim();
     const m = email.trim();
-    const t = message.trim();
+    const body = message.trim();
     if (n.length < 2 || n.length > 80) {
-      setError("Bitte einen Namen angeben (2–80 Zeichen).");
+      setError(t("fbErrName"));
       return;
     }
     if (!EMAIL_RE.test(m) || m.length > 120) {
-      setError("Bitte eine gültige E-Mail-Adresse angeben.");
+      setError(t("fbErrMail"));
       return;
     }
-    if (t.length < 10 || t.length > 4000) {
-      setError("Die Nachricht sollte zwischen 10 und 4000 Zeichen haben.");
+    if (body.length < 10 || body.length > 4000) {
+      setError(t("fbErrMsg"));
       return;
     }
     setBusy(true);
@@ -35,19 +37,19 @@ export function FeedbackPage() {
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: n, email: m, message: t, company: hp }),
+        body: JSON.stringify({ name: n, email: m, message: body, company: hp }),
       });
       if (res.status === 429) {
-        setError("Zu viele Nachrichten. Bitte später noch einmal.");
+        setError(t("fbErr429"));
         return;
       }
       if (!res.ok) {
-        setError("Senden hat nicht geklappt. Bitte später noch einmal.");
+        setError(t("fbErrSend"));
         return;
       }
       setOk(true);
     } catch {
-      setError("Senden hat nicht geklappt. Bitte später noch einmal.");
+      setError(t("fbErrSend"));
     } finally {
       setBusy(false);
     }
@@ -57,24 +59,20 @@ export function FeedbackPage() {
     <div className="min-h-dvh bg-bg text-fg">
       <header className="mx-auto flex max-w-lg items-center gap-3 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
         <a href="/" className="inline-flex h-11 items-center gap-2 rounded-lg bg-surface px-3 text-sm ring-1 ring-border">
-          ← Zurück
+          {t("back")}
         </a>
         <div className="ml-auto font-display text-lg text-primary">Blue Lagune</div>
       </header>
       <main className="mx-auto w-full max-w-lg px-4 pb-8">
-        <p className="text-xs tracking-wide text-muted uppercase">Kontakt</p>
-        <h1 className="mt-1 font-display text-4xl leading-tight">Feedback</h1>
-        <p className="mt-3 text-sm leading-relaxed text-muted">
-          Hinweis zur Karte, ein Fehler, ein Wunsch. Wir lesen mit.
-        </p>
+        <p className="text-xs tracking-wide text-muted uppercase">{t("fbKicker")}</p>
+        <h1 className="mt-1 font-display text-4xl leading-tight">{t("fbTitle")}</h1>
+        <p className="mt-3 text-sm leading-relaxed text-muted">{t("fbLead")}</p>
         {ok ? (
-          <p className="mt-8 rounded-2xl bg-surface p-4 text-sm leading-relaxed ring-1 ring-border">
-            Danke. Deine Nachricht ist raus.
-          </p>
+          <p className="mt-8 rounded-2xl bg-surface p-4 text-sm leading-relaxed ring-1 ring-border">{t("fbThanks")}</p>
         ) : (
           <form className="mt-6 flex flex-col gap-4" onSubmit={onSubmit} noValidate>
             <label className="flex flex-col gap-1.5 text-sm">
-              <span className="font-medium">Name</span>
+              <span className="font-medium">{t("fbName")}</span>
               <input
                 name="name"
                 autoComplete="name"
@@ -86,7 +84,7 @@ export function FeedbackPage() {
               />
             </label>
             <label className="flex flex-col gap-1.5 text-sm">
-              <span className="font-medium">E-Mail</span>
+              <span className="font-medium">{t("fbEmail")}</span>
               <input
                 name="email"
                 type="email"
@@ -99,7 +97,7 @@ export function FeedbackPage() {
               />
             </label>
             <label className="bl-hp" aria-hidden="true">
-              Firma
+              {t("fbCompany")}
               <input
                 name="company"
                 tabIndex={-1}
@@ -109,7 +107,7 @@ export function FeedbackPage() {
               />
             </label>
             <label className="flex flex-col gap-1.5 text-sm">
-              <span className="font-medium">Nachricht</span>
+              <span className="font-medium">{t("fbMsg")}</span>
               <textarea
                 name="message"
                 required
@@ -127,7 +125,7 @@ export function FeedbackPage() {
               disabled={busy}
               className="h-12 rounded-full bg-primary text-base font-semibold text-primary-fg shadow-btn disabled:opacity-60"
             >
-              {busy ? "Senden…" : "Absenden"}
+              {busy ? t("fbSending") : t("fbSend")}
             </button>
           </form>
         )}

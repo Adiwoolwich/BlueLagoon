@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 import { LEGAL, hasCompleteImprint } from "@/lib/legal";
 import { SiteFooter } from "@/components/site-footer";
+import { t, useLang } from "@/lib/i18n";
 
 function Shell({ title, kicker, children }: { title: string; kicker: string; children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-bg text-fg">
       <header className="mx-auto flex max-w-3xl items-center gap-3 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
         <a href="/" className="inline-flex h-11 items-center gap-2 rounded-lg bg-surface px-3 text-sm ring-1 ring-border">
-          ← Karte
+          {t("backMap")}
         </a>
         <div className="ml-auto font-display text-lg text-primary">Blue Lagune</div>
       </header>
@@ -24,10 +25,13 @@ function Shell({ title, kicker, children }: { title: string; kicker: string; chi
 }
 
 export function ImpressumPage() {
+  useLang();
+  const odr = t("imprintOdrP", { url: "https://ec.europa.eu/consumers/odr" });
+  const [odrBefore, odrAfter] = odr.split("https://ec.europa.eu/consumers/odr");
   return (
-    <Shell kicker="Rechtliches" title="Impressum">
-      <p>Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG).</p>
-      <h2>Diensteanbieter</h2>
+    <Shell kicker={t("legalKicker")} title={t("imprintTitle")}>
+      <p>{t("imprintP1")}</p>
+      <h2>{t("imprintProvider")}</h2>
       {hasCompleteImprint() ? (
         <p>
           {LEGAL.operatorName}
@@ -39,64 +43,58 @@ export function ImpressumPage() {
           {LEGAL.country}
         </p>
       ) : (
-        <p>
-          Blue Lagune, erreichbar über die unten genannte E-Mail. Name und
-          ladungsfähige Anschrift des Betreibers werden hier ergänzt.
-        </p>
+        <p>{t("imprintFallback")}</p>
       )}
-      <h2>Kontakt</h2>
+      <h2>{t("imprintContact")}</h2>
       <p>
         E-Mail: <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>
       </p>
-      <h2>Verantwortlich für den Inhalt</h2>
-      <p>Verantwortlich nach § 18 Abs. 2 MStV: {LEGAL.operatorName || "der Betreiber, siehe Kontakt"}.</p>
-      <h2>Haftung für Inhalte und Links</h2>
+      <h2>{t("imprintResponsible")}</h2>
+      <p>{t("imprintResponsibleP", { name: LEGAL.operatorName || t("imprintOperator") })}</p>
+      <h2>{t("imprintLiability")}</h2>
+      <p>{t("imprintLiabilityP")}</p>
+      <h2>{t("imprintOdr")}</h2>
       <p>
-        Die Stationseinträge dienen der Orientierung. Öffnungszeiten und Ausstattung können
-        sich ändern. Für verlinkte Websites sind deren Betreiber verantwortlich.
-      </p>
-      <h2>EU-Streitschlichtung</h2>
-      <p>
-        Plattform der EU-Kommission:{" "}
+        {odrBefore}
         <a href="https://ec.europa.eu/consumers/odr" rel="noopener noreferrer" target="_blank">
           https://ec.europa.eu/consumers/odr
         </a>
-        . Wir nehmen nicht an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teil.
+        {odrAfter}
       </p>
     </Shell>
   );
 }
 
 export function DatenschutzPage() {
+  useLang();
   return (
-    <Shell kicker="Rechtliches" title="Datenschutz">
+    <Shell kicker={t("legalKicker")} title={t("privacyTitle")}>
       <p>
-        Verantwortlich im Sinne der DSGVO ist der im <a href="/impressum">Impressum</a> genannte Anbieter.
+        {t("privacyP1")} (<a href="/impressum">{t("imprintTitle")}</a>).
       </p>
-      <h2>Welche Daten anfallen</h2>
+      <h2>{t("privacyWhich")}</h2>
       <ul className="list-disc space-y-1 pl-5">
         <li>
-          <strong className="text-fg">Karte:</strong> Aufrufe von OpenStreetMap-Kacheln (IP-Adresse technisch nötig).
+          <strong className="text-fg">{t("privacyMap")}</strong> {t("privacyMapP")}
         </li>
         <li>
-          <strong className="text-fg">Standort:</strong> nur im Browser nach Freigabe, nicht an uns gesendet.
+          <strong className="text-fg">{t("privacyLoc")}</strong> {t("privacyLocP")}
         </li>
         <li>
-          <strong className="text-fg">Local Storage:</strong> Filter und Merkliste auf deinem Gerät.
+          <strong className="text-fg">{t("privacyLs")}</strong> {t("privacyLsP")}
         </li>
         <li>
-          <strong className="text-fg">Hosting:</strong> Cloudflare-Logs (IP, Zeitpunkt, Datei) zur Sicherheit.
+          <strong className="text-fg">{t("privacyHost")}</strong> {t("privacyHostP")}
         </li>
       </ul>
-      <h2>Rechtsgrundlagen</h2>
-      <p>Art. 6 Abs. 1 lit. f DSGVO (Betrieb), lit. a bei Standortfreigabe.</p>
-      <h2>Deine Rechte</h2>
+      <h2>{t("privacyLaw")}</h2>
+      <p>{t("privacyLawP")}</p>
+      <h2>{t("privacyRights")}</h2>
       <p>
-        Auskunft, Löschung, Widerspruch. Kontakt:{" "}
-        <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>.
+        {t("privacyRightsP")} <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>.
       </p>
-      <h2>Cookies</h2>
-      <p>Keine Tracking- oder Werbe-Cookies.</p>
+      <h2>{t("privacyCookies")}</h2>
+      <p>{t("privacyCookiesP")}</p>
     </Shell>
   );
 }
