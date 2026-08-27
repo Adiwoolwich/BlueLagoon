@@ -8,15 +8,7 @@ import { StatusBadge } from "./status-badge";
 import { formatKm, haversineKm, inBounds } from "../lib/geo";
 import { downloadGpx, downloadStationGpx } from "../lib/gpx";
 import { fetchDrivingRoute } from "../lib/osrm";
-import {
-  canNavigateTo,
-  FEE_LABEL,
-  findCity,
-  hasPreciseCoords,
-  hoursSummary,
-  TYPE_LABEL,
-  type Station,
-} from "../lib/stations";
+import { canNavigateTo, findCity, hasPreciseCoords, type Station } from "../lib/stations";
 import {
   allStations,
   CORRIDOR_OPTIONS,
@@ -25,6 +17,7 @@ import {
   type Filters,
 } from "../lib/store";
 import { copyShareUrl, shareUrl } from "../lib/url-state";
+import { feeLabel, hoursLine, t, typeLabel, useLang } from "../lib/i18n";
 import { cn } from "../lib/utils";
 
 function Chip({
@@ -70,6 +63,7 @@ export function StationPanel({ stations }: { stations: Station[] }) {
 }
 
 export function SearchBar() {
+  useLang();
   const query = useAppStore((s) => s.query);
   const setQuery = useAppStore((s) => s.setQuery);
   const filters = useAppStore((s) => s.filters);
@@ -88,22 +82,22 @@ export function SearchBar() {
             setFilters({ place });
             if (place.trim()) setUserPos(null);
           }}
-          placeholder="Ort, Stadt oder PLZ …"
+          placeholder={t("placePh")}
           warnUnmatched={false}
         />
       </div>
       <label className="relative block w-[4.6rem] shrink-0 self-end">
-        <span className="sr-only">Umkreis</span>
+        <span className="sr-only">{t("radius")}</span>
         <select
           value={filters.radiusKm}
           disabled={!hasOrigin}
           onChange={(e) => setFilters({ radiusKm: Number(e.target.value) })}
           className="h-11 w-full appearance-none rounded-xl bg-surface py-0 pr-6 pl-2 text-sm text-fg ring-1 ring-border outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
-          aria-label="Umkreis"
+          aria-label={t("radius")}
         >
           {RADIUS_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {o.value === 0 ? t("radiusPlace") : o.label}
             </option>
           ))}
         </select>
@@ -113,39 +107,64 @@ export function SearchBar() {
   );
 }
 
-const CHIP_DEFS: {
+const CHIP_KEYS: {
   key: keyof Filters;
-  label: string;
-  aria: string;
+  label:
+    | "chipCassette"
+    | "chipGrey"
+    | "chipFresh"
+    | "chipFree"
+    | "chipPaid"
+    | "chipGuest"
+    | "chipOpen"
+    | "chip24"
+    | "chipCamp"
+    | "chipCc"
+    | "chipHose"
+    | "chipOk";
+  aria:
+    | "ariaCassette"
+    | "ariaGrey"
+    | "ariaFresh"
+    | "ariaFree"
+    | "ariaPaid"
+    | "ariaGuest"
+    | "ariaOpen"
+    | "aria24"
+    | "ariaCamp"
+    | "ariaCc"
+    | "ariaHose"
+    | "ariaOk";
 }[] = [
-  { key: "cassette", label: "Kassette", aria: "Kassette anzeigen" },
-  { key: "greywater", label: "Grauwasser", aria: "Nur mit Grauwasser" },
-  { key: "freshwater", label: "Frischwasser", aria: "Nur mit Frischwasser" },
-  { key: "feeFree", label: "Kostenlos", aria: "Kostenlos" },
-  { key: "feePaid", label: "Bezahlt", aria: "Mit Gebühr" },
-  { key: "feeGuest", label: "Nur Gäste", aria: "Nur Gäste / im Preis" },
-  { key: "openNow", label: "Jetzt offen", aria: "Jetzt geöffnet" },
-  { key: "h24", label: "24h", aria: "Rund um die Uhr" },
-  { key: "campsite", label: "Campingplatz", aria: "Campingplätze anzeigen" },
-  { key: "camperclean", label: "CamperClean", aria: "CamperClean anzeigen" },
-  { key: "hose", label: "Schlauch", aria: "Mit Schlauch" },
-  { key: "confirmed", label: "Bestätigt", aria: "Community bestätigt" },
+  { key: "cassette", label: "chipCassette", aria: "ariaCassette" },
+  { key: "greywater", label: "chipGrey", aria: "ariaGrey" },
+  { key: "freshwater", label: "chipFresh", aria: "ariaFresh" },
+  { key: "feeFree", label: "chipFree", aria: "ariaFree" },
+  { key: "feePaid", label: "chipPaid", aria: "ariaPaid" },
+  { key: "feeGuest", label: "chipGuest", aria: "ariaGuest" },
+  { key: "openNow", label: "chipOpen", aria: "ariaOpen" },
+  { key: "h24", label: "chip24", aria: "aria24" },
+  { key: "campsite", label: "chipCamp", aria: "ariaCamp" },
+  { key: "camperclean", label: "chipCc", aria: "ariaCc" },
+  { key: "hose", label: "chipHose", aria: "ariaHose" },
+  { key: "confirmed", label: "chipOk", aria: "ariaOk" },
 ];
 
 export function FilterChips() {
+  useLang();
   const filters = useAppStore((s) => s.filters);
   const setFilters = useAppStore((s) => s.setFilters);
   const resetFilters = useAppStore((s) => s.resetFilters);
   return (
     <div className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {CHIP_DEFS.map((c) => (
+      {CHIP_KEYS.map((c) => (
         <Chip
           key={c.key}
           active={Boolean(filters[c.key])}
           onClick={() => setFilters({ [c.key]: !filters[c.key] })}
-          label={c.aria}
+          label={t(c.aria)}
         >
-          {c.label}
+          {t(c.label)}
         </Chip>
       ))}
       <button
@@ -153,39 +172,40 @@ export function FilterChips() {
         onClick={resetFilters}
         className="inline-flex h-9 shrink-0 items-center rounded-full px-3 text-xs text-muted ring-1 ring-border hover:text-fg"
       >
-        Reset
+        {t("reset")}
       </button>
     </div>
   );
 }
 
 export function ListToolbar({ count }: { count: number }) {
+  useLang();
   const setPanel = useAppStore((s) => s.setPanel);
   const panel = useAppStore((s) => s.panel);
   const route = useAppStore((s) => s.route);
   return (
     <div className="flex items-center justify-between gap-2 text-xs text-muted">
-      <span className="tabular-nums">{count} im Ausschnitt</span>
+      <span className="tabular-nums">{t("inView", { n: count })}</span>
       <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => setPanel(panel === "route" ? "list" : "route")}
           className={cn("h-9 px-2 hover:text-fg", (panel === "route" || route) && "text-primary")}
         >
-          Route
+          {t("route")}
         </button>
         <button
           type="button"
           onClick={() => setPanel(panel === "saved" ? "list" : "saved")}
           className={cn("h-9 px-2 hover:text-fg", panel === "saved" && "text-primary")}
         >
-          Merkliste
+          {t("saved")}
         </button>
         <button
           type="button"
           onClick={() => setPanel("add")}
           className="inline-flex size-9 items-center justify-center rounded-full bg-primary text-primary-fg"
-          aria-label="Örtlichkeit hinzufügen"
+          aria-label={t("addPlace")}
         >
           <Plus className="size-4" />
         </button>
@@ -195,6 +215,7 @@ export function ListToolbar({ count }: { count: number }) {
 }
 
 export function SearchAndFilters({ count, compact }: { count: number; compact?: boolean }) {
+  useLang();
   const setSheet = useAppStore((s) => s.setSheet);
   const setPanel = useAppStore((s) => s.setPanel);
   if (compact) {
@@ -205,14 +226,14 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
           onClick={() => setSheet("mid")}
           className="flex h-11 min-w-0 flex-1 items-center justify-between rounded-xl bg-surface px-3 text-sm text-fg ring-1 ring-border"
         >
-          <span className="tabular-nums">{count} Stationen</span>
-          <span className="text-primary">Liste</span>
+          <span className="tabular-nums">{t("stationsN", { n: count })}</span>
+          <span className="text-primary">{t("list")}</span>
         </button>
         <button
           type="button"
           onClick={() => setPanel("add")}
           className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-fg"
-          aria-label="Örtlichkeit hinzufügen"
+          aria-label={t("addPlace")}
         >
           <Plus className="size-5" />
         </button>
@@ -231,6 +252,7 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
 }
 
 function StationList({ stations }: { stations: Station[] }) {
+  useLang();
   const userPos = useAppStore((s) => s.userPos);
   const reports = useAppStore((s) => s.reports);
   const select = useAppStore((s) => s.select);
@@ -243,15 +265,15 @@ function StationList({ stations }: { stations: Station[] }) {
       : stations.filter(hasPreciseCoords);
     return [...inView].sort((a, b) => {
       if (userPos) return haversineKm(userPos, a) - haversineKm(userPos, b);
-      return a.name.localeCompare(b.name, "de");
+      return a.name.localeCompare(b.name);
     });
   }, [stations, userPos, bounds]);
 
   if (visible.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-12 text-center text-muted">
-        <p className="text-sm">Keine Stationen in diesem Kartenausschnitt.</p>
-        <p className="text-xs">Zoome heraus oder Filter zurücksetzen.</p>
+        <p className="text-sm">{t("emptyView")}</p>
+        <p className="text-xs">{t("emptyHint")}</p>
       </div>
     );
   }
@@ -266,43 +288,44 @@ function StationList({ stations }: { stations: Station[] }) {
           GPX
         </button>
       </div>
-    <ul className="bl-scroll divide-y divide-border/50">
-      {visible.map((s) => {
-        const km = userPos && hasPreciseCoords(s) ? haversineKm(userPos, s) : null;
-        const fav = favorites.includes(s.id);
-        return (
-          <li key={s.id}>
-            <button
-              type="button"
-              onClick={() => select(s.id)}
-              className={cn(
-                "flex w-full items-start gap-3 px-1 py-3 text-left",
-                selectedId === s.id ? "bg-primary/8" : "hover:bg-surface/80",
-              )}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="truncate text-[15px] font-semibold text-fg">{s.name}</span>
-                  {fav ? <Star className="size-3.5 shrink-0 fill-primary text-primary" /> : null}
+      <ul className="bl-scroll divide-y divide-border/50">
+        {visible.map((s) => {
+          const km = userPos && hasPreciseCoords(s) ? haversineKm(userPos, s) : null;
+          const fav = favorites.includes(s.id);
+          return (
+            <li key={s.id}>
+              <button
+                type="button"
+                onClick={() => select(s.id)}
+                className={cn(
+                  "flex w-full items-start gap-3 px-1 py-3 text-left",
+                  selectedId === s.id ? "bg-primary/8" : "hover:bg-surface/80",
+                )}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-[15px] font-semibold text-fg">{s.name}</span>
+                    {fav ? <Star className="size-3.5 shrink-0 fill-primary text-primary" /> : null}
+                  </div>
+                  <p className="mt-0.5 truncate text-xs text-muted">
+                    {s.city} · {typeLabel(s.type)} · {feeLabel(s.fee)}
+                  </p>
                 </div>
-                <p className="mt-0.5 truncate text-xs text-muted">
-                  {s.city} · {TYPE_LABEL[s.type]} · {FEE_LABEL[s.fee]}
-                </p>
-              </div>
-              <div className="flex shrink-0 flex-col items-end gap-1">
-                {km != null ? <span className="text-xs tabular-nums text-muted">{formatKm(km)}</span> : null}
-                <StatusBadge station={s} report={reports[s.id]} compact />
-              </div>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  {km != null ? <span className="text-xs tabular-nums text-muted">{formatKm(km)}</span> : null}
+                  <StatusBadge station={s} report={reports[s.id]} compact />
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
 
 function SavedList() {
+  useLang();
   const favorites = useAppStore((s) => s.favorites);
   const recent = useAppStore((s) => s.recent);
   const extra = useAppStore((s) => s.extraStations);
@@ -317,12 +340,12 @@ function SavedList() {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <button type="button" onClick={() => setPanel("list")} className="inline-flex h-11 items-center gap-1 text-sm text-muted hover:text-fg">
-        ← Liste
+        {t("backList")}
       </button>
-      <h2 className="mt-1 mb-3 text-lg font-semibold">Merkliste</h2>
+      <h2 className="mt-1 mb-3 text-lg font-semibold">{t("saved")}</h2>
       <div className="bl-scroll">
         {saved.length === 0 ? (
-          <p className="text-sm text-muted">Noch keine Stationen gemerkt.</p>
+          <p className="text-sm text-muted">{t("savedEmpty")}</p>
         ) : (
           <ul className="divide-y divide-border/50">
             {saved.map((s) => (
@@ -337,7 +360,7 @@ function SavedList() {
         )}
         {last.length ? (
           <>
-            <h3 className="mt-6 mb-2 text-sm font-medium text-muted">Zuletzt angesehen</h3>
+            <h3 className="mt-6 mb-2 text-sm font-medium text-muted">{t("recently")}</h3>
             <ul className="divide-y divide-border/50">
               {last.map((s) => (
                 <li key={s.id}>
@@ -356,6 +379,7 @@ function SavedList() {
 }
 
 function RoutePlanner() {
+  useLang();
   const setPanel = useAppStore((s) => s.setPanel);
   const route = useAppStore((s) => s.route);
   const setRoute = useAppStore((s) => s.setRoute);
@@ -379,7 +403,7 @@ function RoutePlanner() {
       return;
     }
     if (!a || !b) {
-      setError("Start und Ziel aus der Vorschlagsliste wählen.");
+      setError(t("routeNeedCities"));
       return;
     }
     setBusy(true);
@@ -396,20 +420,20 @@ function RoutePlanner() {
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
       <button type="button" onClick={() => setPanel("list")} className="inline-flex h-11 items-center gap-1 text-sm text-muted hover:text-fg">
-        ← Liste
+        {t("backList")}
       </button>
-      <h2 className="text-lg font-semibold">Route</h2>
-      <p className="text-sm text-muted">Stationen entlang der Strecke, nicht nur Luftlinie.</p>
+      <h2 className="text-lg font-semibold">{t("route")}</h2>
+      <p className="text-sm text-muted">{t("routeLead")}</p>
       <label className="block text-sm">
-        <span className="mb-1 block text-muted">Von</span>
-        <CitySelect value={from} onChange={setFrom} placeholder="Startort" />
+        <span className="mb-1 block text-muted">{t("from")}</span>
+        <CitySelect value={from} onChange={setFrom} placeholder={t("startPlace")} />
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block text-muted">Nach</span>
-        <CitySelect value={to} onChange={setTo} placeholder="Zielort" />
+        <span className="mb-1 block text-muted">{t("to")}</span>
+        <CitySelect value={to} onChange={setTo} placeholder={t("endPlace")} />
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block text-muted">Korridor</span>
+        <span className="mb-1 block text-muted">{t("corridor")}</span>
         <select
           value={corridorKm}
           onChange={(e) => setCorridorKm(Number(e.target.value))}
@@ -423,13 +447,11 @@ function RoutePlanner() {
         </select>
       </label>
       {routePath?.source === "straight" ? (
-        <p className="rounded-xl bg-stale/10 px-3 py-2 text-sm text-stale">
-          Straßenroute nicht verfügbar – Luftlinie mit Korridor.
-        </p>
+        <p className="rounded-xl bg-stale/10 px-3 py-2 text-sm text-stale">{t("routeAir")}</p>
       ) : null}
       {routePath?.source === "osrm" ? (
         <p className="text-sm text-muted">
-          {Math.round(routePath.distanceKm)} km · ca. {routePath.durationMin} min
+          {t("routeKmMin", { km: Math.round(routePath.distanceKm), min: routePath.durationMin })}
         </p>
       ) : null}
       {error ? <p className="text-sm text-bad">{error}</p> : null}
@@ -439,7 +461,7 @@ function RoutePlanner() {
         onClick={() => void apply()}
         className="h-12 rounded-xl bg-primary text-sm font-semibold text-primary-fg disabled:opacity-60"
       >
-        {busy ? "Route wird berechnet …" : "Route anwenden"}
+        {busy ? t("routeBusy") : t("routeApply")}
       </button>
       {route ? (
         <button
@@ -451,7 +473,7 @@ function RoutePlanner() {
           }}
           className="h-11 rounded-xl text-sm text-muted ring-1 ring-border hover:text-fg"
         >
-          Route löschen
+          {t("routeClear")}
         </button>
       ) : null}
     </div>
@@ -459,6 +481,7 @@ function RoutePlanner() {
 }
 
 function Detail({ station }: { station: Station }) {
+  useLang();
   const reports = useAppStore((s) => s.reports);
   const report = useAppStore((s) => s.report);
   const notes = useAppStore((s) => s.notes);
@@ -507,7 +530,7 @@ function Detail({ station }: { station: Station }) {
           }}
           className="inline-flex h-11 items-center gap-1 text-sm text-muted hover:text-fg"
         >
-          ← Zurück
+          {t("back")}
         </button>
         <div className="flex gap-2">
           {isUserStation ? (
@@ -518,7 +541,7 @@ function Detail({ station }: { station: Station }) {
               }}
               className="inline-flex h-11 items-center rounded-xl bg-bad/12 px-3 text-sm text-bad ring-1 ring-border"
             >
-              Löschen
+              {t("delete")}
             </button>
           ) : null}
           <button
@@ -527,14 +550,14 @@ function Detail({ station }: { station: Station }) {
             className="inline-flex h-11 items-center gap-1 rounded-xl bg-surface px-3 text-sm ring-1 ring-border"
           >
             <Star className={cn("size-4", fav && "fill-primary text-primary")} />
-            {fav ? "Gemerkt" : "Merken"}
+            {fav ? t("savedYes") : t("save")}
           </button>
         </div>
       </div>
       <div className="bl-scroll space-y-4 pr-1">
         <header>
           <p className="text-xs tracking-wide text-muted uppercase">
-            {station.state} · {TYPE_LABEL[station.type]}
+            {station.state} · {typeLabel(station.type)}
           </p>
           <h2 className="mt-1 text-2xl leading-tight font-semibold text-fg">{station.name}</h2>
           <p className="mt-1 text-sm text-muted">
@@ -544,7 +567,7 @@ function Detail({ station }: { station: Station }) {
         <div className="flex flex-wrap gap-2">
           <StatusBadge station={station} report={reports[station.id]} />
           <span className="inline-flex h-6 items-center rounded-full bg-surface px-2.5 text-xs text-muted ring-1 ring-border">
-            {FEE_LABEL[station.fee]}
+            {feeLabel(station.fee)}
           </span>
           {km != null ? (
             <span className="inline-flex h-6 items-center rounded-full bg-surface px-2.5 text-xs text-muted tabular-nums ring-1 ring-border">
@@ -567,7 +590,7 @@ function Detail({ station }: { station: Station }) {
             className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-surface text-sm ring-1 ring-border"
           >
             <Share2 className="size-4" />
-            {copied ? "Link kopiert" : "Teilen"}
+            {copied ? t("linkCopied") : t("share")}
           </button>
           {hasPreciseCoords(station) ? (
             <button
@@ -580,19 +603,17 @@ function Detail({ station }: { station: Station }) {
           ) : null}
         </div>
         {station.hours === "seasonal" ? (
-          <p className="rounded-lg bg-stale/10 px-3 py-2 text-xs text-stale">
-            Saisonale Station – im Winter oft geschlossen. Zeiten vor der Anfahrt prüfen.
-          </p>
+          <p className="rounded-lg bg-stale/10 px-3 py-2 text-xs text-stale">{t("seasonalWarn")}</p>
         ) : null}
         <HoursTable station={station} />
-        <p className="text-sm text-muted">{hoursSummary(station)}</p>
+        <p className="text-sm text-muted">{hoursLine(station)}</p>
         <div className="flex flex-wrap gap-1.5">
           {(
             [
-              ["Kassette", station.cassette],
-              ["Grauwasser", station.greywater],
-              ["Frischwasser", station.freshwater],
-              ["Schlauch", station.hose],
+              [t("chipCassette"), station.cassette],
+              [t("chipGrey"), station.greywater],
+              [t("chipFresh"), station.freshwater],
+              [t("chipHose"), station.hose],
             ] as const
           ).map(([label, on]) => (
             <span
@@ -606,14 +627,14 @@ function Detail({ station }: { station: Station }) {
         {station.feeNote ? <p className="text-sm text-muted">{station.feeNote}</p> : null}
         {station.description ? <p className="text-sm leading-relaxed text-muted">{station.description}</p> : null}
         <section>
-          <h3 className="mb-2 text-sm font-medium">Status melden</h3>
+          <h3 className="mb-2 text-sm font-medium">{t("reportStatus")}</h3>
           <div className="grid grid-cols-2 gap-2">
             {(
               [
-                ["ok", "Gerade genutzt", false],
-                ["broken", "Defekt", true],
-                ["closed", "Geschlossen", false],
-                ["dirty", "Unsauber", false],
+                ["ok", t("usedNow"), false],
+                ["broken", t("broken"), true],
+                ["closed", t("closed"), false],
+                ["dirty", t("dirty"), false],
               ] as const
             ).map(([kind, label, bad]) => {
               const selected = reports[station.id]?.kind === kind;
@@ -640,14 +661,14 @@ function Detail({ station }: { station: Station }) {
           </div>
         </section>
         <label className="block text-sm">
-          <span className="mb-1 block text-muted">Persönliche Notiz</span>
+          <span className="mb-1 block text-muted">{t("note")}</span>
           <textarea
             value={noteDraft}
             onChange={(e) => setNoteDraft(e.target.value)}
             onBlur={() => setNote(station.id, noteDraft)}
             rows={3}
             className="w-full resize-none rounded-xl bg-surface p-3 text-sm ring-1 ring-border outline-none"
-            placeholder="Zufahrt, Münzen, Geruch …"
+            placeholder={t("notePh")}
           />
         </label>
       </div>
@@ -656,6 +677,7 @@ function Detail({ station }: { station: Station }) {
 }
 
 export function LocateButton({ iconOnly, floating }: { iconOnly?: boolean; floating?: boolean }) {
+  useLang();
   const setUserPos = useAppStore((s) => s.setUserPos);
   const setFilters = useAppStore((s) => s.setFilters);
   const setQuery = useAppStore((s) => s.setQuery);
@@ -676,15 +698,13 @@ export function LocateButton({ iconOnly, floating }: { iconOnly?: boolean; float
       }}
       className={cn(
         "inline-flex items-center justify-center bg-bg-elevated text-fg ring-1 ring-border",
-        floating
-          ? "size-11 rounded-full shadow-panel"
-          : "h-11 shrink-0 rounded-xl",
+        floating ? "size-11 rounded-full shadow-panel" : "h-11 shrink-0 rounded-xl",
         iconOnly || floating ? "w-11" : "px-3",
       )}
-      aria-label="Standort"
+      aria-label={t("locate")}
     >
       <LocateFixed className="size-5" />
-      {iconOnly || floating ? null : <span className="ml-1.5 text-sm">Standort</span>}
+      {iconOnly || floating ? null : <span className="ml-1.5 text-sm">{t("locate")}</span>}
     </button>
   );
 }
