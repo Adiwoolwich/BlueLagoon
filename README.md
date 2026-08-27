@@ -1,44 +1,43 @@
-# Blue Lagune
+# Blue Lagoon
 
-**Chemietoiletten-Entsorgungsstationen für Wohnmobile in Deutschland**
+**Die App für Chemietoiletten-Entsorgungsstationen in Deutschland und den Niederlanden**  
+*(Inspiriert von Tesla Superchargern – finde, plane & navigiere zu Entsorgungspunkten für Wohnmobile)*
 
-Live: [https://blue-lagune.com](https://blue-lagune.com)
+## Überblick
 
-Karte mit 1241+ Entsorgungsstationen. Headline: „Kassettentoilette entsorgen – ohne Sucherei.“
+Blue Lagoon hilft Wohnmobil- und Camper-Fahrern, schnell und zuverlässig geeignete Entsorgungsstationen für Chemietoiletten (Kassettentoiletten / Thetford / Dometic) zu finden.
 
-## Stack
+### Kernfunktionen
+- **Interaktive Karte** (Leaflet) mit bekannten Stationen in Deutschland und den Niederlanden
+- **Stationen entlang der Route** – Stadt-/Ortsauswahl mit Fuzzy-Suche (alle DE-Gemeinden + alle NL-Gemeenten)
+- **Umkreis-Suche** im Kleinanzeigen-Stil (Radius filterbar)
+- **Genaue Öffnungszeiten** pro Station (Wochentage + Confidence-Badges)
+- **Google Maps Deep-Link** – öffnet direkt die Google Maps App (iOS/Android), Fallback auf Web
+- **Mobile-First Bottom-Sheet UI** (Peek / Mid / Full) optimiert für Smartphones
+- **Favoriten, Bewertungen (1–3 Sterne) und Community-Beiträge** (nach Login)
+- **Account** mit Google / X / E-Mail (Better Auth)
 
-Vite + React + TypeScript, Leaflet, Supercluster, Tailwind, Zustand. Hosting über Cloudflare Workers (wrangler.toml).
+## Tech-Stack
 
-Repo: [Adiwoolwich/BlueLagune](https://github.com/Adiwoolwich/BlueLagune)
+| Technologie          | Verwendung                          |
+|----------------------|-------------------------------------|
+| TanStack Start       | Full-Stack React-Framework          |
+| React 19             | UI                                  |
+| Vite 8               | Build / Dev-Server                  |
+| Tailwind CSS v4      | Styling                             |
+| Zustand (persist)    | Client-State                        |
+| Leaflet + react-leaflet | Karte                            |
+| Better Auth          | Authentifizierung                   |
+| Neon / PGLite        | Datenbank                           |
 
-## Was die App kann
+## Status
 
-- Karte (Leaflet) mit Suche, Filter-Chips, Favoriten und Bottom-Sheet
-- Marker-Clustering (Supercluster), Liste der Stationen im aktuellen Kartenausschnitt
-- **Live-Stationsdaten** (OSM, Bordatlas, Community), nicht nur Beispieldaten
-- Navigation über den **System-App-Chooser** (Android geo, Apple Karten, Google Maps, Waze)
-- Navigation nur bei echten Koordinaten oder auflösbarer Straßenadresse, keine Ortsmittelpunkte
-- Route Start→Ziel über den öffentlichen OSRM-Router, Stationen im Korridor; Fallback Luftlinie
-- Deep-Link / Teilen: URL mit Zentrum, Zoom, Station-ID und abweichenden Filtern
-- Community-Meldungen, Merkliste, Zuletzt geöffnet, Notizen, GPX-Export
-- Unique-Besucher auf der Startseite (gehashte IPs im Cloudflare Worker, kein Klartext-Log)
-- Umkreis um Ort oder Standort. Saisonale Stationen im Detail gekennzeichnet
+Produktions-App: Vite-SPA auf GitHub Pages / Cloudflare → blue-lagune.com
 
-## Deep-Link
+## Lizenz
 
-Beispiel: https://blue-lagune.com/?lat=53.5500&lng=10.0000&z=11&id=hh-hafen
-
-Filter-Flags (nur abweichend vom Standard): cas, camp, cc, gw, fw, free, paid, guest, open, h24, hose, ok, r (Umkreis), q (Ort).
-
-## Lokal starten
-
-Vite-Devserver laut package.json.
-
-## Deploy (Cloudflare)
-
-Build, dann Wrangler auf den Worker. Domain: https://blue-lagune.com
+Privat / All rights reserved (Adiwoolwich)
 
 ---
 
-*Blue Lagune – Damit die blaue Lagune immer in Reichweite bleibt.*
+*Blue Lagoon – Damit die blaue Lagune immer in Reichweite bleibt.*

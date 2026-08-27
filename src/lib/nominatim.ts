@@ -29,12 +29,18 @@ export async function searchNominatimDe(query: string, limit = 8): Promise<Nomin
   if (hit) return hit;
 
   const url = new URL("https://nominatim.openstreetmap.org/search");
-  if (/^\d{1,5}$/.test(q)) {
+  const compact = q.replace(/\s+/g, "").toUpperCase();
+  const isDeZip = /^\d{5}$/.test(q);
+  const isNlZip = /^\d{4}[A-Z]{0,2}$/.test(compact) && q.length <= 8;
+  if (isDeZip) {
     url.searchParams.set("postalcode", q);
     url.searchParams.set("country", "de");
+  } else if (isNlZip) {
+    url.searchParams.set("postalcode", q);
+    url.searchParams.set("country", "nl");
   } else {
     url.searchParams.set("q", q);
-    url.searchParams.set("countrycodes", "de");
+    url.searchParams.set("countrycodes", "de,nl");
   }
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("addressdetails", "1");
@@ -64,11 +70,15 @@ export async function searchNominatimDe(query: string, limit = 8): Promise<Nomin
     const id = `${name}|${lat.toFixed(3)}|${lng.toFixed(3)}`;
     if (seen.has(id)) continue;
     seen.add(id);
+    const country = (addr?.country_code ?? "").toLowerCase();
+    const state =
+      addr?.state ||
+      (country === "nl" ? "Nederland" : country === "de" ? "Deutschland" : addr?.country ?? "");
     out.push({
       name,
       lat,
       lng,
-      state: addr?.state ?? "",
+      state,
       postalCode: addr?.postcode,
     });
   }
