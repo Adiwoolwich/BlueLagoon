@@ -8,7 +8,7 @@ export function CitySelect({
   value,
   onChange,
   label,
-  placeholder = "Stadt oder PLZ …",
+  placeholder = "Stadt, Ort oder PLZ (DE / NL) …",
   allowEmpty = true,
   warnUnmatched = true,
 }: {
@@ -61,7 +61,7 @@ export function CitySelect({
             name: h.name,
             lat: h.lat,
             lng: h.lng,
-            state: h.state || "Deutschland",
+            state: h.state || "",
             postalCode: h.postalCode,
           })),
         );
@@ -246,7 +246,7 @@ export function CitySelect({
                 );
               })}
               <li className="border-t border-border px-3 py-1.5 text-[11px] text-subtle">
-                {CITIES.length.toLocaleString("de-DE")} Orte · PLZ-Suche
+                {CITIES.length.toLocaleString("de-DE")} Orte · DE + NL
               </li>
             </>
           )}
