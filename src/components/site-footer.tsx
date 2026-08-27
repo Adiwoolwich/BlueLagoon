@@ -30,6 +30,12 @@ export function SiteFooter({
       <span aria-hidden className="text-subtle">
         ·
       </span>
+      <a href="/feedback" className="hover:text-fg">
+        Feedback
+      </a>
+      <span aria-hidden className="text-subtle">
+        ·
+      </span>
       <a href="/datenschutz" className="hover:text-fg">
         Datenschutz
       </a>
