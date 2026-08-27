@@ -1,4 +1,5 @@
-import raw from "../data/de-places.json";
+import rawDe from "../data/de-places.json";
+import rawNl from "../data/nl-places.json";
 
 export type City = {
   name: string;
@@ -26,6 +27,18 @@ const STATE_NAME: Record<string, string> = {
   ST: "Sachsen-Anhalt",
   SH: "Schleswig-Holstein",
   TH: "Thüringen",
+  DR: "Drenthe",
+  FL: "Flevoland",
+  FR: "Friesland",
+  GE: "Gelderland",
+  GR: "Groningen",
+  LI: "Limburg",
+  NB: "Noord-Brabant",
+  NH: "Noord-Holland",
+  OV: "Overijssel",
+  UT: "Utrecht",
+  ZE: "Zeeland",
+  ZH: "Zuid-Holland",
 };
 
 type PlacesFile = {
@@ -33,7 +46,8 @@ type PlacesFile = {
   z: [string, number, number, number][];
 };
 
-const data = raw as PlacesFile;
+const dataDe = rawDe as PlacesFile;
+const dataNl = rawNl as PlacesFile;
 
 const EXTRA_ALIASES: Record<string, string[]> = {
   "Frankfurt am Main": ["Frankfurt", "Frankfurt/Main", "Frankfurt a. M.", "Frankfurt a.M."],
@@ -49,15 +63,25 @@ const EXTRA_ALIASES: Record<string, string[]> = {
   Westerland: ["Sylt"],
   "Neumarkt in der Oberpfalz": ["Neumarkt/Opf.", "Neumarkt i.d.OPf.", "Neumarkt Opf", "Neumarkt"],
   "Isny im Allgäu": ["Isny"],
+  "'s-Gravenhage": ["Den Haag", "The Hague", "Haag", "'s Gravenhage", "s-Gravenhage"],
+  "Den Haag": ["'s-Gravenhage", "The Hague", "Haag"],
+  "'s-Hertogenbosch": ["Den Bosch", "s-Hertogenbosch", "'s Hertogenbosch"],
+  "Den Bosch": ["'s-Hertogenbosch"],
+  Amsterdam: ["A'dam"],
+  "Bergen op Zoom": ["Bergen-op-Zoom"],
 };
 
-export const CITIES: City[] = data.p.map(([name, code, lat, lng]) => ({
-  name,
-  state: STATE_NAME[code] ?? code,
-  lat,
-  lng,
-  aliases: EXTRA_ALIASES[name],
-}));
+function mapPlaces(data: PlacesFile): City[] {
+  return data.p.map(([name, code, lat, lng]) => ({
+    name,
+    state: STATE_NAME[code] ?? code,
+    lat,
+    lng,
+    aliases: EXTRA_ALIASES[name],
+  }));
+}
+
+export const CITIES: City[] = [...mapPlaces(dataDe), ...mapPlaces(dataNl)];
 
 const SEEDED: City[] = [
   { name: "Schwandorf", lat: 49.3264, lng: 12.1097, state: "Bayern", postalCode: "92421" },
@@ -67,7 +91,7 @@ function indexCity(c: City) {
   addIndex(byLower, c.name.toLowerCase(), c);
   addIndex(byFold, foldCity(c.name), c);
   byLabel.set(`${c.name}, ${c.state}`.toLowerCase(), c);
-  if (c.postalCode) byZip.set(c.postalCode, c);
+  if (c.postalCode) indexZip(c.postalCode, c);
   for (const a of c.aliases ?? []) {
     addIndex(byLower, a.toLowerCase(), c);
     addIndex(byFold, foldCity(a), c);
@@ -76,10 +100,17 @@ function indexCity(c: City) {
 
 export function registerCity(c: City): City {
   const existing = findCity(c.postalCode ? `${c.postalCode} ${c.name}` : c.name);
-  if (existing) return existing;
+  if (existing) {
+    if (c.postalCode) indexZip(c.postalCode, { ...existing, postalCode: c.postalCode, lat: c.lat, lng: c.lng });
+    return existing;
+  }
   CITIES.push(c);
   indexCity(c);
   return c;
+}
+
+export function indexPostal(c: City) {
+  if (c.postalCode) indexZip(c.postalCode, c);
 }
 
 for (const c of SEEDED) {
@@ -98,6 +129,14 @@ function addIndex(map: Map<string, City[]>, key: string, city: City) {
   const arr = map.get(key);
   if (arr) arr.push(city);
   else map.set(key, [city]);
+}
+
+function indexZip(zip: string, city: City) {
+  const compact = zip.replace(/\s+/g, "").toUpperCase();
+  byZip.set(zip, city);
+  byZip.set(compact, city);
+  const digits = compact.match(/^(\d{4,5})/);
+  if (digits && !byZip.has(digits[1])) byZip.set(digits[1], city);
 }
 
 export function foldCity(s: string): string {
@@ -129,58 +168,69 @@ for (const c of CITIES) {
   addIndex(byFold, foldCity(c.name), c);
   byLabel.set(`${c.name}, ${c.state}`.toLowerCase(), c);
   byLabel.set(c.name.toLowerCase() + ", " + foldCity(c.state), c);
-  if (c.postalCode) byZip.set(c.postalCode, c);
+  if (c.postalCode) indexZip(c.postalCode, c);
   for (const a of c.aliases ?? []) {
     addIndex(byLower, a.toLowerCase(), c);
     addIndex(byFold, foldCity(a), c);
   }
 }
 
-for (const [zip, idx, lat, lng] of data.z) {
-  const base = CITIES[idx];
-  if (!base) continue;
-  byZip.set(zip, {
-    name: base.name,
-    state: base.state,
-    lat,
-    lng,
-    postalCode: zip,
-    aliases: base.aliases,
-  });
+function applyZipTable(data: PlacesFile, offset: number) {
+  for (const [zip, idx, lat, lng] of data.z) {
+    const base = CITIES[offset + idx];
+    if (!base) continue;
+    indexZip(zip, {
+      name: base.name,
+      state: base.state,
+      lat,
+      lng,
+      postalCode: zip,
+      aliases: base.aliases,
+    });
+  }
 }
+
+applyZipTable(dataDe, 0);
+applyZipTable(dataNl, dataDe.p.length);
 
 const POPULAR_NAMES = [
   "Berlin",
   "Hamburg",
   "München",
   "Köln",
+  "Amsterdam",
+  "Rotterdam",
+  "Utrecht",
+  "Den Haag",
+  "Eindhoven",
+  "Groningen",
+  "Maastricht",
   "Frankfurt am Main",
   "Stuttgart",
   "Düsseldorf",
   "Leipzig",
-  "Dortmund",
-  "Essen",
-  "Bremen",
-  "Dresden",
-  "Hannover",
-  "Nürnberg",
-  "Kiel",
-  "Freiburg im Breisgau",
-  "Rostock",
-  "Erfurt",
-  "Mainz",
-  "Augsburg",
 ];
 
 export const POPULAR_CITIES: City[] = POPULAR_NAMES.map(
   (n) => byLower.get(n.toLowerCase())?.[0],
 ).filter((c): c is City => Boolean(c));
 
+function parseZipLead(q: string): string | undefined {
+  const de = q.match(/^(\d{5})(?:\s+|$)/);
+  const nl = q.match(/^(\d{4})\s*([A-Za-z]{2})?(?:\s+|$)/);
+  if (de) return de[1];
+  if (nl) return (nl[1] + (nl[2] ?? "")).toUpperCase();
+  return undefined;
+}
+
 export function findCity(name: string): City | undefined {
   const q = name.trim();
   if (!q) return undefined;
-  const zipLead = q.match(/^(\d{5})(?:\s+|$)/);
-  if (zipLead) return byZip.get(zipLead[1]);
+  const zipLead = parseZipLead(q);
+  if (zipLead) {
+    const hit = byZip.get(zipLead) ?? byZip.get(zipLead.replace(/\s+/g, ""));
+    if (hit) return hit;
+  }
   const lower = q.toLowerCase();
   const labeled = byLabel.get(lower);
   if (labeled) return labeled;
@@ -223,10 +273,11 @@ export function searchCities(query: string, limit = 12): City[] {
   const q = query.trim();
   if (!q) return POPULAR_CITIES.slice(0, limit);
 
-  if (/^\d{1,5}$/.test(q)) {
+  if (/^\d{1,5}$/.test(q) || /^\d{4}\s*[A-Za-z]{0,2}$/.test(q)) {
+    const needle = q.replace(/\s+/g, "").toUpperCase();
     const hits: City[] = [];
     for (const [zip, city] of byZip) {
-      if (zip.startsWith(q)) hits.push(city);
+      if (zip.replace(/\s+/g, "").toUpperCase().startsWith(needle)) hits.push(city);
       if (hits.length >= limit) break;
     }
     hits.sort((a, b) => (a.postalCode ?? "").localeCompare(b.postalCode ?? ""));
