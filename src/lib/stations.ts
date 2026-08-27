@@ -62,6 +62,8 @@ export type Station = {
 };
 
 export const GERMANY_CENTER = { lat: 51.16, lng: 10.45 };
+/** Startansicht, damit DE und NL gemeinsam auf der Karte liegen. */
+export const MAP_CENTER = { lat: 51.55, lng: 7.6 };
 
 export const DAY_ORDER: DayKey[] = ["mo", "tu", "we", "th", "fr", "sa", "su"];
 export const DAY_LABEL: Record<DayKey, string> = {
@@ -273,16 +275,13 @@ export function searchStations(query: string, list: Station[]): Station[] {
 
 export const STATIONS: Station[] = [...(partA as Station[]), ...(partB as Station[]), ...(partC as Station[]), ...(partD as Station[])];
 
-
 const STREET_RE =
-  /\d|straße|strasse|str\.|weg|platz|allee|ufer|ring|gasse|damm|chaussee|promenade|deich|hafen|kai|hof|park/i;
+  /\d|straße|strasse|str\.|weg|platz|allee|ufer|ring|gasse|damm|chaussee|promenade|deich|hafen|kai|hof|park|straat|laan|kade|dijk|plein|gracht|singel|steeg|haven|kaai|brug|pad|baan/i;
 
-/** Real coordinates only — never treat missing/zero as a pin. */
 export function hasPreciseCoords(s: { lat?: number; lng?: number }): boolean {
   return isFiniteLatLng(s.lat, s.lng);
 }
 
-/** Street-level address that a maps app can resolve. Not city-only. */
 export function hasStreetAddress(s: { address?: string; city?: string }): boolean {
   const a = (s.address ?? "").trim();
   if (a.length < 3) return false;
