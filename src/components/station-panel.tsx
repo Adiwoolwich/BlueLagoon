@@ -62,7 +62,7 @@ export function StationPanel({ stations }: { stations: Station[] }) {
   return <div className="flex h-full min-h-0 flex-1 flex-col">{body}</div>;
 }
 
-export function SearchBar() {
+export function SearchBar({ overlay }: { overlay?: boolean }) {
   useLang();
   const query = useAppStore((s) => s.query);
   const setQuery = useAppStore((s) => s.setQuery);
@@ -84,6 +84,7 @@ export function SearchBar() {
           }}
           placeholder={t("placePh")}
           warnUnmatched={false}
+          compactMenu={overlay}
         />
       </div>
       <label className="relative block w-[4.6rem] shrink-0 self-end">
@@ -214,7 +215,15 @@ export function ListToolbar({ count }: { count: number }) {
   );
 }
 
-export function SearchAndFilters({ count, compact }: { count: number; compact?: boolean }) {
+export function SearchAndFilters({
+  count,
+  compact,
+  embedSearch,
+}: {
+  count: number;
+  compact?: boolean;
+  embedSearch?: boolean;
+}) {
   useLang();
   const setSheet = useAppStore((s) => s.setSheet);
   const setPanel = useAppStore((s) => s.setPanel);
@@ -242,7 +251,7 @@ export function SearchAndFilters({ count, compact }: { count: number; compact?: 
   }
   return (
     <div className="shrink-0 space-y-2">
-      <div className="hidden md:block">
+      <div className={embedSearch ? "block" : "hidden md:block"}>
         <SearchBar />
       </div>
       <FilterChips />
@@ -339,10 +348,12 @@ function SavedList() {
     .slice(0, 8);
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <button type="button" onClick={() => setPanel("list")} className="inline-flex h-11 items-center gap-1 text-sm text-muted hover:text-fg">
-        {t("backList")}
-      </button>
-      <h2 className="mt-1 mb-3 text-lg font-semibold">{t("saved")}</h2>
+      <div data-bl-keep-clear className="sticky top-0 z-20 -mx-1 mb-2 bg-bg-elevated px-1 pb-1">
+        <button type="button" onClick={() => setPanel("list")} className="inline-flex h-11 items-center gap-1 text-sm text-muted hover:text-fg">
+          {t("backList")}
+        </button>
+        <h2 className="mt-1 text-lg font-semibold">{t("saved")}</h2>
+      </div>
       <div className="bl-scroll">
         {saved.length === 0 ? (
           <p className="text-sm text-muted">{t("savedEmpty")}</p>
@@ -419,10 +430,12 @@ function RoutePlanner() {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
-      <button type="button" onClick={() => setPanel("list")} className="inline-flex h-11 items-center gap-1 text-sm text-muted hover:text-fg">
-        {t("backList")}
-      </button>
-      <h2 className="text-lg font-semibold">{t("route")}</h2>
+      <div data-bl-keep-clear className="sticky top-0 z-20 bg-bg-elevated pb-1">
+        <button type="button" onClick={() => setPanel("list")} className="inline-flex h-11 items-center gap-1 text-sm text-muted hover:text-fg">
+          {t("backList")}
+        </button>
+        <h2 className="text-lg font-semibold">{t("route")}</h2>
+      </div>
       <p className="text-sm text-muted">{t("routeLead")}</p>
       <label className="block text-sm">
         <span className="mb-1 block text-muted">{t("from")}</span>
@@ -480,7 +493,7 @@ function RoutePlanner() {
   );
 }
 
-function Detail({ station }: { station: Station }) {
+function Detail({ station }: { station: Station[] } | { station: Station }) {
   useLang();
   const reports = useAppStore((s) => s.reports);
   const report = useAppStore((s) => s.report);
@@ -521,7 +534,7 @@ function Detail({ station }: { station: Station }) {
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="mb-3 flex shrink-0 items-center justify-between gap-2">
+      <div data-bl-keep-clear className="sticky top-0 z-20 mb-3 flex shrink-0 items-center justify-between gap-2 bg-bg-elevated">
         <button
           type="button"
           onClick={() => {
@@ -696,9 +709,10 @@ export function LocateButton({ iconOnly, floating }: { iconOnly?: boolean; float
           { enableHighAccuracy: true, timeout: 10000 },
         );
       }}
+      data-bl-keep-clear
       className={cn(
         "inline-flex items-center justify-center bg-bg-elevated text-fg ring-1 ring-border",
-        floating ? "size-11 rounded-full shadow-panel" : "h-11 shrink-0 rounded-xl",
+        floating ? "size-11 shrink-0 rounded-full shadow-panel" : "h-11 shrink-0 rounded-xl",
         iconOnly || floating ? "w-11" : "px-3",
       )}
       aria-label={t("locate")}
