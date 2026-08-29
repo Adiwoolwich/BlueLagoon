@@ -136,7 +136,7 @@ function Landing({ onDone }: { onDone: () => void }) {
           <p className="mt-6 text-center text-sm tabular-nums text-muted">
             {t("landingCount", { n })}
             {visitors != null
-              ? ` \u00b7 ${t("landingVisitors", { n: visitors.toLocaleString(lang === "en" ? "en-GB" : "de-DE") })}`
+              ? ` · ${t("landingVisitors", { n: visitors.toLocaleString(lang === "en" ? "en-GB" : "de-DE") })}`
               : ""}
           </p>
           <div className="mt-auto flex flex-col items-center pt-8">
@@ -229,15 +229,18 @@ function MapApp() {
 
       <main className="absolute inset-0">
         <MapHost stations={stations.length ? stations : STATIONS} initialView={initial} />
-        <div className="absolute top-3 right-3 left-3 z-30 flex gap-2 md:hidden">
-          <div className="min-w-0 flex-1">
-            <SearchBar />
+        {panel === "list" && sheet !== "full" ? (
+          <div className="absolute inset-x-3 z-30 flex items-start gap-2 pt-[max(0.75rem,env(safe-area-inset-top))] md:hidden">
+            <div className="min-w-0 flex-1">
+              <SearchBar overlay />
+            </div>
+            <LocateButton floating />
           </div>
-          <LocateButton floating />
-        </div>
-        <div className="absolute right-3 bottom-6 z-10 hidden md:block">
-          <LocateButton floating />
-        </div>
+        ) : (
+          <div className="absolute top-[max(0.75rem,env(safe-area-inset-top))] right-3 z-10 hidden md:block md:top-auto md:bottom-6">
+            <LocateButton floating />
+          </div>
+        )}
       </main>
 
       <aside
@@ -259,7 +262,9 @@ function MapApp() {
           <span className="h-1 w-10 rounded-full bg-border-strong" />
         </button>
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] md:p-4">
-          {panel === "list" ? <SearchAndFilters count={inViewCount} compact={sheet === "peek"} /> : null}
+          {panel === "list" ? (
+            <SearchAndFilters count={inViewCount} compact={sheet === "peek"} embedSearch={sheet === "full"} />
+          ) : null}
           {routePath?.source === "straight" && panel === "list" && sheet !== "peek" ? (
             <p className="shrink-0 rounded-lg bg-stale/10 px-2.5 py-1.5 text-xs text-stale">{t("routeAir")}</p>
           ) : null}
