@@ -1,9 +1,12 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown, MapPin, X } from "lucide-react";
 import { findCity, searchCities, CITIES, cityKey, registerCity, type City } from "@/lib/cities";
 import { searchNominatimDe } from "@/lib/nominatim";
 import { t, useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+
+type MenuBox = { left: number; width: number; top?: number; bottom?: number; maxHeight: number };
 
 export function CitySelect({
   value,
@@ -12,6 +15,7 @@ export function CitySelect({
   placeholder,
   allowEmpty = true,
   warnUnmatched = true,
+  compactMenu = false,
 }: {
   value: string;
   onChange: (name: string) => void;
@@ -19,16 +23,19 @@ export function CitySelect({
   placeholder?: string;
   allowEmpty?: boolean;
   warnUnmatched?: boolean;
+  compactMenu?: boolean;
 }) {
   useLang();
   const ph = placeholder ?? t("cityPh");
   const id = useId();
   const listId = `${id}-list`;
   const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
   const [active, setActive] = useState(0);
+  const [menuBox, setMenuBox] = useState<MenuBox | null>(null);
   const resolved = findCity(value);
 
   useEffect(() => {
@@ -37,7 +44,9 @@ export function CitySelect({
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      const node = e.target as Node;
+      if (rootRef.current?.contains(node) || menuRef.current?.contains(node)) return;
+      setOpen(false);
     };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
@@ -88,6 +97,57 @@ export function CitySelect({
   }, [local, remote]);
   const unmatched = draft.trim().length > 0 && !findCity(draft);
 
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuBox(null);
+      return;
+    }
+    function keepClearBounds(input: DOMRect) {
+      let reservedTop = 8;
+      let reservedBottom = 8;
+      document.querySelectorAll("[data-bl-keep-clear]").forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+        const root = rootRef.current;
+        if (root && (root.contains(node) || node.contains(root))) return;
+        const b = node.getBoundingClientRect();
+        if (b.width < 2 || b.height < 2) return;
+        const overlapX = Math.min(input.right, b.right) - Math.max(input.left, b.left);
+        const sameColumn = overlapX > 8;
+        const beside = b.left >= input.right - 4 || b.right <= input.left + 4;
+        if (beside && !sameColumn) return;
+        if (b.bottom <= input.top + 10) reservedTop = Math.max(reservedTop, b.bottom + 8);
+        else if (b.top >= input.bottom - 10) reservedBottom = Math.max(reservedBottom, window.innerHeight - b.top + 8);
+        else if (b.top < input.top) reservedTop = Math.max(reservedTop, b.bottom + 8);
+        else reservedBottom = Math.max(reservedBottom, window.innerHeight - b.top + 8);
+      });
+      return { reservedTop, reservedBottom };
+    }
+    function place() {
+      const el = rootRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const { reservedTop, reservedBottom } = keepClearBounds(r);
+      const spaceBelow = window.innerHeight - r.bottom - reservedBottom;
+      const spaceAbove = r.top - reservedTop;
+      const cap = compactMenu ? 168 : 248;
+      const openUp = spaceBelow < 132 && spaceAbove > spaceBelow;
+      const maxHeight = Math.max(88, Math.min(cap, openUp ? spaceAbove : spaceBelow));
+      setMenuBox({
+        left: Math.max(8, Math.min(r.left, window.innerWidth - Math.min(r.width, window.innerWidth - 16) - 8)),
+        width: Math.min(r.width, window.innerWidth - 16),
+        maxHeight,
+        ...(openUp ? { bottom: window.innerHeight - r.top + 4 } : { top: r.bottom + 4 }),
+      });
+    }
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open, compactMenu, draft]);
+
   function pick(city: City) {
     const saved = registerCity(city);
     const next = cityKey(saved);
@@ -113,6 +173,69 @@ export function CitySelect({
     }
     setOpen(false);
   }
+
+  const list =
+    open && menuBox ? (
+      <ul
+        ref={menuRef}
+        id={listId}
+        role="listbox"
+        style={{
+          position: "fixed",
+          left: menuBox.left,
+          width: menuBox.width,
+          top: menuBox.top,
+          bottom: menuBox.bottom,
+          maxHeight: menuBox.maxHeight,
+          zIndex: 80,
+        }}
+        className="overflow-y-auto rounded-lg bg-bg-elevated py-1 shadow-panel ring-1 ring-border"
+      >
+        {matches.length === 0 ? (
+          <li className="px-3 py-3 text-sm text-muted">
+            {t("noCityHits", { n: CITIES.length.toLocaleString(undefined) })}
+          </li>
+        ) : (
+          <>
+            {unmatched ? (
+              <li className="px-3 py-1.5 text-[11px] tracking-wide text-stale uppercase">{t("didYouMean")}</li>
+            ) : !draft.trim() ? (
+              <li className="px-3 py-1.5 text-[11px] tracking-wide text-muted uppercase">{t("popular")}</li>
+            ) : null}
+            {matches.map((c, i) => {
+              const selected = cityKey(c) === (resolved ? cityKey(resolved) : value);
+              return (
+                <li key={`${c.name}-${c.state}-${c.postalCode ?? i}`}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={selected}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onMouseEnter={() => setActive(i)}
+                    onClick={() => pick(c)}
+                    className={cn(
+                      "flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm",
+                      i === active ? "bg-surface-2 text-fg" : "text-fg hover:bg-surface",
+                    )}
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">
+                        {c.postalCode ? `${c.postalCode} ${c.name}` : c.name}
+                      </span>
+                      <span className="block truncate text-xs text-muted">{c.state}</span>
+                    </span>
+                    {selected ? <Check className="size-4 shrink-0 text-primary" /> : null}
+                  </button>
+                </li>
+              );
+            })}
+            <li className="border-t border-border px-3 py-1.5 text-[11px] text-subtle">
+              {t("placesFooter", { n: CITIES.length.toLocaleString(undefined) })}
+            </li>
+          </>
+        )}
+      </ul>
+    ) : null;
 
   return (
     <div ref={rootRef} className="relative">
@@ -198,57 +321,7 @@ export function CitySelect({
       {warnUnmatched && unmatched && !open ? (
         <p className="mt-1 text-xs text-bad">{t("noCity")}</p>
       ) : null}
-      {open ? (
-        <ul
-          id={listId}
-          role="listbox"
-          className="absolute z-50 mt-1 max-h-[min(18rem,42dvh)] w-full overflow-y-auto rounded-lg bg-bg-elevated py-1 shadow-panel ring-1 ring-border"
-        >
-          {matches.length === 0 ? (
-            <li className="px-3 py-3 text-sm text-muted">
-              {t("noCityHits", { n: CITIES.length.toLocaleString(undefined) })}
-            </li>
-          ) : (
-            <>
-              {unmatched ? (
-                <li className="px-3 py-1.5 text-[11px] tracking-wide text-stale uppercase">{t("didYouMean")}</li>
-              ) : !draft.trim() ? (
-                <li className="px-3 py-1.5 text-[11px] tracking-wide text-muted uppercase">{t("popular")}</li>
-              ) : null}
-              {matches.map((c, i) => {
-                const selected = cityKey(c) === (resolved ? cityKey(resolved) : value);
-                return (
-                  <li key={`${c.name}-${c.state}-${c.postalCode ?? i}`}>
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={selected}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onMouseEnter={() => setActive(i)}
-                      onClick={() => pick(c)}
-                      className={cn(
-                        "flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm",
-                        i === active ? "bg-surface-2 text-fg" : "text-fg hover:bg-surface",
-                      )}
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate font-medium">
-                          {c.postalCode ? `${c.postalCode} ${c.name}` : c.name}
-                        </span>
-                        <span className="block truncate text-xs text-muted">{c.state}</span>
-                      </span>
-                      {selected ? <Check className="size-4 shrink-0 text-primary" /> : null}
-                    </button>
-                  </li>
-                );
-              })}
-              <li className="border-t border-border px-3 py-1.5 text-[11px] text-subtle">
-                {t("placesFooter", { n: CITIES.length.toLocaleString(undefined) })}
-              </li>
-            </>
-          )}
-        </ul>
-      ) : null}
+      {list && typeof document !== "undefined" ? createPortal(list, document.body) : null}
     </div>
   );
 }
