@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MapHost } from "./components/map-host";
 import {
   LocateButton,
@@ -163,6 +163,71 @@ function Landing({ onDone }: { onDone: () => void }) {
   );
 }
 
+function SheetHandle({
+  label,
+  onTap,
+  onSwipeUp,
+  onSwipeDown,
+}: {
+  label: string;
+  onTap: () => void;
+  onSwipeUp: () => void;
+  onSwipeDown: () => void;
+}) {
+  const startY = useRef<number | null>(null);
+  const lastY = useRef(0);
+  const dragged = useRef(false);
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    startY.current = e.clientY;
+    lastY.current = e.clientY;
+    dragged.current = false;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (startY.current == null) return;
+    lastY.current = e.clientY;
+    if (Math.abs(e.clientY - startY.current) > 10) dragged.current = true;
+  }
+
+  function onPointerUp() {
+    if (startY.current == null) return;
+    const dy = lastY.current - startY.current;
+    startY.current = null;
+    if (dy < -32) onSwipeUp();
+    else if (dy > 32) onSwipeDown();
+    else if (!dragged.current) onTap();
+  }
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={label}
+      className="flex h-11 shrink-0 touch-none items-center justify-center md:hidden"
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          onSwipeUp();
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          onSwipeDown();
+        } else if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onTap();
+        }
+      }}
+    >
+      <span className="h-1.5 w-12 rounded-full bg-border-strong" />
+    </div>
+  );
+}
+
 export function App() {
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   if (path === "/impressum") return <ImpressumPage />;
@@ -216,6 +281,19 @@ function MapApp() {
     setSheet(sheet === "peek" ? "mid" : sheet === "mid" ? "full" : "peek");
   }
 
+  function stepSheet(dir: "up" | "down") {
+    if (panel !== "list") {
+      if (dir === "up") setSheet("full");
+      else setSheet("mid");
+      return;
+    }
+    if (dir === "up") {
+      if (sheet === "peek") setSheet("mid");
+      else if (sheet === "mid") setSheet("full");
+    } else if (sheet === "full") setSheet("mid");
+    else if (sheet === "mid") setSheet("peek");
+  }
+
   if (showLanding) {
     return <Landing onDone={() => setShowLanding(false)} />;
   }
@@ -254,14 +332,12 @@ function MapApp() {
             "top-[calc(max(0.75rem,env(safe-area-inset-top))+3.25rem)] h-auto bottom-0 md:top-3 md:h-auto",
         )}
       >
-        <button
-          type="button"
-          onClick={cycleSheet}
-          className="flex h-7 shrink-0 items-center justify-center md:hidden"
-          aria-label={t("sheetResize")}
-        >
-          <span className="h-1 w-10 rounded-full bg-border-strong" />
-        </button>
+        <SheetHandle
+          label={t("sheetResize")}
+          onTap={cycleSheet}
+          onSwipeUp={() => stepSheet("up")}
+          onSwipeDown={() => stepSheet("down")}
+        />
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] md:p-4">
           {panel === "list" ? <SearchAndFilters count={inViewCount} compact={sheet === "peek"} /> : null}
           {routePath?.source === "straight" && panel === "list" && sheet !== "peek" ? (
