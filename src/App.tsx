@@ -229,18 +229,18 @@ function MapApp() {
 
       <main className="absolute inset-0">
         <MapHost stations={stations.length ? stations : STATIONS} initialView={initial} />
-        {panel === "list" && sheet !== "full" ? (
-          <div className="absolute inset-x-3 z-30 flex items-start gap-2 pt-[max(0.75rem,env(safe-area-inset-top))] md:hidden">
-            <div className="min-w-0 flex-1">
-              <SearchBar overlay />
-            </div>
-            <LocateButton floating />
+        <div
+          data-bl-keep-clear
+          className="absolute inset-x-0 top-0 z-30 flex items-start gap-2 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))] md:hidden"
+        >
+          <div className="min-w-0 flex-1">
+            <SearchBar overlay />
           </div>
-        ) : (
-          <div className="absolute top-[max(0.75rem,env(safe-area-inset-top))] right-3 z-10 hidden md:block md:top-auto md:bottom-6">
-            <LocateButton floating />
-          </div>
-        )}
+          <LocateButton floating />
+        </div>
+        <div className="absolute right-3 bottom-6 z-10 hidden md:block">
+          <LocateButton floating />
+        </div>
       </main>
 
       <aside
@@ -250,7 +250,8 @@ function MapApp() {
           "md:inset-auto md:top-3 md:bottom-3 md:left-3 md:w-[24rem] md:rounded-2xl md:transition-none",
           sheet === "peek" && "h-[11.25rem] md:h-auto",
           sheet === "mid" && "h-[min(52dvh,32rem)] md:h-auto",
-          sheet === "full" && "h-[calc(100%-0.35rem)] md:h-auto",
+          sheet === "full" &&
+            "top-[calc(max(0.75rem,env(safe-area-inset-top))+3.25rem)] h-auto bottom-0 md:top-3 md:h-auto",
         )}
       >
         <button
@@ -262,9 +263,7 @@ function MapApp() {
           <span className="h-1 w-10 rounded-full bg-border-strong" />
         </button>
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] md:p-4">
-          {panel === "list" ? (
-            <SearchAndFilters count={inViewCount} compact={sheet === "peek"} embedSearch={sheet === "full"} />
-          ) : null}
+          {panel === "list" ? <SearchAndFilters count={inViewCount} compact={sheet === "peek"} /> : null}
           {routePath?.source === "straight" && panel === "list" && sheet !== "peek" ? (
             <p className="shrink-0 rounded-lg bg-stale/10 px-2.5 py-1.5 text-xs text-stale">{t("routeAir")}</p>
           ) : null}
