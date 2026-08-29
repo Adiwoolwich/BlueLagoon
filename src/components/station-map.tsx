@@ -346,6 +346,15 @@ export function StationMap({
         maxZoom={19}
         maxNativeZoom={19}
       />
+      <TileLayer
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}"
+        maxZoom={19}
+        opacity={0.9}
+      />
+      <TileLayer
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+        maxZoom={19}
+      />
       <MapChrome stations={stations} initialView={initialView} />
       {searchOrigin && radiusKm > 0 && !routeLine ? (
         <Circle
