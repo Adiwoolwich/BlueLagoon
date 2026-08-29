@@ -2,30 +2,30 @@
 @import "leaflet/dist/leaflet.css";
 
 @theme {
-  --color-bg: #04151c;
-  --color-bg-elevated: #072028;
-  --color-surface: #0c2a33;
-  --color-surface-2: #123640;
-  --color-fg: #e8f6f8;
-  --color-muted: #8fb4bb;
-  --color-subtle: #5d858c;
-  --color-primary: #2ee0c5;
-  --color-primary-fg: #042f2e;
-  --color-lagoon: #1ad4c0;
-  --color-border: #1a3f4a;
-  --color-border-strong: #2a5a68;
-  --color-ok: #2ee0c5;
-  --color-stale: #fbbf24;
-  --color-bad: #f87171;
-  --color-auto: #67e8f9;
+  --color-bg: #eef6f6;
+  --color-bg-elevated: #ffffff;
+  --color-surface: #e4f1f1;
+  --color-surface-2: #d3e8e8;
+  --color-fg: #123038;
+  --color-muted: #45656c;
+  --color-subtle: #6e9096;
+  --color-primary: #0b7d86;
+  --color-primary-fg: #ffffff;
+  --color-lagoon: #1498a3;
+  --color-border: #c4dcdc;
+  --color-border-strong: #8eb8bb;
+  --color-ok: #0a8a74;
+  --color-stale: #c07a12;
+  --color-bad: #c24747;
+  --color-auto: #1578b8;
 
   --font-sans: "Inter", "Outfit", "Segoe UI", system-ui, sans-serif;
   --font-display: "Fraunces", "Times New Roman", serif;
 
-  --shadow-border: 0 0 0 1px #1a3f4a;
-  --shadow-panel: 0 16px 40px -16px rgb(0 20 28 / 0.72), 0 0 0 1px #1a3f4a;
-  --shadow-btn: 0 1px 2px rgb(0 20 28 / 0.45);
-  --shadow-btn-hover: 0 2px 14px -2px rgb(46 224 197 / 0.4);
+  --shadow-border: 0 0 0 1px #c4dcdc;
+  --shadow-panel: 0 14px 36px -18px rgb(18 48 56 / 0.28), 0 0 0 1px #c4dcdc;
+  --shadow-btn: 0 1px 2px rgb(18 48 56 / 0.12);
+  --shadow-btn-hover: 0 4px 16px -4px rgb(11 125 134 / 0.35);
 }
 
 @layer base {
@@ -46,7 +46,7 @@
   button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
   button, a, [role="button"], [role="option"] { touch-action: manipulation; }
   :focus-visible {
-    outline: 2px solid var(--color-fg);
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
 }
@@ -55,7 +55,7 @@
   width: 100%;
   height: 100%;
   z-index: 0;
-  background: #04151c;
+  background: #1c2c30;
   font-family: var(--font-sans);
 }
 
@@ -68,29 +68,29 @@
 .leaflet-marker-shadow { display: none !important; }
 
 .leaflet-control-attribution {
-  background: rgb(4 21 28 / 0.86) !important;
-  color: #8fb4bb !important;
+  background: rgb(255 255 255 / 0.88) !important;
+  color: #45656c !important;
   font-size: 11px !important;
   border-radius: 4px 0 0 0;
 }
-.leaflet-control-attribution a { color: #e8f6f8 !important; }
+.leaflet-control-attribution a { color: #123038 !important; }
 
 .leaflet-bar {
-  border: 1px solid var(--color-border) !important;
-  box-shadow: none !important;
+  border: 1px solid #c4dcdc !important;
+  box-shadow: 0 6px 18px -8px rgb(18 48 56 / 0.4) !important;
   border-radius: 8px !important;
   overflow: hidden;
 }
 .leaflet-bar a {
-  background: #0c2a33 !important;
-  color: #e8f6f8 !important;
+  background: #ffffff !important;
+  color: #123038 !important;
   border: none !important;
   width: 36px !important;
   height: 36px !important;
   line-height: 36px !important;
   font-size: 16px !important;
 }
-.leaflet-bar a:hover { background: #123640 !important; color: #e8f6f8 !important; }
+.leaflet-bar a:hover { background: #e4f1f1 !important; color: #0b7d86 !important; }
 .leaflet-bar a:last-child { border-bottom: none !important; }
 
 @media (max-width: 767px) {
@@ -121,33 +121,33 @@
 .bl-dot {
   display: block;
   border-radius: 999px;
-  background: var(--pin, #2ee0c5);
-  box-shadow: 0 0 0 2px #04151c, 0 0 0 3px #e8f6f8;
+  background: var(--pin, #0b7d86);
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px #123038;
 }
 .bl-marker.is-selected .bl-dot {
-  box-shadow: 0 0 0 2px #04151c, 0 0 0 5px var(--pin, #2ee0c5);
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 5px var(--pin, #0b7d86);
 }
 
 .bl-cluster-dot {
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: #e8f6f8;
-  color: #04151c;
+  background: #0b7d86;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  box-shadow: 0 0 0 2px #04151c;
+  box-shadow: 0 0 0 2px #ffffff, 0 6px 16px rgb(0 0 0 / 0.35);
   font-family: var(--font-sans);
 }
 
 .leaflet-tooltip.bl-map-tooltip {
-  background: #072028;
-  color: #e8f6f8;
-  border: 1px solid #1a3f4a;
+  background: #ffffff;
+  color: #123038;
+  border: 1px solid #c4dcdc;
   border-radius: 8px;
   padding: 0.4rem 0.65rem;
-  box-shadow: 0 4px 16px -6px rgb(0 0 0 / 0.2);
+  box-shadow: 0 8px 22px -10px rgb(18 48 56 / 0.35);
   font-family: var(--font-sans);
   font-size: 0.8125rem;
   line-height: 1.35;
@@ -155,9 +155,9 @@
   max-width: 16rem;
   pointer-events: none;
 }
-.leaflet-tooltip.bl-map-tooltip::before { border-top-color: #141416; }
-.bl-map-tooltip-name { display: block; font-weight: 600; color: #e8f6f8; }
-.bl-map-tooltip-place { display: block; margin-top: 0.1rem; font-size: 0.75rem; font-weight: 400; color: #8fb4bb; }
+.leaflet-tooltip.bl-map-tooltip::before { border-top-color: #ffffff; }
+.bl-map-tooltip-name { display: block; font-weight: 600; color: #123038; }
+.bl-map-tooltip-place { display: block; margin-top: 0.1rem; font-size: 0.75rem; font-weight: 400; color: #45656c; }
 
 .bl-chips {
   display: flex;
@@ -176,11 +176,11 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  scrollbar-color: #2a5a68 transparent;
+  scrollbar-color: #8eb8bb transparent;
 }
 .bl-scroll::-webkit-scrollbar { width: 8px; }
 .bl-scroll::-webkit-scrollbar-thumb {
-  background: #2a5a68;
+  background: #8eb8bb;
   border-radius: 99px;
 }
 
@@ -191,19 +191,19 @@
   gap: 8px;
   padding: 8px 10px;
   border-radius: 8px;
-  background: #123640;
+  background: #e4f1f1;
   font-size: 12px;
   line-height: 1.4;
-  color: #8fb4bb;
+  color: #45656c;
 }
 
 .bl-drop {
   display: block;
   line-height: 0;
-  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.28));
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.45));
 }
 .bl-marker.is-selected .bl-drop {
-  filter: drop-shadow(0 0 0 2px color-mix(in oklab, var(--pin, #2ee0c5) 55%, transparent)) drop-shadow(0 2px 6px rgb(0 0 0 / 0.28));
+  filter: drop-shadow(0 0 0 2px color-mix(in oklab, var(--pin, #0b7d86) 55%, white)) drop-shadow(0 2px 6px rgb(0 0 0 / 0.4));
 }
 .bl-drop svg { display: block; overflow: visible; }
 
@@ -215,28 +215,27 @@
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: #e8f6f8;
-  color: #04151c;
+  background: #0b7d86;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  box-shadow: 0 0 0 2px #04151c, 0 8px 20px rgb(0 20 28 / 0.5);
+  box-shadow: 0 0 0 2px #ffffff, 0 8px 20px rgb(0 0 0 / 0.35);
   font-family: var(--font-sans);
 }
 
-/* Landing: lagoon atmosphere + motion (transform/opacity only) */
 .bl-landing {
   background:
-    radial-gradient(120% 70% at 50% -8%, rgb(10 92 102 / 0.55) 0%, transparent 58%),
-    radial-gradient(90% 50% at 100% 100%, rgb(11 61 74 / 0.55) 0%, transparent 52%),
-    #04151c;
+    radial-gradient(120% 70% at 50% -8%, rgb(20 152 163 / 0.22) 0%, transparent 58%),
+    radial-gradient(90% 50% at 100% 100%, rgb(11 125 134 / 0.12) 0%, transparent 52%),
+    #eef6f6;
 }
 .bl-landing-glow {
   position: absolute;
   inset: -18% -12% auto -12%;
   height: 52%;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 0%, rgb(46 224 197 / 0.22), transparent 68%);
+  background: radial-gradient(ellipse at 50% 0%, rgb(20 152 163 / 0.28), transparent 68%);
 }
 .bl-waves {
   position: absolute;
@@ -245,7 +244,7 @@
   bottom: -6%;
   height: 42%;
   pointer-events: none;
-  opacity: 0.42;
+  opacity: 0.55;
 }
 .bl-wave-a { animation: bl-wave 20s linear infinite; }
 .bl-wave-b { animation: bl-wave 28s linear infinite reverse; opacity: 0.7; }
@@ -262,13 +261,13 @@
   border-radius: 1rem;
   background: var(--color-primary);
   color: var(--color-primary-fg);
-  box-shadow: 0 8px 24px -8px rgb(46 224 197 / 0.55);
+  box-shadow: 0 8px 24px -8px rgb(11 125 134 / 0.5);
 }
 .bl-ripple {
   position: absolute;
   inset: -7px;
   border-radius: 1.25rem;
-  border: 1px solid rgb(46 224 197 / 0.4);
+  border: 1px solid rgb(11 125 134 / 0.35);
   animation: bl-ping 2.8s ease-out infinite;
   pointer-events: none;
 }
@@ -290,8 +289,8 @@
   gap: 0.35rem;
   border-radius: 1rem;
   padding: 0.85rem 0.7rem 0.9rem;
-  background: rgb(12 42 51 / 0.72);
-  box-shadow: inset 0 0 0 1px rgb(42 90 104 / 0.55);
+  background: rgb(255 255 255 / 0.82);
+  box-shadow: inset 0 0 0 1px rgb(196 220 220 / 0.95);
   backdrop-filter: blur(8px);
   text-align: left;
 }
@@ -344,7 +343,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(110deg, transparent 25%, rgb(255 255 255 / 0.2) 48%, transparent 72%);
+  background: linear-gradient(110deg, transparent 25%, rgb(255 255 255 / 0.28) 48%, transparent 72%);
   transform: translate3d(-130%, 0, 0);
   animation: bl-shimmer 3.2s ease-in-out infinite;
   pointer-events: none;
