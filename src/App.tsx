@@ -9,6 +9,7 @@ import {
 import { SiteFooter } from "./components/site-footer";
 import { DatenschutzPage, ImpressumPage } from "./components/legal-pages";
 import { FeedbackPage } from "./components/feedback-form";
+import { OfflineButton } from "./components/offline-panel";
 import { hasPreciseCoords, STATIONS } from "./lib/stations";
 import { allStations, applyFilters, useAppStore } from "./lib/store";
 import { inBounds } from "./lib/geo";
@@ -337,9 +338,11 @@ function MapApp() {
             <SearchBar overlay />
           </div>
           <LocateButton floating />
+          <OfflineButton floating />
         </div>
-        <div className="absolute right-3 bottom-6 z-10 hidden md:block">
+        <div className="absolute right-3 bottom-6 z-10 hidden md:flex md:flex-col md:gap-2">
           <LocateButton floating />
+          <OfflineButton floating />
         </div>
       </main>
 
