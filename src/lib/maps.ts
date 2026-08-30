@@ -1,4 +1,4 @@
-/** Navigation helpers: mobile app chooser, desktop web fallback */
+/** Navigation helpers. Destinations are GPS coords only — never a place-name search. */
 
 import { fullAddress, hasPreciseCoords, hasStreetAddress } from "./stations";
 
@@ -20,32 +20,45 @@ export function isAndroid(): boolean {
   return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
 }
 
-/** Android system chooser for installed map/nav apps */
+function coords(lat: number, lng: number): string {
+  return `${lat.toFixed(6)},${lng.toFixed(6)}`;
+}
+
+function safeLabel(label?: string): string {
+  return (label ?? "")
+    .replace(/[()[\]{}]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+}
+
+/** Android / iOS geo: handler. Query is lat,lng so apps cannot geocode a wrong namesake. */
 export function geoNavUrl(lat: number, lng: number, label?: string) {
-  const name = label?.trim();
-  const q = name ? `${lat},${lng}(${name})` : `${lat},${lng}`;
-  return `geo:${lat},${lng}?q=${encodeURIComponent(q)}`;
+  const ll = coords(lat, lng);
+  const name = safeLabel(label);
+  const q = name ? `${ll}(${name})` : ll;
+  return `geo:${ll}?q=${encodeURIComponent(q)}`;
 }
 
-/** Apple Maps directions (iOS / macOS) */
-export function appleMapsUrl(lat: number, lng: number, label?: string) {
-  const daddr = label?.trim()
-    ? encodeURIComponent(`${label.trim()}@${lat},${lng}`)
-    : `${lat},${lng}`;
-  return `https://maps.apple.com/?daddr=${daddr}&dirflg=d`;
+/** Apple Maps turn-by-turn to the pin, not a name search. */
+export function appleMapsUrl(lat: number, lng: number, _label?: string) {
+  const ll = coords(lat, lng);
+  return `https://maps.apple.com/?daddr=${ll}&ll=${ll}&dirflg=d`;
 }
 
-/** Google Maps web / app (universal link) */
-export function googleMapsWebUrl(lat: number, lng: number, label?: string) {
-  const dest = label?.trim()
-    ? encodeURIComponent(`${label.trim()}@${lat},${lng}`)
-    : `${lat},${lng}`;
-  return `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving&dir_action=navigate`;
+/**
+ * Google Maps directions to the exact pin.
+ * Do not pass "Name@lat,lng" — Google treats that as a place search and often
+ * opens a different dump station or fails entirely.
+ */
+export function googleMapsWebUrl(lat: number, lng: number, _label?: string) {
+  const dest = encodeURIComponent(coords(lat, lng));
+  return `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
 }
 
-/** Waze navigate link */
 export function wazeUrl(lat: number, lng: number) {
-  return `https://waze.com/ul?ll=${lat}%2C${lng}&navigate=yes`;
+  const dest = encodeURIComponent(coords(lat, lng));
+  return `https://waze.com/ul?ll=${dest}&navigate=yes`;
 }
 
 export type NavTarget = {
@@ -54,7 +67,6 @@ export type NavTarget = {
   href: string;
 };
 
-/** Options shown in the mobile app picker sheet */
 export function navTargets(lat: number, lng: number, label?: string): NavTarget[] {
   const targets: NavTarget[] = [];
 
@@ -97,9 +109,8 @@ export function navTargets(lat: number, lng: number, label?: string): NavTarget[
   return targets;
 }
 
-/** Desktop / non-mobile: open Google Maps web directions */
 export function openNavigationWeb(lat: number, lng: number, label?: string) {
-  window.open(googleMapsWebUrl(lat, lng, label), "_blank", "noopener,noreferrer");
+  launchNav(googleMapsWebUrl(lat, lng, label));
 }
 
 /** @deprecated use openNavigationWeb or mobile sheet */
@@ -116,7 +127,7 @@ export function appleMapsAddressUrl(address: string) {
 }
 
 export function googleMapsAddressUrl(address: string) {
-  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}&travelmode=driving&dir_action=navigate`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}&travelmode=driving`;
 }
 
 export function navTargetsAddress(address: string): NavTarget[] {
@@ -135,7 +146,18 @@ export function navTargetsAddress(address: string): NavTarget[] {
 }
 
 export function openNavigationAddress(address: string) {
-  window.open(googleMapsAddressUrl(address), "_blank", "noopener,noreferrer");
+  launchNav(googleMapsAddressUrl(address));
+}
+
+/** Open https in a new tab; app-schemes (geo:) in the same window so iOS/Android can hand off. */
+export function launchNav(href: string) {
+  if (!href || href === "#") return;
+  if (/^https?:/i.test(href)) {
+    const w = window.open(href, "_blank", "noopener,noreferrer");
+    if (!w) window.location.assign(href);
+    return;
+  }
+  window.location.assign(href);
 }
 
 /** Precise coords preferred. Address-only if the street can be resolved. Never invents city-centroid coords. */
