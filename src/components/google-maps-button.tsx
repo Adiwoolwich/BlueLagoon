@@ -1,12 +1,6 @@
-import { useMemo, useState } from "react";
-import {
-  isMobileDevice,
-  navTargetsForPlace,
-  openNavigationAddress,
-  openNavigationWeb,
-  type NavTarget,
-} from "../lib/maps";
-import { canNavigateTo, fullAddress, hasPreciseCoords } from "../lib/stations";
+import { useMemo, useState, type ReactNode } from "react";
+import { isMobileDevice, navTargetsForPlace, type NavTarget } from "../lib/maps";
+import { canNavigateTo } from "../lib/stations";
 import { t, useLang } from "../lib/i18n";
 
 function targetLabel(id: string, fallback: string) {
@@ -16,6 +10,10 @@ function targetLabel(id: string, fallback: string) {
   if (id === "waze") return t("navWaze");
   if (id === "geo") return t("navOther");
   return fallback;
+}
+
+function isHttp(href: string) {
+  return /^https?:/i.test(href);
 }
 
 export function GoogleMapsButton({
@@ -38,8 +36,11 @@ export function GoogleMapsButton({
   const mobile = useMemo(() => isMobileDevice(), []);
   const place = { lat, lng, name: label, address, city, postalCode };
   const navigable = canNavigateTo(place);
-  const precise = hasPreciseCoords(place);
-  const targets = useMemo(() => navTargetsForPlace(place), [lat, lng, label, address, city, postalCode]);
+  const targets = useMemo(
+    () => navTargetsForPlace(place),
+    [lat, lng, label, address, city, postalCode],
+  );
+  const googleHref = targets.find((x) => x.id === "google")?.href ?? targets[0]?.href ?? "#";
 
   if (!navigable || targets.length === 0) {
     return (
@@ -49,32 +50,12 @@ export function GoogleMapsButton({
     );
   }
 
-  function openDesktop(e: React.MouseEvent) {
-    e.preventDefault();
-    if (precise && lat != null && lng != null) {
-      openNavigationWeb(lat, lng, label);
-      return;
-    }
-    openNavigationAddress(fullAddress(place));
-  }
-
-  function pick(target: NavTarget) {
-    setSheetOpen(false);
-    window.location.href = target.href;
-  }
-
   const cls =
     "inline-flex h-12 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-fg shadow-btn transition-[transform,filter] active:scale-[0.98]";
 
   if (!mobile) {
     return (
-      <a
-        href={targets.find((x) => x.id === "google")?.href ?? "#"}
-        onClick={openDesktop}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={cls}
-      >
+      <a href={googleHref} target="_blank" rel="noopener noreferrer" className={cls}>
         {t("navStart")}
       </a>
     );
@@ -105,13 +86,9 @@ export function GoogleMapsButton({
             <ul className="divide-y divide-border/60">
               {targets.map((x) => (
                 <li key={x.id}>
-                  <button
-                    type="button"
-                    onClick={() => pick(x)}
-                    className="flex h-12 w-full items-center px-4 text-left text-sm font-medium text-fg hover:bg-surface-2"
-                  >
+                  <NavLink target={x} onPick={() => setSheetOpen(false)}>
                     {targetLabel(x.id, x.label)}
-                  </button>
+                  </NavLink>
                 </li>
               ))}
             </ul>
@@ -126,5 +103,28 @@ export function GoogleMapsButton({
         </div>
       ) : null}
     </>
+  );
+}
+
+function NavLink({
+  target,
+  onPick,
+  children,
+}: {
+  target: NavTarget;
+  onPick: () => void;
+  children: ReactNode;
+}) {
+  const http = isHttp(target.href);
+  return (
+    <a
+      href={target.href}
+      target={http ? "_blank" : undefined}
+      rel="noopener noreferrer"
+      onClick={onPick}
+      className="flex h-12 w-full items-center px-4 text-left text-sm font-medium text-fg hover:bg-surface-2"
+    >
+      {children}
+    </a>
   );
 }
