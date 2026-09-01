@@ -5,7 +5,9 @@ Chemietoiletten-Entsorgungsstationen für Wohnmobile in Deutschland und den Nied
 **Live:** https://blue-lagune.com  
 **Repo:** https://github.com/Adiwoolwich/BlueLagune
 
-1281 Stationen (1241 DE + 40 NL)
+1612 Stationen (1428 DE + 184 NL)
+
+CamperClean overlay: 284 Automaten (DE + NL), separat von den Dump-Stationen.
 
 ## Funktionen
 
