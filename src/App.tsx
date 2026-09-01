@@ -10,7 +10,7 @@ import { SiteFooter } from "./components/site-footer";
 import { DatenschutzPage, ImpressumPage } from "./components/legal-pages";
 import { FeedbackPage } from "./components/feedback-form";
 import { OfflineButton } from "./components/offline-panel";
-import { hasPreciseCoords, STATIONS } from "./lib/stations";
+import { DUMP_STATIONS, hasPreciseCoords, STATIONS } from "./lib/stations";
 import { allStations, applyFilters, useAppStore } from "./lib/store";
 import { inBounds } from "./lib/geo";
 import { hasMapDeepLink, parseUrl } from "./lib/url-state";
@@ -48,7 +48,7 @@ function useFilteredStations() {
 
 function Landing({ onDone }: { onDone: () => void }) {
   const lang = useLang();
-  const n = STATIONS.length;
+  const n = DUMP_STATIONS.length;
   const [visitors, setVisitors] = useState<number | null>(null);
   useEffect(() => {
     fetch("/api/visitors")

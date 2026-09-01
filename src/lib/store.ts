@@ -262,8 +262,8 @@ export function stationCountry(s: Station): "de" | "nl" {
 
 /** Layer for the Kassette / Automat / Camping display toggles. */
 export function stationLayer(s: Station): "campsite" | "automat" | "cassette" | null {
-  if (isCampsite(s)) return "campsite";
   if (s.type === "camperclean") return "automat";
+  if (isCampsite(s)) return "campsite";
   if (s.cassette) return "cassette";
   return null;
 }

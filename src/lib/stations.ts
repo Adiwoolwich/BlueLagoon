@@ -5,6 +5,8 @@ import partB from "../data/stations-b.json";
 import partC from "../data/stations-c.json";
 import partD from "../data/stations-d.json";
 import partNl from "../data/stations-nl.json";
+import partE from "../data/stations-e.json";
+import partCc from "../data/stations-cc.json";
 
 export { CITIES, findCity };
 export type { City };
@@ -303,7 +305,12 @@ export const STATIONS: Station[] = [
   ...(partC as Station[]),
   ...(partD as Station[]),
   ...(partNl as Station[]),
+  ...(partE as Station[]),
+  ...(partCc as Station[]),
 ];
+
+/** Cassette/combo/municipal/greywater dumps (excludes CamperClean overlay). */
+export const DUMP_STATIONS: Station[] = STATIONS.filter((s) => s.type !== "camperclean");
 
 const STREET_RE =
   /\d|straße|strasse|str\.|weg|platz|allee|ufer|ring|gasse|damm|chaussee|promenade|deich|hafen|kai|hof|park|straat|laan|kade|dijk|plein|gracht|singel|steeg|haven|kaai|brug|pad|baan/i;
