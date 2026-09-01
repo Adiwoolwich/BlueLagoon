@@ -25,6 +25,8 @@ export type Filters = {
   feeFree: boolean;
   feePaid: boolean;
   feeGuest: boolean;
+  countryDe: boolean;
+  countryNl: boolean;
   openNow: boolean;
   h24: boolean;
   hose: boolean;
@@ -61,6 +63,8 @@ export const defaultFilters: Filters = {
   feeFree: false,
   feePaid: false,
   feeGuest: false,
+  countryDe: true,
+  countryNl: true,
   openNow: false,
   h24: false,
   hose: false,
@@ -90,6 +94,7 @@ type AppState = {
   panel: "list" | "detail" | "saved" | "route" | "add";
   extraStations: Station[];
   sheet: "peek" | "mid" | "full";
+  serverReports: Record<string, ServerReport>;
   setQuery: (q: string) => void;
   setFilters: (p: Partial<Filters>) => void;
   resetFilters: () => void;
@@ -109,7 +114,11 @@ type AppState = {
   setExtraStations: (list: Station[]) => void;
   addStation: (station: Station) => void;
   removeExtraStation: (id: string) => void;
+  setServerReports: (reports: Record<string, ServerReport>) => void;
+  upsertServerReport: (id: string, report: ServerReport) => void;
 };
+
+export type ServerReport = { status: "ok" | "broken"; note?: string; at: number };
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -130,6 +139,7 @@ export const useAppStore = create<AppState>()(
       panel: "list",
       extraStations: [],
       sheet: "mid",
+      serverReports: {},
       setQuery: (query) => set({ query }),
       setFilters: (p) => set({ filters: { ...get().filters, ...p } }),
       resetFilters: () => set({ filters: defaultFilters }),
@@ -186,6 +196,9 @@ export const useAppStore = create<AppState>()(
           panel: get().selectedId === id ? "list" : get().panel,
         });
       },
+      setServerReports: (serverReports) => set({ serverReports }),
+      upsertServerReport: (id, report) =>
+        set({ serverReports: { ...get().serverReports, [id]: report } }),
     }),
     {
       name: "blue-lagoon-v4",
@@ -208,6 +221,45 @@ export function isCampsite(s: Station): boolean {
   return n.includes("camping");
 }
 
+export const NL_STATES = new Set([
+  "Noord-Holland",
+  "Zuid-Holland",
+  "Friesland",
+  "Groningen",
+  "Gelderland",
+  "Utrecht",
+  "Noord-Brabant",
+  "Limburg",
+  "Overijssel",
+  "Zeeland",
+  "Drenthe",
+  "Flevoland",
+]);
+
+export const DE_STATES = new Set([
+  "Baden-Württemberg",
+  "Bayern",
+  "Berlin",
+  "Brandenburg",
+  "Bremen",
+  "Hamburg",
+  "Hessen",
+  "Mecklenburg-Vorpommern",
+  "Niedersachsen",
+  "Nordrhein-Westfalen",
+  "Rheinland-Pfalz",
+  "Saarland",
+  "Sachsen",
+  "Sachsen-Anhalt",
+  "Schleswig-Holstein",
+  "Thüringen",
+]);
+
+export function stationCountry(s: Station): "de" | "nl" {
+  if (NL_STATES.has(s.state)) return "nl";
+  return "de";
+}
+
 /** Layer for the Kassette / Automat / Camping display toggles. */
 export function stationLayer(s: Station): "campsite" | "automat" | "cassette" | null {
   if (isCampsite(s)) return "campsite";
@@ -222,9 +274,20 @@ export function allStations(extra: Station[] = []): Station[] {
   return [...STATIONS, ...extra.filter((s) => !seen.has(s.id))];
 }
 
+export function serverToLocal(
+  id: string,
+  server?: ServerReport,
+  local?: LocalReport,
+): LocalReport | undefined {
+  if (server) {
+    return { stationId: id, kind: server.status === "broken" ? "broken" : "ok", at: server.at, note: server.note };
+  }
+  return local;
+}
+
 export function applyFilters(
   list: Station[],
-  state: Pick<AppState, "query" | "filters" | "reports" | "userPos" | "route" | "routePath" | "corridorKm">,
+  state: Pick<AppState, "query" | "filters" | "reports" | "serverReports" | "userPos" | "route" | "routePath" | "corridorKm">,
   opts?: { now?: Date },
 ): Station[] {
   const now = opts?.now ?? new Date();
@@ -241,13 +304,22 @@ export function applyFilters(
       const hay = `${s.name} ${s.city} ${s.postalCode} ${s.state} ${s.address}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
+    const country = stationCountry(s);
+    if (country === "de" && !f.countryDe) return false;
+    if (country === "nl" && !f.countryNl) return false;
     const layer = stationLayer(s);
     if (layer === "campsite" && !f.campsite) return false;
+    // CamperClean is an overlay: automats appear in addition to cassette dumps.
     if (layer === "automat" && !f.camperclean) return false;
     if (layer === "cassette" && !f.cassette) return false;
-    if (layer === null) return false;
+    // Greywater-only (cassette=false, layer null): hidden in default cassette view,
+    // shown when the greywater chip is on.
+    if (layer === null) {
+      if (!(f.greywater && s.greywater)) return false;
+    }
     if (f.greywater && !s.greywater) return false;
     if (f.freshwater && !s.freshwater) return false;
+    if (s.fee === "guest" && !f.feeGuest) return false;
     if (feeOn) {
       const ok =
         (s.fee === "free" && f.feeFree) ||
@@ -257,12 +329,13 @@ export function applyFilters(
     }
     if (f.hose && !s.hose) return false;
     if (f.h24 && s.hours !== "24h") return false;
+    const report = serverToLocal(s.id, state.serverReports[s.id], state.reports[s.id]);
     if (f.openNow) {
-      if (!isOpenNow(s, now) || deriveStatus(s, state.reports[s.id]) === "broken") {
+      if (!isOpenNow(s, now) || deriveStatus(s, report) === "broken") {
         return false;
       }
     }
-    if (f.confirmed && deriveStatus(s, state.reports[s.id]) !== "confirmed") {
+    if (f.confirmed && deriveStatus(s, report) !== "confirmed") {
       return false;
     }
     if (state.routePath && state.routePath.coords.length >= 2) {

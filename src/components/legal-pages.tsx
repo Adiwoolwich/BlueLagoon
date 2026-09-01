@@ -86,6 +86,12 @@ export function DatenschutzPage() {
         <li>
           <strong className="text-fg">{t("privacyHost")}</strong> {t("privacyHostP")}
         </li>
+        <li>
+          <strong className="text-fg">{t("privacyData")}</strong> {t("privacyDataP")}
+        </li>
+        <li>
+          <strong className="text-fg">{t("privacyGeo")}</strong> {t("privacyGeoP")}
+        </li>
       </ul>
       <h2>{t("privacyLaw")}</h2>
       <p>{t("privacyLawP")}</p>

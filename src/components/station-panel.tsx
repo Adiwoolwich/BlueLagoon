@@ -8,15 +8,17 @@ import { StatusBadge } from "./status-badge";
 import { formatKm, haversineKm, inBounds } from "../lib/geo";
 import { downloadGpx, downloadStationGpx } from "../lib/gpx";
 import { fetchDrivingRoute } from "../lib/osrm";
-import { canNavigateTo, findCity, hasPreciseCoords, type Station } from "../lib/stations";
+import { canNavigateTo, findCity, hasPreciseCoords, isHttpPhotoUrl, type Station } from "../lib/stations";
 import {
   allStations,
   CORRIDOR_OPTIONS,
   RADIUS_OPTIONS,
+  serverToLocal,
   useAppStore,
   type Filters,
 } from "../lib/store";
 import { copyShareUrl, shareUrl } from "../lib/url-state";
+import { postReport } from "../lib/reports";
 import { feeLabel, hoursLine, t, typeLabel, useLang } from "../lib/i18n";
 import { cn } from "../lib/utils";
 
@@ -122,7 +124,9 @@ const CHIP_KEYS: {
     | "chipCamp"
     | "chipCc"
     | "chipHose"
-    | "chipOk";
+    | "chipOk"
+    | "chipDe"
+    | "chipNl";
   aria:
     | "ariaCassette"
     | "ariaGrey"
@@ -135,9 +139,13 @@ const CHIP_KEYS: {
     | "ariaCamp"
     | "ariaCc"
     | "ariaHose"
-    | "ariaOk";
+    | "ariaOk"
+    | "ariaDe"
+    | "ariaNl";
 }[] = [
   { key: "cassette", label: "chipCassette", aria: "ariaCassette" },
+  { key: "countryDe", label: "chipDe", aria: "ariaDe" },
+  { key: "countryNl", label: "chipNl", aria: "ariaNl" },
   { key: "greywater", label: "chipGrey", aria: "ariaGrey" },
   { key: "freshwater", label: "chipFresh", aria: "ariaFresh" },
   { key: "feeFree", label: "chipFree", aria: "ariaFree" },
@@ -264,6 +272,7 @@ function StationList({ stations }: { stations: Station[] }) {
   useLang();
   const userPos = useAppStore((s) => s.userPos);
   const reports = useAppStore((s) => s.reports);
+  const serverReports = useAppStore((s) => s.serverReports);
   const select = useAppStore((s) => s.select);
   const selectedId = useAppStore((s) => s.selectedId);
   const favorites = useAppStore((s) => s.favorites);
@@ -317,12 +326,13 @@ function StationList({ stations }: { stations: Station[] }) {
                     {fav ? <Star className="size-3.5 shrink-0 fill-primary text-primary" /> : null}
                   </div>
                   <p className="mt-0.5 truncate text-xs text-muted">
-                    {s.city} · {typeLabel(s.type)} · {feeLabel(s.fee)}
+                    {s.city} · {typeLabel(s.type)}
+                    {s.fee ? ` · ${feeLabel(s.fee)}` : ""}
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   {km != null ? <span className="text-xs tabular-nums text-muted">{formatKm(km)}</span> : null}
-                  <StatusBadge station={s} report={reports[s.id]} compact />
+                  <StatusBadge station={s} report={serverToLocal(s.id, serverReports[s.id], reports[s.id])} compact />
                 </div>
               </button>
             </li>
@@ -493,10 +503,12 @@ function RoutePlanner() {
   );
 }
 
-function Detail({ station }: { station: Station[] } | { station: Station }) {
+function Detail({ station }: { station: Station }) {
   useLang();
   const reports = useAppStore((s) => s.reports);
-  const report = useAppStore((s) => s.report);
+  const extra = useAppStore((s) => s.extraStations);
+  const serverReports = useAppStore((s) => s.serverReports);
+  const upsertServerReport = useAppStore((s) => s.upsertServerReport);
   const notes = useAppStore((s) => s.notes);
   const setNote = useAppStore((s) => s.setNote);
   const favorites = useAppStore((s) => s.favorites);
@@ -509,11 +521,17 @@ function Detail({ station }: { station: Station[] } | { station: Station }) {
   const filters = useAppStore((s) => s.filters);
   const query = useAppStore((s) => s.query);
   const [noteDraft, setNoteDraft] = useState(notes[station.id] ?? "");
+  const [publicNote, setPublicNote] = useState(serverReports[station.id]?.note ?? "");
   const [copied, setCopied] = useState(false);
+  const [reportBusy, setReportBusy] = useState(false);
+  const [reportMsg, setReportMsg] = useState<string | null>(null);
   const km = userPos && hasPreciseCoords(station) ? haversineKm(userPos, station) : null;
   const fav = favorites.includes(station.id);
-  const isUserStation = station.id.startsWith("user-") || station.source === "community";
+  const canDelete = extra.some((s) => s.id === station.id);
   const navOk = canNavigateTo(station);
+  const live = serverReports[station.id];
+  const photoOk = isHttpPhotoUrl(station.photoUrl);
+  const hoursText = hoursLine(station);
 
   async function share() {
     const url = shareUrl({ ...mapView, id: station.id, filters, query });
@@ -532,6 +550,24 @@ function Detail({ station }: { station: Station[] } | { station: Station }) {
     }
   }
 
+  async function sendStatus(status: "ok" | "broken") {
+    if (reportBusy) return;
+    setReportBusy(true);
+    setReportMsg(null);
+    const res = await postReport(station.id, status, publicNote);
+    setReportBusy(false);
+    if (res.status === 429) {
+      setReportMsg(t("reportRate"));
+      return;
+    }
+    if (!res.ok) {
+      setReportMsg(t("reportErr"));
+      return;
+    }
+    const rec = res.report ?? { status, at: Date.now(), note: publicNote.trim() || undefined };
+    upsertServerReport(station.id, rec);
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <div data-bl-keep-clear className="sticky top-0 z-20 mb-3 flex shrink-0 items-center justify-between gap-2 bg-bg-elevated">
@@ -546,7 +582,7 @@ function Detail({ station }: { station: Station[] } | { station: Station }) {
           {t("back")}
         </button>
         <div className="flex gap-2">
-          {isUserStation ? (
+          {canDelete ? (
             <button
               type="button"
               onClick={() => {
@@ -568,6 +604,13 @@ function Detail({ station }: { station: Station[] } | { station: Station }) {
         </div>
       </div>
       <div className="bl-scroll space-y-4 pr-1">
+        {photoOk ? (
+          <img
+            src={station.photoUrl}
+            alt=""
+            className="h-40 w-full rounded-xl object-cover"
+          />
+        ) : null}
         <header>
           <p className="text-xs tracking-wide text-muted uppercase">
             {station.state} · {typeLabel(station.type)}
@@ -578,10 +621,16 @@ function Detail({ station }: { station: Station[] } | { station: Station }) {
           </p>
         </header>
         <div className="flex flex-wrap gap-2">
-          <StatusBadge station={station} report={reports[station.id]} />
-          <span className="inline-flex h-6 items-center rounded-full bg-surface px-2.5 text-xs text-muted ring-1 ring-border">
-            {feeLabel(station.fee)}
-          </span>
+          <StatusBadge station={station} report={serverToLocal(station.id, live, reports[station.id])} />
+          {station.fee ? (
+            <span className="inline-flex h-6 items-center rounded-full bg-surface px-2.5 text-xs text-muted ring-1 ring-border">
+              {feeLabel(station.fee)}
+            </span>
+          ) : (
+            <span className="inline-flex h-6 items-center rounded-full bg-surface px-2.5 text-xs text-subtle ring-1 ring-border">
+              {t("feeUnknown")}
+            </span>
+          )}
           {km != null ? (
             <span className="inline-flex h-6 items-center rounded-full bg-surface px-2.5 text-xs text-muted tabular-nums ring-1 ring-border">
               {formatKm(km)}
@@ -618,8 +667,11 @@ function Detail({ station }: { station: Station[] } | { station: Station }) {
         {station.hours === "seasonal" ? (
           <p className="rounded-lg bg-stale/10 px-3 py-2 text-xs text-stale">{t("seasonalWarn")}</p>
         ) : null}
-        <HoursTable station={station} />
-        <p className="text-sm text-muted">{hoursLine(station)}</p>
+        {hoursText || station.weeklyHours || station.hours === "24h" || station.hoursNote ? (
+          <HoursTable station={station} />
+        ) : (
+          <p className="text-sm text-subtle">{t("hoursOpen")}: {t("hoursUnknown")}</p>
+        )}
         <div className="flex flex-wrap gap-1.5">
           {(
             [
@@ -644,20 +696,19 @@ function Detail({ station }: { station: Station[] } | { station: Station }) {
           <div className="grid grid-cols-2 gap-2">
             {(
               [
-                ["ok", t("usedNow"), false],
+                ["ok", t("geht"), false],
                 ["broken", t("broken"), true],
-                ["closed", t("closed"), false],
-                ["dirty", t("dirty"), false],
               ] as const
             ).map(([kind, label, bad]) => {
-              const selected = reports[station.id]?.kind === kind;
+              const selected = live?.status === kind;
               return (
                 <button
                   key={kind}
                   type="button"
-                  onClick={() => report({ stationId: station.id, kind, at: new Date().toISOString() })}
+                  disabled={reportBusy}
+                  onClick={() => void sendStatus(kind)}
                   className={cn(
-                    "h-11 rounded-xl text-sm font-medium ring-1 ring-border",
+                    "h-11 rounded-xl text-sm font-medium ring-1 ring-border disabled:opacity-60",
                     selected
                       ? bad
                         ? "bg-bad text-fg"
@@ -672,6 +723,18 @@ function Detail({ station }: { station: Station[] } | { station: Station }) {
               );
             })}
           </div>
+          {live?.note ? <p className="mt-2 text-xs text-muted">{live.note}</p> : null}
+          <label className="mt-3 block text-sm">
+            <span className="mb-1 block text-muted">{t("reportNote")}</span>
+            <input
+              value={publicNote}
+              onChange={(e) => setPublicNote(e.target.value.slice(0, 200))}
+              className="h-11 w-full rounded-xl bg-surface px-3 text-sm ring-1 ring-border outline-none"
+              placeholder={t("reportNotePh")}
+              maxLength={200}
+            />
+          </label>
+          {reportMsg ? <p className="mt-2 text-sm text-bad">{reportMsg}</p> : null}
         </section>
         <label className="block text-sm">
           <span className="mb-1 block text-muted">{t("note")}</span>

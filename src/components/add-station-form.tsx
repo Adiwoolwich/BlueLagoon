@@ -157,8 +157,6 @@ export function AddStationForm() {
       lastVerified: new Date().toISOString().slice(0, 10),
       source: "community",
       description: description.trim() || t("communityEntry"),
-      rating: 0,
-      reviewCount: 0,
     };
     addStation(station);
   }

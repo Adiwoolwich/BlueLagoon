@@ -54,6 +54,8 @@ export function parseUrl(search = typeof window === "undefined" ? "" : window.lo
   const h24 = flag(p, "h24");
   const hose = flag(p, "hose");
   const conf = flag(p, "ok");
+  const cde = flag(p, "de");
+  const cnl = flag(p, "nl");
   if (cas != null) filters.cassette = cas;
   if (camp != null) filters.campsite = camp;
   if (cc != null) filters.camperclean = cc;
@@ -66,6 +68,8 @@ export function parseUrl(search = typeof window === "undefined" ? "" : window.lo
   if (h24 != null) filters.h24 = h24;
   if (hose != null) filters.hose = hose;
   if (conf != null) filters.confirmed = conf;
+  if (cde != null) filters.countryDe = cde;
+  if (cnl != null) filters.countryNl = cnl;
   const r = num(p.get("r"));
   if (r != null) filters.radiusKm = r;
   if (query) filters.place = query;
@@ -109,6 +113,8 @@ export function buildSearchParams(view: {
   setFlag(p, "h24", f.h24, d.h24);
   setFlag(p, "hose", f.hose, d.hose);
   setFlag(p, "ok", f.confirmed, d.confirmed);
+  setFlag(p, "de", f.countryDe, d.countryDe);
+  setFlag(p, "nl", f.countryNl, d.countryNl);
   if (f.radiusKm !== d.radiusKm) p.set("r", String(f.radiusKm));
   const q = (view.query ?? f.place).trim();
   if (q) p.set("q", q);
