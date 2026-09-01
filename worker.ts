@@ -102,7 +102,7 @@ function isSitePage(url: URL): boolean {
 }
 
 
-const FEEDBACK_TO = "bluelagune.feedback@gmail.com";
+const FEEDBACK_TO = "woolwichvcc@gmail.com";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 function corsHeaders(): Record<string, string> {
@@ -189,7 +189,7 @@ async function handleFeedback(request: Request, env: Env): Promise<Response> {
         || (first as { message?: string })?.message
         || "mail";
       console.error(JSON.stringify({ feedbackMail: String(code) }));
-      return json({ ok: false, error: "mail" }, 502);
+      return json({ ok: false, error: "mail", code: String(code) }, 502);
     }
   }
   return json({ ok: true });
