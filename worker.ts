@@ -8,13 +8,7 @@ export interface Env {
   ASSETS: Fetcher;
   VISITORS: DurableObjectNamespace;
   EMAIL: {
-    send: (msg: {
-      to: string;
-      from: { name: string; email: string };
-      replyTo?: string;
-      subject: string;
-      text: string;
-    }) => Promise<{ messageId: string }>;
+    send: (message: EmailMessage) => Promise<void>;
   };
 }
 
@@ -162,35 +156,24 @@ async function handleFeedback(request: Request, env: Env): Promise<Response> {
 
   const fromAddr = "feedback@blue-lagune.com";
   const subject = `Feedback: ${escapeText(name).slice(0, 60)}`;
+  const subj = `=?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`;
+  const raw = [
+    `From: Blue Lagune <${fromAddr}>`,
+    `To: ${FEEDBACK_TO}`,
+    `Reply-To: ${email}`,
+    `Subject: ${subj}`,
+    "MIME-Version: 1.0",
+    "Content-Type: text/plain; charset=utf-8",
+    "",
+    text,
+  ].join("\r\n");
   try {
-    await env.EMAIL.send({
-      to: FEEDBACK_TO,
-      from: { name: "Blue Lagune", email: fromAddr },
-      replyTo: email,
-      subject,
-      text,
-    });
-  } catch (first) {
-    try {
-      const subj = `=?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`;
-      const raw = [
-        `From: Blue Lagune <${fromAddr}>`,
-        `To: ${FEEDBACK_TO}`,
-        `Reply-To: ${email}`,
-        `Subject: ${subj}`,
-        "MIME-Version: 1.0",
-        "Content-Type: text/plain; charset=utf-8",
-        "",
-        text,
-      ].join("\r\n");
-      await env.EMAIL.send(new EmailMessage(fromAddr, FEEDBACK_TO, raw) as never);
-    } catch (second) {
-      const code = (first as { code?: string; message?: string })?.code
-        || (first as { message?: string })?.message
-        || "mail";
-      console.error(JSON.stringify({ feedbackMail: String(code) }));
-      return json({ ok: false, error: "mail", code: String(code) }, 502);
-    }
+    await env.EMAIL.send(new EmailMessage(fromAddr, FEEDBACK_TO, raw));
+  } catch (err) {
+    const e = err as { code?: string; message?: string };
+    const code = e?.code || e?.message || "mail";
+    console.error(JSON.stringify({ feedbackMail: String(code) }));
+    return json({ ok: false, error: "mail", code: String(code) }, 502);
   }
   return json({ ok: true });
 }
