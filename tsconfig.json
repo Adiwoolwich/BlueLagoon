@@ -17,6 +17,5 @@
       "~/*": ["./src/*"]
     }
   },
-  "include": ["src", "vite.config.ts"],
-  "exclude": ["src/router.tsx", "src/routes"]
+  "include": ["src", "vite.config.ts"]
 }

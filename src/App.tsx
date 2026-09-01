@@ -14,6 +14,7 @@ import { hasPreciseCoords, STATIONS } from "./lib/stations";
 import { allStations, applyFilters, useAppStore } from "./lib/store";
 import { inBounds } from "./lib/geo";
 import { hasMapDeepLink, parseUrl } from "./lib/url-state";
+import { fetchReports } from "./lib/reports";
 import { t, useLang } from "./lib/i18n";
 import { cn } from "./lib/utils";
 
@@ -28,18 +29,20 @@ function useFilteredStations() {
   const routePath = useAppStore((s) => s.routePath);
   const corridorKm = useAppStore((s) => s.corridorKm);
   const extraStations = useAppStore((s) => s.extraStations);
+  const serverReports = useAppStore((s) => s.serverReports);
   return useMemo(
     () =>
       applyFilters(allStations(extraStations), {
         query,
         filters,
         reports,
+        serverReports,
         userPos,
         route,
         routePath,
         corridorKm,
       }),
-    [query, filters, reports, userPos, route, routePath, corridorKm, extraStations],
+    [query, filters, reports, serverReports, userPos, route, routePath, corridorKm, extraStations],
   );
 }
 
@@ -137,7 +140,7 @@ function Landing({ onDone }: { onDone: () => void }) {
           <p className="mt-6 text-center text-sm tabular-nums text-muted">
             {t("landingCount", { n })}
             {visitors != null
-              ? ` · ${t("landingVisitors", { n: visitors.toLocaleString(lang === "en" ? "en-GB" : "de-DE") })}`
+              ? ` · ${t("landingVisitors", { n: visitors.toLocaleString(lang === "en" ? "en-GB" : lang === "nl" ? "nl-NL" : "de-DE") })}`
               : ""}
           </p>
           <div className="mt-auto flex flex-col items-center pt-8">
@@ -285,6 +288,9 @@ function MapApp() {
 
   useEffect(() => {
     fetch("/api/visitors").catch(() => {});
+    void fetchReports()
+      .then((r) => useAppStore.getState().setServerReports(r))
+      .catch(() => {});
     void useAppStore.persist.rehydrate();
     const s = useAppStore.getState();
     if (Object.keys(initial.filters).length) s.setFilters(initial.filters);

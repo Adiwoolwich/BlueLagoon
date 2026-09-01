@@ -37,3 +37,23 @@ export const extraEn: Record<keyof typeof extraDe, string> = {
   offlineNeedNet: "Go online once to save tiles.",
   offlineZoomIn: "Zoom in closer, then save.",
 };
+
+export const extraNl: Record<keyof typeof extraDe, string> = {
+  offlineTitle: "Kaart offline",
+  offlineLead: "Sla dit gebied op dit apparaat op. Stations staan al in de app.",
+  offlineOnline: "Online",
+  offlineOffline: "Geen netwerk — opgeslagen tegels worden gebruikt",
+  offlineHave: "{n} tegels opgeslagen",
+  offlineNoCache: "Deze browser staat geen offline-opslag toe.",
+  offlineLast: "Laatst: {label} · ca. {mb} MB",
+  offlineSaveView: "Huidig gebied opslaan",
+  offlineView: "kaartweergave",
+  offlineAround: "{n} km rond het kaartmidden",
+  offlineProgress: "{done} / {total} · {pct} %",
+  offlineSaved: "Klaar. {n} tegels · ca. {mb} MB.",
+  offlineFail: "Opslaan afgebroken of mislukt.",
+  offlineCleared: "Offline kaarten verwijderd.",
+  offlineDelete: "Opgeslagen kaarten verwijderen",
+  offlineNeedNet: "Ga een keer online om tegels op te slaan.",
+  offlineZoomIn: "Zoom eerst verder in, daarna opslaan.",
+};

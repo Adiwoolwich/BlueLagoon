@@ -18,7 +18,8 @@ Chemietoiletten-Entsorgungsstationen für Wohnmobile in Deutschland und den Nied
 - Feedback-Formular unter `/feedback` (Cloudflare Email Routing)
 - Unique Visitors (gehashed im Worker)
 - Offline-Packs
-- i18n DE/EN
+- i18n DE/EN/NL
+- Live-Status (Geht/Defekt) serverseitig
 
 ## Stack
 

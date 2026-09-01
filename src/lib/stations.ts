@@ -55,8 +55,9 @@ export type Station = {
   lastVerified: string;
   source: DataSource;
   description: string;
-  rating: number;
-  reviewCount: number;
+  rating?: number;
+  reviewCount?: number;
+  photoUrl?: string;
   statusOverride?: "broken" | "closed";
   authorName?: string;
   ownerId?: string;
@@ -243,7 +244,7 @@ export function trustScore(station: Station, report?: LocalReport): number {
   if (status === "closed") score = 20;
   if (status === "broken") score = 8;
   if (station.source === "operator" || station.source === "bordatlas") score += 6;
-  if (station.rating >= 4.4) score += 4;
+  if ((station.rating ?? 0) >= 4.4) score += 4;
   if (reportKind(report) === "dirty") score -= 10;
   return Math.max(0, Math.min(99, Math.round(score)));
 }
@@ -257,11 +258,33 @@ export function isOpenNow(station: Station, date = new Date()): boolean {
   if (station.statusOverride) return false;
   const m = date.getMonth();
   if (station.hours === "seasonal" && (m < 2 || m > 9)) return false;
-  const slot = resolveWeeklyHours(station)[JS_DAY_TO_KEY[date.getDay()]];
-  if (slot === "closed") return false;
-  if (slot === "24h") return true;
-  const now = date.getHours() * 60 + date.getMinutes();
-  return now >= minutesOf(slot.open) && now < minutesOf(slot.close);
+  if (station.hours === "24h") return true;
+  const week = station.weeklyHours;
+  if (week) {
+    const slot = week[JS_DAY_TO_KEY[date.getDay()]];
+    if (slot === "closed") return false;
+    if (slot === "24h") return true;
+    const now = date.getHours() * 60 + date.getMinutes();
+    return now >= minutesOf(slot.open) && now < minutesOf(slot.close);
+  }
+  const parsed = parseHourRange(station.hoursNote);
+  if (parsed) {
+    const now = date.getHours() * 60 + date.getMinutes();
+    return now >= minutesOf(parsed.open) && now < minutesOf(parsed.close);
+  }
+  return false;
+}
+
+export function isHttpPhotoUrl(url?: string | null): boolean {
+  if (!url || typeof url !== "string") return false;
+  const u = url.trim();
+  if (!u) return false;
+  try {
+    const parsed = new URL(u);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 export function searchStations(query: string, list: Station[]): Station[] {

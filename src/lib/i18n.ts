@@ -3,7 +3,6 @@ import {
   DAY_ORDER,
   formatDayHours,
   HOURS_LABEL,
-  resolveWeeklyHours,
   type ChemicalRule,
   type DayHours,
   type FeeKind,
@@ -13,15 +12,16 @@ import {
   type StationType,
   type TrustStatus,
 } from "./stations";
+import { extraDe, extraEn, extraNl } from "./i18n-extra";
 
-export type Lang = "de" | "en";
+export type Lang = "de" | "en" | "nl";
 
 const KEY = "bl-lang";
 
 function readSaved(): Lang | null {
   try {
     const v = localStorage.getItem(KEY);
-    if (v === "en" || v === "de") return v;
+    if (v === "en" || v === "de" || v === "nl") return v;
   } catch {
     /* ignore */
   }
@@ -33,6 +33,7 @@ function detect(): Lang {
   if (saved) return saved;
   try {
     const nav = (navigator.language || "").toLowerCase();
+    if (nav.startsWith("nl")) return "nl";
     if (nav.startsWith("en")) return "en";
   } catch {
     /* ignore */
@@ -48,17 +49,23 @@ function emit() {
   listeners.forEach((l) => l());
 }
 
+function pageTitle(lang: Lang): string {
+  if (lang === "en") return "Blue Lagune – cassette toilet dump stations | Germany & the Netherlands";
+  if (lang === "nl") return "Blue Lagune – cassette legen | Stations in DE + NL";
+  return "Blue Lagune – Chemietoilette entsorgen | Stationen in DE + NL";
+}
+
+function applyLangToDocument(lang: Lang) {
+  if (typeof document === "undefined") return;
+  document.documentElement.lang = lang;
+  document.title = pageTitle(lang);
+}
+
 export function bootLang() {
   if (booted) return getLang();
   booted = true;
   current = detect();
-  if (typeof document !== "undefined") {
-    document.documentElement.lang = current;
-    document.title =
-      current === "en"
-        ? "Blue Lagune – cassette toilet dump stations | Germany & the Netherlands"
-        : "Blue Lagune – Chemietoilette entsorgen | Stationen in DE + NL";
-  }
+  applyLangToDocument(current);
   return current;
 }
 
@@ -67,25 +74,19 @@ export function getLang(): Lang {
 }
 
 export function setLang(next: Lang) {
-  if (next !== "de" && next !== "en") return;
+  if (next !== "de" && next !== "en" && next !== "nl") return;
   current = next;
   try {
     localStorage.setItem(KEY, next);
   } catch {
     /* ignore */
   }
-  if (typeof document !== "undefined") {
-    document.documentElement.lang = next;
-    document.title =
-      next === "en"
-        ? "Blue Lagune – cassette toilet dump stations | Germany & the Netherlands"
-        : "Blue Lagune – Chemietoilette entsorgen | Stationen in DE + NL";
-  }
+  applyLangToDocument(next);
   emit();
 }
 
 export function toggleLang() {
-  setLang(current === "de" ? "en" : "de");
+  setLang(current === "de" ? "en" : current === "en" ? "nl" : "de");
 }
 
 export function useLang(): Lang {
@@ -106,6 +107,7 @@ const de = {
   footerPrivacy: "Datenschutz",
   langDe: "DE",
   langEn: "EN",
+  langNl: "NL",
   langToggle: "Sprache wechseln",
   landingKicker: "Entsorgungsstationen fürs Wohnmobil",
   landingH1: "Kassettentoilette entsorgen – ohne Sucherei.",
@@ -160,6 +162,8 @@ const de = {
   chipCc: "CamperClean",
   chipHose: "Schlauch",
   chipOk: "Bestätigt",
+  chipDe: "DE",
+  chipNl: "NL",
   ariaCassette: "Kassette anzeigen",
   ariaGrey: "Nur mit Grauwasser",
   ariaFresh: "Nur mit Frischwasser",
@@ -172,6 +176,8 @@ const de = {
   ariaCc: "CamperClean anzeigen",
   ariaHose: "Mit Schlauch",
   ariaOk: "Community bestätigt",
+  ariaDe: "Stationen in Deutschland",
+  ariaNl: "Stationen in den Niederlanden",
   reset: "Reset",
   inView: "{n} im Ausschnitt",
   route: "Route",
@@ -204,6 +210,7 @@ const de = {
   seasonalWarn: "Saisonale Station – im Winter oft geschlossen. Zeiten vor der Anfahrt prüfen.",
   reportStatus: "Status melden",
   usedNow: "Gerade genutzt",
+  geht: "Geht",
   broken: "Defekt",
   closed: "Geschlossen",
   dirty: "Unsauber",
@@ -328,7 +335,7 @@ const de = {
   privacyP1: "Verantwortlich im Sinne der DSGVO ist der im Impressum genannte Anbieter.",
   privacyWhich: "Welche Daten anfallen",
   privacyMap: "Karte:",
-  privacyMapP: "Aufrufe von OpenStreetMap-Kacheln (IP-Adresse technisch nötig).",
+  privacyMapP: "Satelliten- und Straßenkarten von Esri (World Imagery, World Transportation) und Ortsnamen von CARTO (voyager_only_labels). Dafür ist die IP-Adresse technisch nötig. Es werden keine OpenStreetMap-Rasterkacheln geladen.",
   privacyLoc: "Standort:",
   privacyLocP: "nur im Browser nach Freigabe, nicht an uns gesendet.",
   privacyLs: "Local Storage:",
@@ -341,6 +348,17 @@ const de = {
   privacyRightsP: "Auskunft, Löschung, Widerspruch. Kontakt:",
   privacyCookies: "Cookies",
   privacyCookiesP: "Keine Tracking- oder Werbe-Cookies.",
+  privacyData: "Stationsdaten:",
+  privacyDataP: "OpenStreetMap, Bordatlas, Betreiber und Community.",
+  privacyGeo: "Ortssuche:",
+  privacyGeoP: "Nominatim (OpenStreetMap) für Ortsnamen — nicht für die Kartenkacheln.",
+  hoursUnknown: "unbekannt",
+  feeUnknown: "unbekannt",
+  reportNote: "Kurzer Hinweis (öffentlich)",
+  reportNotePh: "z. B. Münze klemmt …",
+  reportErr: "Meldung hat nicht geklappt. Bitte später noch einmal.",
+  reportRate: "Zu viele Meldungen. Bitte später noch einmal.",
+  sourceCredits: "Stationsdaten: OpenStreetMap, Bordatlas, Betreiber, Community.",
 } as const;
 
 const en: Record<keyof typeof de, string> = {
@@ -350,6 +368,7 @@ const en: Record<keyof typeof de, string> = {
   footerPrivacy: "Privacy",
   langDe: "DE",
   langEn: "EN",
+  langNl: "NL",
   langToggle: "Switch language",
   landingKicker: "Dump stations for motorhomes",
   landingH1: "Empty the cassette toilet — no hunting around.",
@@ -404,6 +423,8 @@ const en: Record<keyof typeof de, string> = {
   chipCc: "CamperClean",
   chipHose: "Hose",
   chipOk: "Confirmed",
+  chipDe: "DE",
+  chipNl: "NL",
   ariaCassette: "Show cassette stations",
   ariaGrey: "Grey water only",
   ariaFresh: "Fresh water only",
@@ -416,6 +437,8 @@ const en: Record<keyof typeof de, string> = {
   ariaCc: "Show CamperClean",
   ariaHose: "With hose",
   ariaOk: "Community confirmed",
+  ariaDe: "Stations in Germany",
+  ariaNl: "Stations in the Netherlands",
   reset: "Reset",
   inView: "{n} in view",
   route: "Route",
@@ -448,6 +471,7 @@ const en: Record<keyof typeof de, string> = {
   seasonalWarn: "Seasonal station — often closed in winter. Check hours before you go.",
   reportStatus: "Report status",
   usedNow: "Just used",
+  geht: "Working",
   broken: "Broken",
   closed: "Closed",
   dirty: "Dirty",
@@ -571,7 +595,7 @@ const en: Record<keyof typeof de, string> = {
   privacyP1: "The controller under the GDPR is the provider named in the imprint.",
   privacyWhich: "What data occurs",
   privacyMap: "Map:",
-  privacyMapP: "OpenStreetMap tile requests (IP address required technically).",
+  privacyMapP: "Satellite and road map tiles from Esri (World Imagery, World Transportation) and place names from CARTO (voyager_only_labels). An IP address is technically required. No OpenStreetMap raster tiles are loaded.",
   privacyLoc: "Location:",
   privacyLocP: "only in the browser after you allow it, not sent to us.",
   privacyLs: "Local storage:",
@@ -584,13 +608,286 @@ const en: Record<keyof typeof de, string> = {
   privacyRightsP: "Access, erasure, objection. Contact:",
   privacyCookies: "Cookies",
   privacyCookiesP: "No tracking or advertising cookies.",
+  privacyData: "Station data:",
+  privacyDataP: "OpenStreetMap, Bordatlas, operators and the community.",
+  privacyGeo: "Place search:",
+  privacyGeoP: "Nominatim (OpenStreetMap) for place names — not for map tiles.",
+  hoursUnknown: "unknown",
+  feeUnknown: "unknown",
+  reportNote: "Short public note",
+  reportNotePh: "e.g. coin jammed …",
+  reportErr: "Could not send the report. Please try again later.",
+  reportRate: "Too many reports. Please try again later.",
+  sourceCredits: "Station data: OpenStreetMap, Bordatlas, operators, community.",
 };
 
-type Key = keyof typeof de;
+const nl: Record<keyof typeof de, string> = {
+  footerEmpty: "Legen",
+  footerImprint: "Colofon",
+  footerFeedback: "Feedback",
+  footerPrivacy: "Privacy",
+  langDe: "DE",
+  langEn: "EN",
+  langNl: "NL",
+  langToggle: "Taal wisselen",
+  landingKicker: "Losstations voor de camper",
+  landingH1: "Cassette legen – zonder zoekwerk.",
+  landingLead: "Vind betrouwbare stations in Duitsland en Nederland, navigeer ernaartoe en houd de kaart samen actueel.",
+  landingTileFind: "Vinden & rijden",
+  landingTileFindSub: "Kaart, zoeken, GPX",
+  landingTileWater: "Water & cassette",
+  landingTileWaterSub: "V+E, filters",
+  landingTileSave: "Bewaren",
+  landingTileSaveSub: "Lijst & notities",
+  landingCount: "Momenteel {n}+ stations",
+  landingVisitors: "{n} bezoekers",
+  landingCta: "Naar de kaart",
+  landingNext: "De volgende keer meteen naar de kaart.",
+  landingOnce: "Alleen deze keer naar de kaart",
+  srTitle: "Blue Lagune – chemisch toilet en cassette legen in Duitsland en Nederland",
+  srLead: "Interactieve kaart met losstations voor chemische toiletten en cassettes in Duitsland en Nederland.",
+  sheetResize: "Lijst groter of kleiner",
+  routeAir: "Geen wegroute beschikbaar – luchtlijn met corridor.",
+  guideTitle: "Cassette legen",
+  close: "Sluiten",
+  closeDe: "Sluiten",
+  guide1t: "1. Station vinden.",
+  guide1: "Plaats + straal of je locatie.",
+  guide2t: "2. Openingstijden controleren.",
+  guide3t: "3. Alleen de gemarkeerde put.",
+  guide4t: "4. Naspoelen.",
+  guide5t: "5. Status melden.",
+  guide5: "Markeer een defect in de app.",
+  placePh: "Plaats, stad of postcode …",
+  cityPh: "Stad, plaats of postcode (DE / NL) …",
+  radius: "Straal",
+  radiusPlace: "Plaats",
+  noCity: "Geen plaats gevonden. Voer een stad in DE/NL, een wijk of een postcode in.",
+  noCityHits: "Geen treffers in {n} plaatsen. Probeer een stad in DE/NL, een wijk of een postcode.",
+  didYouMean: "Bedoelde je …",
+  popular: "Populaire bestemmingen",
+  placesFooter: "{n} plaatsen · DE + NL · postcodezoeken",
+  clearPlace: "Plaats wissen",
+  showCities: "Steden tonen",
+  chipCassette: "Cassette",
+  chipGrey: "Grijs water",
+  chipFresh: "Drinkwater",
+  chipFree: "Gratis",
+  chipPaid: "Betaald",
+  chipGuest: "Alleen gasten",
+  chipOpen: "Nu open",
+  chip24: "24u",
+  chipCamp: "Camping",
+  chipCc: "CamperClean",
+  chipHose: "Slang",
+  chipOk: "Bevestigd",
+  chipDe: "DE",
+  chipNl: "NL",
+  ariaCassette: "Cassettestations tonen",
+  ariaGrey: "Alleen met grijs water",
+  ariaFresh: "Alleen met drinkwater",
+  ariaFree: "Gratis",
+  ariaPaid: "Met tarief",
+  ariaGuest: "Alleen gasten / inbegrepen",
+  ariaOpen: "Nu geopend",
+  aria24: "Rond de klok",
+  ariaCamp: "Campings tonen",
+  ariaCc: "CamperClean tonen",
+  ariaHose: "Met slang",
+  ariaOk: "Door community bevestigd",
+  ariaDe: "Stations in Duitsland",
+  ariaNl: "Stations in Nederland",
+  reset: "Reset",
+  inView: "{n} in beeld",
+  route: "Route",
+  saved: "Bewaard",
+  addPlace: "Plek toevoegen",
+  stationsN: "{n} stations",
+  list: "Lijst",
+  backList: "← Lijst",
+  back: "← Terug",
+  emptyView: "Geen stations in dit kaartbeeld.",
+  emptyHint: "Zoom uit of zet de filters terug.",
+  savedEmpty: "Nog geen stations bewaard.",
+  recently: "Onlangs bekeken",
+  routeLead: "Stations langs de route, niet alleen hemelsbreed.",
+  from: "Van",
+  to: "Naar",
+  startPlace: "Startplaats",
+  endPlace: "Bestemming",
+  corridor: "Corridor",
+  routeNeedCities: "Kies start en bestemming uit de suggesties.",
+  routeBusy: "Route wordt berekend …",
+  routeApply: "Route toepassen",
+  routeClear: "Route wissen",
+  routeKmMin: "{km} km · ca. {min} min",
+  delete: "Verwijderen",
+  savedYes: "Bewaard",
+  save: "Bewaren",
+  share: "Delen",
+  linkCopied: "Link gekopieerd",
+  seasonalWarn: "Seizoensstation – in de winter vaak dicht. Check de tijden voor je vertrekt.",
+  reportStatus: "Status melden",
+  usedNow: "Net gebruikt",
+  geht: "Gaat",
+  broken: "Defect",
+  closed: "Gesloten",
+  dirty: "Vuil",
+  note: "Persoonlijke notitie",
+  notePh: "Toegang, munten, geur …",
+  locate: "Locatie",
+  typeCassette: "Cassette",
+  typeCombo: "Combi V+E",
+  typeCc: "CamperClean",
+  typeMunicipal: "Gemeentelijk",
+  typeGrey: "Alleen grijs water",
+  feeFree: "Gratis",
+  feePaid: "Tarief",
+  feeGuest: "Alleen gasten / inbegrepen",
+  hours24: "Rond de klok",
+  hoursDay: "Overdag",
+  hoursSeason: "Seizoensgebonden",
+  hoursLimited: "Beperkt",
+  certExact: "Tijden bevestigd",
+  certApprox: "Ongeveerde tijden",
+  certUnknown: "Tijden onzeker",
+  statusConfirmed: "Bevestigd",
+  statusStale: "Controle nodig",
+  statusBroken: "Defect",
+  statusClosed: "Gesloten",
+  statusUnknown: "Niet gecontroleerd",
+  hoursDaily24: "Dagelijks rond de klok",
+  hoursDaily: "Dagelijks {slot}",
+  hoursOpen: "Openingstijden",
+  today: "vandaag",
+  hoursCheck: "Check de tijden voor aankomst – ze kunnen seizoensafhankelijk zijn.",
+  allDay: "doorlopend",
+  shut: "gesloten",
+  dayMo: "ma",
+  dayTu: "di",
+  dayWe: "wo",
+  dayTh: "do",
+  dayFr: "vr",
+  daySa: "za",
+  daySu: "zo",
+  clusterN: "{n} stations",
+  navMissing: "Geen exacte positie – navigatie niet mogelijk.",
+  navStart: "Navigatie starten",
+  navChoose: "Kies een navigatie-app",
+  navOpenWith: "Navigatie openen met",
+  navPick: "Kies een app op je telefoon",
+  navCancel: "Annuleren",
+  navSystem: "Kies een geïnstalleerde navi-app",
+  navApple: "Apple Kaarten",
+  navGoogle: "Google Maps",
+  navWaze: "Waze",
+  navOther: "Andere geïnstalleerde app",
+  addTitle: "Plek toevoegen",
+  fieldName: "Naam *",
+  fieldCity: "Stad *",
+  fieldZip: "Postcode *",
+  fieldState: "Deelstaat / provincie",
+  fieldAddress: "Adres *",
+  fieldLat: "Latitude *",
+  fieldLng: "Longitude *",
+  useMyPos: "Mijn locatie gebruiken",
+  fieldType: "Type",
+  fieldFee: "Tarief",
+  fieldFeeNote: "Tarieftoelichting",
+  fieldHours: "Openingstijden",
+  fieldHoursNote: "Toelichting openingstijden",
+  fieldChem: "Chemie-regel",
+  fieldGear: "Voorzieningen",
+  fieldDesc: "Beschrijving",
+  light: "Verlichting",
+  covered: "Overdekt",
+  wheels: "Wielen",
+  saveStation: "Station opslaan",
+  saveLocal: "Alleen op dit apparaat opgeslagen (community-item).",
+  namePh: "bijv. camperplaats XY",
+  addrPh: "Straat en huisnummer",
+  feePh: "bijv. €2 munt",
+  hoursPh: "bijv. 8–20 uur, winter dicht",
+  descPh: "Toegang, tips, openingstijden …",
+  errGeoOff: "Geolocatie niet beschikbaar",
+  errGeoFail: "Locatie kon niet worden bepaald",
+  errRequired: "Naam, stad, postcode en adres zijn verplicht.",
+  errCoords: "Geldige coördinaten (lat/lng) vereist.",
+  errBounds: "Coördinaten liggen buiten DE/NL.",
+  chemNone: "Geen beperking",
+  chemGreen: "Alleen groene toevoegingen",
+  chemBan: "Chemie verboden",
+  communityEntry: "Community-item",
+  fbKicker: "Contact",
+  fbTitle: "Feedback",
+  fbLead: "Een kaarttip, een fout, een wens. We lezen mee.",
+  fbThanks: "Dank je. Je bericht is verstuurd.",
+  fbName: "Naam",
+  fbEmail: "E-mail",
+  fbCompany: "Bedrijf",
+  fbMsg: "Bericht",
+  fbSend: "Versturen",
+  fbSending: "Versturen…",
+  fbErrName: "Vul een naam in (2–80 tekens).",
+  fbErrMail: "Vul een geldig e-mailadres in.",
+  fbErrMsg: "Het bericht moet tussen 10 en 4000 tekens zijn.",
+  fbErr429: "Te veel berichten. Probeer het later opnieuw.",
+  fbErrSend: "Versturen is mislukt. Probeer het later opnieuw.",
+  backMap: "← Kaart",
+  legalKicker: "Juridisch",
+  imprintTitle: "Colofon",
+  imprintP1: "Gegevens volgens § 5 Duitse DDG.",
+  imprintProvider: "Dienstverlener",
+  imprintFallback: "Blue Lagune, bereikbaar via het e-mailadres hieronder. Naam en vestigingsadres van de exploitant worden hier aangevuld.",
+  imprintContact: "Contact",
+  imprintResponsible: "Verantwoordelijk voor de inhoud",
+  imprintResponsibleP: "Verantwoordelijk volgens § 18 lid 2 MStV: {name}.",
+  imprintOperator: "de exploitant, zie contact",
+  imprintLiability: "Aansprakelijkheid voor inhoud en links",
+  imprintLiabilityP: "De stations dienen ter oriëntatie. Openingstijden en voorzieningen kunnen wijzigen. Voor gelinkte websites zijn hun exploitanten verantwoordelijk.",
+  imprintOdr: "EU-geschillenbeslechting",
+  imprintOdrP: "Platform van de Europese Commissie: {url}. Wij nemen niet deel aan procedures bij een consumentengeschillencommissie.",
+  privacyTitle: "Privacy",
+  privacyP1: "Verwerkingsverantwoordelijke in de zin van de AVG is de in het colofon genoemde aanbieder.",
+  privacyWhich: "Welke gegevens ontstaan",
+  privacyMap: "Kaart:",
+  privacyMapP: "Satelliet- en wegenkaarten van Esri (World Imagery, World Transportation) en plaatsnamen van CARTO (voyager_only_labels). Daarvoor is het IP-adres technisch nodig. Er worden geen OpenStreetMap-rastertegels geladen.",
+  privacyLoc: "Locatie:",
+  privacyLocP: "alleen in de browser na toestemming, niet naar ons gestuurd.",
+  privacyLs: "Local Storage:",
+  privacyLsP: "filters en bewaarde lijst op je apparaat.",
+  privacyHost: "Hosting:",
+  privacyHostP: "Cloudflare-logs (IP, tijdstip, bestand) voor beveiliging.",
+  privacyLaw: "Rechtsgrondslagen",
+  privacyLawP: "Art. 6 lid 1 onder f AVG (exploitatie), onder a bij locatietoestemming.",
+  privacyRights: "Jouw rechten",
+  privacyRightsP: "Inzage, wissen, bezwaar. Contact:",
+  privacyCookies: "Cookies",
+  privacyCookiesP: "Geen tracking- of advertentiecookies.",
+  privacyData: "Stationsgegevens:",
+  privacyDataP: "OpenStreetMap, Bordatlas, exploitanten en de community.",
+  privacyGeo: "Plaatszoeken:",
+  privacyGeoP: "Nominatim (OpenStreetMap) voor plaatsnamen — niet voor de kaarttegels.",
+  hoursUnknown: "onbekend",
+  feeUnknown: "onbekend",
+  reportNote: "Korte publieke toelichting",
+  reportNotePh: "bijv. munt vast …",
+  reportErr: "Melding is niet gelukt. Probeer het later opnieuw.",
+  reportRate: "Te veel meldingen. Probeer het later opnieuw.",
+  sourceCredits: "Stationsgegevens: OpenStreetMap, Bordatlas, exploitanten, community.",
+};
+
+type Key = keyof typeof de | keyof typeof extraDe;
+
+function dictFor(lang: Lang): Record<string, string> {
+  const extra = lang === "en" ? extraEn : lang === "nl" ? extraNl : extraDe;
+  const base: Record<string, string> = lang === "en" ? en : lang === "nl" ? nl : de;
+  return { ...base, ...extra };
+}
 
 export function t(key: Key, vars?: Record<string, string | number>): string {
-  const table = current === "en" ? en : de;
-  let out: string = table[key] ?? de[key];
+  const table = dictFor(current);
+  let out: string = table[key] ?? extraDe[key as keyof typeof extraDe] ?? de[key as keyof typeof de];
   if (vars) {
     for (const [k, v] of Object.entries(vars)) out = out.replaceAll(`{${k}}`, String(v));
   }
@@ -608,7 +905,8 @@ export function typeLabel(type: StationType): string {
   return t(map[type]);
 }
 
-export function feeLabel(fee: FeeKind): string {
+export function feeLabel(fee?: FeeKind | null): string {
+  if (!fee) return t("feeUnknown");
   const map: Record<FeeKind, Key> = { free: "feeFree", paid: "feePaid", guest: "feeGuest" };
   return t(map[fee]);
 }
@@ -671,16 +969,21 @@ export function fmtSlot(slot: DayHours): string {
   return `${slot.open}–${slot.close}`;
 }
 
-export function hoursLine(station: Station): string {
+export function hoursLine(station: Station): string | null {
   if (station.hours === "24h") return t("hoursDaily24");
-  const week = resolveWeeklyHours(station);
-  const first = week.mo;
-  const uniform = DAY_ORDER.every((d) => formatDayHours(week[d]) === formatDayHours(first));
-  if (uniform) {
-    const core = t("hoursDaily", { slot: fmtSlot(first) });
-    return station.hoursNote && !/\d/.test(station.hoursNote) ? `${core} · ${station.hoursNote}` : core;
+  if (station.weeklyHours) {
+    const week = station.weeklyHours;
+    const first = week.mo;
+    const uniform = DAY_ORDER.every((d) => formatDayHours(week[d]) === formatDayHours(first));
+    if (uniform) {
+      const core = t("hoursDaily", { slot: fmtSlot(first) });
+      return station.hoursNote && !/\d/.test(station.hoursNote) ? `${core} · ${station.hoursNote}` : core;
+    }
+    return station.hoursNote ?? hoursKindLabel(station.hours);
   }
-  return station.hoursNote ?? hoursKindLabel(station.hours);
+  if (station.hoursNote && station.hoursNote.trim()) return station.hoursNote.trim();
+  if (station.hours) return hoursKindLabel(station.hours);
+  return null;
 }
 
 void HOURS_LABEL;

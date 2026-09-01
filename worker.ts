@@ -64,9 +64,59 @@ export class VisitorCounter {
       }
       return Response.json({ ok: true });
     }
+    if (url.pathname === "/report-rl" && request.method === "POST") {
+      const hash = (await request.text()).trim();
+      if (!/^[0-9a-f]{64}$/.test(hash)) return Response.json({ ok: true });
+      const now = Date.now();
+      const key = `st:rl:${hash}`;
+      const rec = await this.state.storage.get<{ n: number; t: number }>(key);
+      if (rec && now - rec.t < 60 * 60 * 1000) {
+        if (rec.n >= 5) return Response.json({ ok: false }, { status: 429 });
+        await this.state.storage.put(key, { n: rec.n + 1, t: rec.t });
+      } else {
+        await this.state.storage.put(key, { n: 1, t: now });
+      }
+      return Response.json({ ok: true });
+    }
+    if (url.pathname === "/reports" && request.method === "GET") {
+      const listed = await this.state.storage.list<StationReport>({ prefix: "st:" });
+      const reports: Record<string, StationReport> = {};
+      for (const [key, rec] of listed) {
+        if (key.startsWith("st:rl:")) continue;
+        const id = key.slice(3);
+        if (rec && (rec.status === "ok" || rec.status === "broken")) reports[id] = rec;
+      }
+      return Response.json({ reports });
+    }
+    if (url.pathname === "/reports" && request.method === "POST") {
+      let body: { id?: string; status?: string; note?: string };
+      try {
+        body = (await request.json()) as typeof body;
+      } catch {
+        return Response.json({ ok: false, error: "invalid" }, { status: 400 });
+      }
+      const id = typeof body.id === "string" ? body.id.trim() : "";
+      const status = body.status;
+      if (!STATION_ID_RE.test(id) || (status !== "ok" && status !== "broken")) {
+        return Response.json({ ok: false, error: "invalid" }, { status: 400 });
+      }
+      let note: string | undefined;
+      if (typeof body.note === "string") {
+        note = body.note.replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 200);
+        if (!note) note = undefined;
+      }
+      const rec: StationReport = { status, at: Date.now() };
+      if (note) rec.note = note;
+      await this.state.storage.put(`st:${id}`, rec);
+      return Response.json({ ok: true, report: rec });
+    }
     return new Response("not found", { status: 404 });
   }
 }
+
+type StationReport = { status: "ok" | "broken"; note?: string; at: number };
+
+const STATION_ID_RE = /^[a-zA-Z0-9][a-zA-Z0-9._-]{1,79}$/;
 
 async function sha256Hex(value: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
@@ -102,7 +152,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 function corsHeaders(): Record<string, string> {
   return {
     "Access-Control-Allow-Origin": "https://blue-lagune.com",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 }
@@ -123,6 +173,56 @@ async function allowFeedback(env: Env, ip: string | null): Promise<boolean> {
   const hash = await sha256Hex(`${salt}\n${ip}`);
   const res = await stub.fetch("https://visitors/feedback-rl", { method: "POST", body: hash });
   return res.ok;
+}
+
+async function hashedIp(env: Env, ip: string | null): Promise<string | null> {
+  if (!ip) return null;
+  const stub = env.VISITORS.get(env.VISITORS.idFromName("global"));
+  const saltRes = await stub.fetch("https://visitors/salt");
+  const salt = saltRes.ok ? await saltRes.text() : "bluelagune";
+  return sha256Hex(`${salt}\n${ip}`);
+}
+
+async function allowReport(env: Env, ip: string | null): Promise<boolean> {
+  const hash = await hashedIp(env, ip);
+  if (!hash) return true;
+  const stub = env.VISITORS.get(env.VISITORS.idFromName("global"));
+  const res = await stub.fetch("https://visitors/report-rl", { method: "POST", body: hash });
+  return res.ok;
+}
+
+async function handleReport(request: Request, env: Env): Promise<Response> {
+  let body: { id?: string; status?: string; note?: string; company?: string };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return json({ ok: false, error: "invalid" }, 400);
+  }
+  if (typeof body.company === "string" && body.company.trim()) {
+    return json({ ok: true });
+  }
+  const id = typeof body.id === "string" ? body.id.trim() : "";
+  const status = body.status;
+  if (!STATION_ID_RE.test(id) || (status !== "ok" && status !== "broken")) {
+    return json({ ok: false, error: "invalid" }, 400);
+  }
+  let note: string | undefined;
+  if (typeof body.note === "string") {
+    note = body.note.replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 200);
+    if (!note) note = undefined;
+  }
+  const ip = request.headers.get("CF-Connecting-IP");
+  if (!(await allowReport(env, ip))) return json({ ok: false, error: "rate" }, 429);
+  const stub = env.VISITORS.get(env.VISITORS.idFromName("global"));
+  const payload: { id: string; status: "ok" | "broken"; note?: string } = { id, status };
+  if (note) payload.note = note;
+  const res = await stub.fetch("https://visitors/reports", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  return json(data, res.status);
 }
 
 async function handleFeedback(request: Request, env: Env): Promise<Response> {
@@ -189,6 +289,19 @@ export default {
         { count },
         { headers: { "Cache-Control": "no-store" } },
       );
+    }
+
+    if (url.pathname === "/api/reports" && request.method === "GET") {
+      const stub = env.VISITORS.get(env.VISITORS.idFromName("global"));
+      const res = await stub.fetch("https://visitors/reports");
+      const data = await res.json();
+      return json(data, res.status);
+    }
+    if (url.pathname === "/api/reports" && request.method === "POST") {
+      return handleReport(request, env);
+    }
+    if (url.pathname === "/api/reports" && request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders() });
     }
 
     if (url.pathname === "/api/feedback" && request.method === "POST") {

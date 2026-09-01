@@ -20,7 +20,7 @@ import {
   hasPreciseCoords,
   type Station,
 } from "@/lib/stations";
-import { isCampsite, useAppStore, type MapView } from "@/lib/store";
+import { isCampsite, serverToLocal, useAppStore, type MapView } from "@/lib/store";
 import { replaceUrl } from "@/lib/url-state";
 import { t, useLang } from "@/lib/i18n";
 import { STATUS_COLOR } from "./status-badge";
@@ -194,6 +194,7 @@ function ClusterLayer({ stations }: { stations: Station[] }) {
   const selectedId = useAppStore((s) => s.selectedId);
   const select = useAppStore((s) => s.select);
   const reports = useAppStore((s) => s.reports);
+  const serverReports = useAppStore((s) => s.serverReports);
   const [, setTick] = useState(0);
 
   const pinned = useMemo(() => stations.filter(hasPreciseCoords), [stations]);
@@ -258,7 +259,7 @@ function ClusterLayer({ stations }: { stations: Station[] }) {
     const s = byId.get(props.id);
     if (!s) return null;
     if (s.id === selectedId) selectedInView = true;
-    const status = deriveStatus(s, reports[s.id]);
+    const status = deriveStatus(s, serverToLocal(s.id, serverReports[s.id], reports[s.id]));
     const color = isCampsite(s) ? "#16a34a" : STATUS_COLOR[status];
     const placeLabel = [s.postalCode, s.city].filter(Boolean).join(" ");
     return (
@@ -283,7 +284,7 @@ function ClusterLayer({ stations }: { stations: Station[] }) {
   });
 
   if (selected && hasPreciseCoords(selected) && !selectedInView) {
-    const status = deriveStatus(selected, reports[selected.id]);
+    const status = deriveStatus(selected, serverToLocal(selected.id, serverReports[selected.id], reports[selected.id]));
     const color = isCampsite(selected) ? "#16a34a" : STATUS_COLOR[status];
     nodes.push(
       <Marker
@@ -341,7 +342,7 @@ export function StationMap({
     >
       <ZoomControl position="topright" />
       <TileLayer
-        attribution='Satellit &copy; <a href="https://www.esri.com/">Esri</a>, Maxar · Namen &copy; <a href="https://carto.com/">CARTO</a>'
+        attribution='Satellit &copy; <a href="https://www.esri.com/">Esri</a>, Maxar · Straßen &copy; Esri · Namen &copy; <a href="https://carto.com/">CARTO</a>'
         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         maxZoom={19}
         maxNativeZoom={19}
