@@ -142,8 +142,33 @@ async function uniqueCount(env: Env, ip: string | null): Promise<number> {
 function isSitePage(url: URL): boolean {
   if (url.pathname.startsWith("/api/")) return false;
   if (url.pathname.startsWith("/assets/")) return false;
-  return !/\.(js|css|png|jpe?g|svg|ico|webp|woff2?|map|json|txt)$/i.test(url.pathname);
+  return !/\.(js|css|png|jpe?g|svg|ico|webp|woff2?|map|json|txt|xml)$/i.test(url.pathname);
 }
+
+const SITEMAP_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://blue-lagune.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://blue-lagune.com/feedback</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://blue-lagune.com/impressum</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://blue-lagune.com/datenschutz</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>
+`;
 
 
 const FEEDBACK_TO = "woolwichvcc@gmail.com";
@@ -281,6 +306,16 @@ async function handleFeedback(request: Request, env: Env): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === "/sitemap.xml") {
+      return new Response(SITEMAP_XML.trim() + "\n", {
+        status: 200,
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+          "Cache-Control": "public, max-age=0, must-revalidate",
+        },
+      });
+    }
 
     if (url.pathname === "/api/visitors") {
       const ip = request.headers.get("CF-Connecting-IP");
