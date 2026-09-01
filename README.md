@@ -1,43 +1,31 @@
-# Blue Lagoon
+# Blue Lagune
 
-**Die App für Chemietoiletten-Entsorgungsstationen in Deutschland und den Niederlanden**  
-*(Inspiriert von Tesla Superchargern – finde, plane & navigiere zu Entsorgungspunkten für Wohnmobile)*
+Chemietoiletten-Entsorgungsstationen für Wohnmobile in Deutschland und den Niederlanden
 
-## Überblick
+**Live:** https://blue-lagune.com  
+**Repo:** https://github.com/Adiwoolwich/BlueLagune
 
-Blue Lagoon hilft Wohnmobil- und Camper-Fahrern, schnell und zuverlässig geeignete Entsorgungsstationen für Chemietoiletten (Kassettentoiletten / Thetford / Dometic) zu finden.
+1281 Stationen (1241 DE + 40 NL)
 
-### Kernfunktionen
-- **Interaktive Karte** (Leaflet) mit bekannten Stationen in Deutschland und den Niederlanden
-- **Stationen entlang der Route** – Stadt-/Ortsauswahl mit Fuzzy-Suche (alle DE-Gemeinden + alle NL-Gemeenten)
-- **Umkreis-Suche** im Kleinanzeigen-Stil (Radius filterbar)
-- **Genaue Öffnungszeiten** pro Station (Wochentage + Confidence-Badges)
-- **Google Maps Deep-Link** – öffnet direkt die Google Maps App (iOS/Android), Fallback auf Web
-- **Mobile-First Bottom-Sheet UI** (Peek / Mid / Full) optimiert für Smartphones
-- **Favoriten, Bewertungen (1–3 Sterne) und Community-Beiträge** (nach Login)
-- **Account** mit Google / X / E-Mail (Better Auth)
+## Funktionen
 
-## Tech-Stack
+- Kartensuche Deutschland und Niederlande
+- Filter
+- Clustering
+- Route / OSRM
+- Deep-Link
+- Navigation nur mit echten Koordinaten bzw. Straße
+- Feedback-Formular unter `/feedback` (Cloudflare Email Routing)
+- Unique Visitors (gehashed im Worker)
+- Offline-Packs
+- i18n DE/EN
 
-| Technologie          | Verwendung                          |
-|----------------------|-------------------------------------|
-| TanStack Start       | Full-Stack React-Framework          |
-| React 19             | UI                                  |
-| Vite 8               | Build / Dev-Server                  |
-| Tailwind CSS v4      | Styling                             |
-| Zustand (persist)    | Client-State                        |
-| Leaflet + react-leaflet | Karte                            |
-| Better Auth          | Authentifizierung                   |
-| Neon / PGLite        | Datenbank                           |
+## Stack
 
-## Status
-
-Produktions-App: Vite-SPA auf GitHub Pages / Cloudflare → blue-lagune.com
+- Vite 6 + React 19 + TypeScript
+- Leaflet, Supercluster, Tailwind, Zustand
+- Hosting: Cloudflare Workers (`wrangler.toml`, `worker.ts`)
 
 ## Lizenz
 
 Privat / All rights reserved (Adiwoolwich)
-
----
-
-*Blue Lagoon – Damit die blaue Lagune immer in Reichweite bleibt.*
