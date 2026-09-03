@@ -10,7 +10,10 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import Supercluster from "supercluster";
+import maplibreGL from "@maplibre/maplibre-gl-leaflet";
 import "leaflet/dist/leaflet.css";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { SAT_LABEL_STYLE } from "@/lib/map-label-style";
 import {
   deriveStatus,
   findCity,
@@ -321,6 +324,33 @@ function ClusterLayer({ stations }: { stations: Station[] }) {
   return <>{nodes}</>;
 }
 
+
+function VectorLabels() {
+  const map = useMap();
+  const mapLabels = useAppStore((s) => s.mapLabels);
+  useEffect(() => {
+    if (!mapLabels) return;
+    if (!map.getPane("bl-labels")) {
+      const pane = map.createPane("bl-labels");
+      pane.style.zIndex = "350";
+      pane.style.pointerEvents = "none";
+    }
+    const layer = maplibreGL({
+      style: SAT_LABEL_STYLE,
+      interactive: false,
+      attributionControl: false,
+    });
+    layer.options.pane = "bl-labels";
+    layer.addTo(map);
+    const canvas = layer.getContainer();
+    if (canvas) canvas.style.pointerEvents = "none";
+    return () => {
+      map.removeLayer(layer);
+    };
+  }, [map, mapLabels]);
+  return null;
+}
+
 export function StationMap({
   stations,
   initialView,
@@ -333,7 +363,6 @@ export function StationMap({
   const placeName = useAppStore((s) => s.filters.place);
   const query = useAppStore((s) => s.query);
   const radiusKm = useAppStore((s) => s.filters.radiusKm);
-  const mapLabels = useAppStore((s) => s.mapLabels);
   const place = findCity(placeName) ?? findCity(query) ?? null;
   const searchOrigin = place ?? userPos;
   const center: [number, number] = initialView
@@ -352,33 +381,24 @@ export function StationMap({
       className="h-full w-full"
       zoomControl={false}
       attributionControl
+      minZoom={1}
+      maxZoom={22}
     >
       <TileLayer
-        attribution='Satellit &copy; <a href="https://www.esri.com/">Esri</a>, Maxar · Straßen &copy; Esri · Namen &copy; <a href="https://carto.com/">CARTO</a>'
+        attribution='Satellit &copy; <a href="https://www.esri.com/">Esri</a>, Maxar · Straßen &copy; Esri · Namen &copy; <a href="https://openfreemap.org/">OpenFreeMap</a> / OSM'
         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         maxZoom={22}
         maxNativeZoom={19}
-        tileSize={512}
-        zoomOffset={-1}
+        detectRetina
       />
       <TileLayer
         url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}"
         maxZoom={22}
         maxNativeZoom={19}
-        tileSize={512}
-        zoomOffset={-1}
+        detectRetina
         opacity={0.88}
       />
-      {mapLabels ? (
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
-          subdomains="abcd"
-          maxZoom={22}
-          maxNativeZoom={20}
-          detectRetina
-          className="bl-map-labels"
-        />
-      ) : null}
+      <VectorLabels />
       <MapChrome stations={stations} initialView={initialView} />
       {searchOrigin && radiusKm > 0 && !routeLine ? (
         <Circle

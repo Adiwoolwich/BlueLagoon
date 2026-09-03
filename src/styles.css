@@ -74,11 +74,11 @@
 }
 .leaflet-control-attribution a { color: #ffffff !important; }
 
-.leaflet-layer.bl-map-labels {
-  pointer-events: none;
+.leaflet-bl-labels-pane,
+.leaflet-bl-labels-pane canvas {
+  pointer-events: none !important;
 }
-.leaflet-tile-pane img.leaflet-tile,
-.leaflet-layer.bl-map-labels img.leaflet-tile {
+.leaflet-tile-pane img.leaflet-tile {
   filter: none !important;
   image-rendering: auto;
 }
