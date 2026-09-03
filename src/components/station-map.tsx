@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Circle,
-  CircleMarker,
   MapContainer,
   Marker,
   Polyline,
@@ -41,6 +40,19 @@ function pinIcon(color: string, selected: boolean) {
     iconAnchor: [w / 2, h - 2],
   });
   iconCache.set(key, icon);
+  return icon;
+}
+
+function locIcon() {
+  const hit = iconCache.get("loc");
+  if (hit) return hit;
+  const icon = L.divIcon({
+    className: "bl-marker",
+    html: `<span class="bl-loc" aria-hidden="true"><span class="bl-loc-chevron"></span><span class="bl-loc-dot"></span></span>`,
+    iconSize: [28, 34],
+    iconAnchor: [14, 22],
+  });
+  iconCache.set("loc", icon);
   return icon;
 }
 
@@ -142,8 +154,7 @@ function MapChrome({
     if (!fitKey || fitKey === "||>") return;
     if (fitKey === prevFit.current) return;
     prevFit.current = fitKey;
-    const padBottom =
-      window.innerWidth < 768 ? (sheet === "full" ? 280 : sheet === "mid" ? 200 : 110) : 48;
+    const padBottom = sheet === "full" ? 300 : sheet === "mid" ? 220 : 120;
     const fit = (bounds: L.LatLngBoundsExpression, maxZoom = 13) => {
       map.fitBounds(bounds, {
         paddingTopLeft: [36, 72],
@@ -393,11 +404,7 @@ export function StationMap({
         />
       ) : null}
       {userPos ? (
-        <CircleMarker
-          center={[userPos.lat, userPos.lng]}
-          radius={8}
-          pathOptions={{ color: "#ffffff", fillColor: "#0b7d86", fillOpacity: 1, weight: 3 }}
-        />
+        <Marker position={[userPos.lat, userPos.lng]} icon={locIcon()} zIndexOffset={800} />
       ) : null}
       <ClusterLayer stations={stations} />
     </MapContainer>

@@ -42,7 +42,7 @@ function Chip({
       aria-label={label}
       title={label}
       className={cn(
-        "inline-flex h-9 shrink-0 items-center rounded-full px-3 text-xs font-medium",
+        "inline-flex h-8 shrink-0 items-center rounded-full px-3 text-[13px] font-medium",
         active ? "bg-primary text-primary-fg" : "bg-surface text-fg ring-1 ring-border hover:ring-border-strong",
       )}
     >
@@ -245,24 +245,24 @@ export function SearchAndFilters({
   const filtersOpen = useAppStore((s) => s.filtersOpen);
   const setFiltersOpen = useAppStore((s) => s.setFiltersOpen);
   return (
-    <div className="shrink-0 space-y-2">
+    <div className="shrink-0 space-y-1.5">
       <div className="flex items-center justify-between gap-2">
         <h2 className="truncate text-[17px] font-semibold tracking-tight">{t("nearbyStations")}</h2>
         <button
           type="button"
           onClick={() => setSheet(compact ? "mid" : "peek")}
-          className="inline-flex size-8 items-center justify-center rounded-full text-fg"
+          className="inline-flex size-8 items-center justify-center text-fg"
           aria-label={t("close")}
         >
           <X className="size-5" />
         </button>
       </div>
-      <div className="flex items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex items-center gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <button
           type="button"
           onClick={() => setFiltersOpen(!filtersOpen)}
           className={cn(
-            "inline-flex size-9 shrink-0 items-center justify-center rounded-full ring-1 ring-border",
+            "inline-flex size-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-white/15",
             filtersOpen ? "bg-surface-2" : "bg-transparent",
           )}
           aria-label={t("filterToggle")}
@@ -274,19 +274,16 @@ export function SearchAndFilters({
           <select
             value={listSort}
             onChange={(e) => setListSort(e.target.value as "distance" | "name" | "verified")}
-            className="h-9 appearance-none rounded-full bg-transparent py-0 pr-7 pl-3 text-xs text-fg ring-1 ring-border"
+            className="h-8 appearance-none rounded-lg bg-transparent py-0 pr-6 pl-2.5 text-[13px] text-fg ring-1 ring-white/15"
           >
-            <option value="distance">{t("sortBy")}: {t("sortDistance")}</option>
-            <option value="name">{t("sortBy")}: {t("sortName")}</option>
-            <option value="verified">{t("sortBy")}: {t("sortVerified")}</option>
-            <option value="along">{t("sortBy")}: {t("alongRoute")}</option>
+            <option value="distance">{t("sortBy")}</option>
+            <option value="name">{t("sortName")}</option>
+            <option value="verified">{t("sortVerified")}</option>
+            <option value="along">{t("alongRoute")}</option>
           </select>
         </label>
         <Chip active={filters.cassette} onClick={() => setFilters({ cassette: !filters.cassette })} label={t("ariaCassette")}>
           {t("chipCassette")}
-        </Chip>
-        <Chip active={filters.camperclean} onClick={() => setFilters({ camperclean: !filters.camperclean })} label={t("ariaCc")}>
-          {t("chipCc")}
         </Chip>
         <Chip active={filters.greywater} onClick={() => setFilters({ greywater: !filters.greywater })} label={t("ariaGrey")}>
           {t("chipGrey")}
@@ -300,9 +297,7 @@ export function SearchAndFilters({
           <FilterChips />
           <ListToolbar count={count} />
         </>
-      ) : (
-        <p className="text-[11px] text-muted tabular-nums">{t("inView", { n: count })}</p>
-      )}
+      ) : null}
       {compact ? (
         <button type="button" onClick={() => setPanel("add")} className="sr-only">
           {t("addPlace")}
@@ -349,49 +344,39 @@ function StationList({ stations }: { stations: Station[] }) {
   }
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="mb-1 flex items-center justify-end">
-        <button
-          type="button"
-          onClick={() => downloadGpx(visible.slice(0, 200), "blue-lagune-ansicht.gpx")}
-          className="h-8 text-[11px] text-muted hover:text-fg"
-        >
-          GPX
-        </button>
-      </div>
-      <ul className="bl-scroll divide-y divide-border/50">
+      <ul className="bl-scroll divide-y divide-white/10">
         {visible.map((s) => {
           const km = origin && hasPreciseCoords(s) ? haversineKm(origin, s) : null;
           const fav = favorites.includes(s.id);
+          const pin = STATUS_COLOR[deriveStatus(s, serverToLocal(s.id, serverReports[s.id], reports[s.id]))] ?? "#e11d2e";
           return (
             <li key={s.id}>
               <button
                 type="button"
                 onClick={() => select(s.id)}
                 className={cn(
-                  "flex w-full items-start gap-3 px-1 py-3 text-left",
-                  selectedId === s.id ? "bg-primary/8" : "hover:bg-surface/80",
+                  "flex w-full items-center gap-3 py-3 text-left",
+                  selectedId === s.id ? "bg-white/5" : "",
                 )}
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="truncate text-[15px] font-semibold text-fg">
+                    <span className="truncate text-[16px] font-semibold leading-tight text-fg">
                       {s.city}, {stationCountry(s) === "nl" ? t("countryNL") : t("countryDE")}
                     </span>
                     {fav ? <Star className="size-3.5 shrink-0 fill-white text-white" /> : null}
                   </div>
-                  <p className="mt-0.5 truncate text-[13px] text-muted">{s.address || s.name}</p>
-                  {s.fee ? <p className="mt-0.5 truncate text-[13px] text-fg/90">{feeLabel(s.fee)}</p> : null}
-                  <p className="mt-0.5 truncate text-[12px] text-muted">{typeLabel(s.type)}</p>
+                  <p className="mt-0.5 truncate text-[13px] leading-snug text-muted">{s.address || s.name}</p>
+                  {s.fee ? <p className="truncate text-[13px] leading-snug text-muted">{feeLabel(s.fee)}</p> : null}
+                  <p className="truncate text-[13px] leading-snug text-muted">{typeLabel(s.type)}</p>
                 </div>
-                <div className="flex w-[4.6rem] shrink-0 flex-col items-end gap-0.5 pt-0.5">
-                  <span className="inline-flex size-8 items-center justify-center" aria-hidden>
-                    <svg viewBox="0 0 24 32" width="18" height="24">
-                      <path fill={STATUS_COLOR[deriveStatus(s, serverToLocal(s.id, serverReports[s.id], reports[s.id]))] ?? "#e11d2e"} stroke="#ffffff" strokeWidth="1.4" strokeLinejoin="round" d="M12 1.5C12 1.5 3.5 12.2 3.5 19.2a8.5 8.5 0 0 0 17 0C20.5 12.2 12 1.5 12 1.5z" />
-                      <circle cx="12" cy="19.2" r="3.1" fill="#ffffff" />
-                    </svg>
-                  </span>
-                  {km != null ? <span className="text-[13px] font-medium tabular-nums text-fg">{formatKm(km)}</span> : null}
-                  <span className="text-[10px] text-muted">{s.hours === "24h" ? "24h" : typeLabel(s.type)}</span>
+                <div className="flex w-[3.6rem] shrink-0 flex-col items-center gap-0.5">
+                  <svg viewBox="0 0 24 32" width="28" height="36" aria-hidden>
+                    <path fill={pin} stroke="#ffffff" strokeWidth="1.5" strokeLinejoin="round" d="M12 1.5C12 1.5 3.5 12.2 3.5 19.2a8.5 8.5 0 0 0 17 0C20.5 12.2 12 1.5 12 1.5z" />
+                    <circle cx="12" cy="19.2" r="3.2" fill="#ffffff" />
+                  </svg>
+                  {km != null ? <span className="text-[15px] font-semibold tabular-nums leading-none text-fg">{formatKm(km)}</span> : null}
+                  {s.hours === "24h" ? <span className="text-[11px] text-muted">24h</span> : null}
                 </div>
               </button>
             </li>
@@ -835,8 +820,8 @@ export function LocateButton({ iconOnly, floating }: { iconOnly?: boolean; float
       }}
       data-bl-keep-clear
       className={cn(
-        "inline-flex items-center justify-center bg-black text-white ring-1 ring-white/20",
-        floating ? "size-11 shrink-0 rounded-full" : "h-11 shrink-0 rounded-full",
+        "inline-flex items-center justify-center bg-black/80 text-white ring-1 ring-white/15",
+        floating ? "size-10 shrink-0 rounded-[10px]" : "h-11 shrink-0 rounded-full",
         iconOnly || floating ? "w-11" : "px-3",
       )}
       aria-label={t("locate")}
@@ -847,35 +832,40 @@ export function LocateButton({ iconOnly, floating }: { iconOnly?: boolean; float
   );
 }
 
-export function MapRoundButtons() {
+const fabCls = "inline-flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-black/80 text-white ring-1 ring-white/15";
+
+export function ShareFab() {
   useLang();
-  const mapLabels = useAppStore((s) => s.mapLabels);
-  const setMapLabels = useAppStore((s) => s.setMapLabels);
-  const filtersOpen = useAppStore((s) => s.filtersOpen);
-  const setFiltersOpen = useAppStore((s) => s.setFiltersOpen);
   const mapView = useAppStore((s) => s.mapView);
   const filters = useAppStore((s) => s.filters);
   const query = useAppStore((s) => s.query);
   const selectedId = useAppStore((s) => s.selectedId);
-  const fab = "inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-black text-white ring-1 ring-white/20";
+  return (
+    <button
+      type="button"
+      className={cn("pointer-events-auto", fabCls)}
+      aria-label={t("shareMap")}
+      onClick={() => {
+        const url = shareUrl({ ...mapView, id: selectedId, filters, query });
+        if (navigator.share) void navigator.share({ url, title: "Blue Lagune" }).catch(() => copyShareUrl());
+        else void copyShareUrl();
+      }}
+    >
+      <Share2 className="size-5" />
+    </button>
+  );
+}
+
+export function MapRoundButtons() {
+  useLang();
+  const mapLabels = useAppStore((s) => s.mapLabels);
+  const setMapLabels = useAppStore((s) => s.setMapLabels);
   return (
     <div className="flex flex-col gap-2">
-      <button
-        type="button"
-        className={fab}
-        aria-label={t("shareMap")}
-        onClick={() => {
-          const url = shareUrl({ ...mapView, id: selectedId, filters, query });
-          if (navigator.share) void navigator.share({ url, title: "Blue Lagune" }).catch(() => copyShareUrl());
-          else void copyShareUrl();
-        }}
-      >
-        <Share2 className="size-5" />
-      </button>
       <LocateButton floating />
       <button
         type="button"
-        className={fab}
+        className={fabCls}
         aria-label={t("mapLayers")}
         aria-pressed={mapLabels}
         onClick={() => setMapLabels(!mapLabels)}
@@ -884,7 +874,7 @@ export function MapRoundButtons() {
       </button>
       <button
         type="button"
-        className={fab}
+        className={cn(fabCls, "size-8 opacity-70")}
         aria-label={t("alongRoute")}
         onClick={() => {
           const st = useAppStore.getState();
@@ -898,19 +888,7 @@ export function MapRoundButtons() {
           }
         }}
       >
-        <Route className="size-5" />
-      </button>
-      <button
-        type="button"
-        className={fab}
-        aria-label={t("filterToggle")}
-        aria-pressed={filtersOpen}
-        onClick={() => {
-          setFiltersOpen(!filtersOpen);
-          useAppStore.getState().setSheet("mid");
-        }}
-      >
-        <SlidersHorizontal className="size-5" />
+        <Route className="size-4" />
       </button>
     </div>
   );
