@@ -1,7 +1,7 @@
 import type { MapBounds } from "./geo";
 import type { MapView } from "./store";
 
-export const TILE_CACHE = "bl-tiles-v3";
+export const TILE_CACHE = "bl-tiles-v4";
 export const OFFLINE_META_KEY = "bl-offline-meta";
 const MAX_TILES = 2400;
 const Z_MIN = 7;
@@ -37,13 +37,8 @@ export function imageryUrl(z: number, x: number, y: number) {
   return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
 }
 
-function cartoHost(x: number, y: number) {
-  return "abcd"[(Math.abs(x + y) % 4) as 0 | 1 | 2 | 3];
-}
-
-export function labelsUrl(z: number, x: number, y: number, retina = false) {
-  const r = retina ? "@2x" : "";
-  return `https://${cartoHost(x, y)}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/${z}/${x}/${y}${r}.png`;
+export function roadsUrl(z: number, x: number, y: number) {
+  return `https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/${z}/${y}/${x}`;
 }
 
 export function boundsFromView(view: MapView): MapBounds {
@@ -76,7 +71,7 @@ function urlsForBounds(bounds: MapBounds, zMin: number, zMax: number, cap: numbe
     const y1 = lat2y(bounds.south, z);
     for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) {
       for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) {
-        urls.push(imageryUrl(z, x, y), labelsUrl(z, x, y), labelsUrl(z, x, y, true));
+        urls.push(imageryUrl(z, x, y), roadsUrl(z, x, y));
         if (urls.length >= cap) return urls;
       }
     }
@@ -114,6 +109,7 @@ export function readMeta(): OfflineMeta | null {
   } catch {
     /* ignore */
   }
+  return null;
 }
 
 function writeMeta(meta: OfflineMeta | null) {
