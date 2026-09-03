@@ -54,6 +54,10 @@ export function distanceToPolylineKm(p: LatLng, line: LatLng[]): number {
   return min;
 }
 
+export function centerOfBounds(b: MapBounds): LatLng {
+  return { lat: (b.north + b.south) / 2, lng: (b.east + b.west) / 2 };
+}
+
 export function inBounds(p: LatLng, b: MapBounds, pad = 0): boolean {
   return (
     p.lat >= b.south - pad &&

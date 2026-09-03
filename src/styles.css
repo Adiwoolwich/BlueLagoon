@@ -76,7 +76,9 @@
 .leaflet-control-attribution a { color: #ffffff !important; }
 
 .leaflet-layer.bl-map-labels {
-  filter: drop-shadow(0 0 1.2px #041018) drop-shadow(0 1px 2px rgb(4 16 24 / 0.7));
+  /* OSM-DE full tiles as German-toponym overlay on satellite */
+  filter: grayscale(1) invert(1) contrast(1.2) brightness(1.15);
+  mix-blend-mode: screen;
   pointer-events: none;
 }
 
@@ -134,16 +136,7 @@
 }
 
 .bl-cluster-dot {
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: #e11d2e;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  box-shadow: 0 0 0 2px #ffffff, 0 6px 16px rgb(0 0 0 / 0.35);
-  font-family: var(--font-sans);
+  display: none;
 }
 
 .leaflet-tooltip.bl-map-tooltip {
@@ -217,16 +210,8 @@
   border: none !important;
 }
 .bl-cluster {
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: #e11d2e;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  box-shadow: 0 0 0 2px #ffffff, 0 8px 20px rgb(0 0 0 / 0.35);
-  font-family: var(--font-sans);
+  background: transparent !important;
+  border: none !important;
 }
 
 .bl-landing {

@@ -34,7 +34,6 @@ function detect(): Lang {
   try {
     const nav = (navigator.language || "").toLowerCase();
     if (nav.startsWith("nl")) return "nl";
-    if (nav.startsWith("en")) return "en";
   } catch {
     /* ignore */
   }
@@ -346,7 +345,7 @@ const de = {
   privacyP1: "Verantwortlich im Sinne der DSGVO ist der im Impressum genannte Anbieter.",
   privacyWhich: "Welche Daten anfallen",
   privacyMap: "Karte:",
-  privacyMapP: "Satelliten- und Straßenkarten von Esri (World Imagery, World Transportation) und Ortsnamen von CARTO (voyager_only_labels). Dafür ist die IP-Adresse technisch nötig. Es werden keine OpenStreetMap-Rasterkacheln geladen.",
+  privacyMapP: "Satelliten- und Straßenkarten von Esri (World Imagery, World Transportation) und Ortsnamen vom OSM-Deutschland-Stil (tile.openstreetmap.de, deutsche Toponyme). Dafür ist die IP-Adresse technisch nötig.",
   privacyLoc: "Standort:",
   privacyLocP: "nur im Browser nach Freigabe, nicht an uns gesendet.",
   privacyLs: "Local Storage:",
@@ -617,7 +616,7 @@ const en: Record<keyof typeof de, string> = {
   privacyP1: "The controller under the GDPR is the provider named in the imprint.",
   privacyWhich: "What data occurs",
   privacyMap: "Map:",
-  privacyMapP: "Satellite and road map tiles from Esri (World Imagery, World Transportation) and place names from CARTO (voyager_only_labels). An IP address is technically required. No OpenStreetMap raster tiles are loaded.",
+  privacyMapP: "Satellite and road map tiles from Esri (World Imagery, World Transportation) and place names from the German OSM style (tile.openstreetmap.de, German toponyms). An IP address is technically required.",
   privacyLoc: "Location:",
   privacyLocP: "only in the browser after you allow it, not sent to us.",
   privacyLs: "Local storage:",
@@ -884,7 +883,7 @@ const nl: Record<keyof typeof de, string> = {
   privacyP1: "Verwerkingsverantwoordelijke in de zin van de AVG is de in het colofon genoemde aanbieder.",
   privacyWhich: "Welke gegevens ontstaan",
   privacyMap: "Kaart:",
-  privacyMapP: "Satelliet- en wegenkaarten van Esri (World Imagery, World Transportation) en plaatsnamen van CARTO (voyager_only_labels). Daarvoor is het IP-adres technisch nodig. Er worden geen OpenStreetMap-rastertegels geladen.",
+  privacyMapP: "Satelliet- en wegenkaarten van Esri (World Imagery, World Transportation) en plaatsnamen in de Duitse OSM-stijl (tile.openstreetmap.de). Daarvoor is het IP-adres technisch nodig.",
   privacyLoc: "Locatie:",
   privacyLocP: "alleen in de browser na toestemming, niet naar ons gestuurd.",
   privacyLs: "Local Storage:",
