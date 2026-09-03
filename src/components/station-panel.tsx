@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Globe, List, LocateFixed, Plus, Route, Share2, SlidersHorizontal, Star, X } from "lucide-react";
+import { Compass, Globe, List, LocateFixed, Plus, Share2, SlidersHorizontal, Star, X } from "lucide-react";
 import { CitySelect } from "./city-select";
 import { GoogleMapsButton } from "./google-maps-button";
 import { AddStationForm } from "./add-station-form";
@@ -43,7 +43,7 @@ function Chip({
       aria-label={label}
       title={label}
       className={cn(
-        "inline-flex h-8 shrink-0 items-center rounded-full px-3 text-[13px] font-medium",
+        "inline-flex h-8 shrink-0 items-center rounded-full px-2.5 text-[13px] font-medium",
         active ? "bg-primary text-primary-fg" : "bg-surface text-fg ring-1 ring-border hover:ring-border-strong",
       )}
     >
@@ -276,7 +276,7 @@ export function SearchAndFilters({
           <X className="size-5" />
         </button>
       </div>
-      <div className="flex items-center gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex flex-nowrap items-center gap-1 overflow-x-auto snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <button
           type="button"
           onClick={() => setFiltersOpen(!filtersOpen)}
@@ -305,7 +305,7 @@ export function SearchAndFilters({
           {t("chipCassette")}
         </Chip>
         <Chip active={filters.greywater} onClick={() => setFilters({ greywater: !filters.greywater })} label={t("ariaGrey")}>
-          {t("chipGrey")}
+          {t("chipGreyShort")}
         </Chip>
       </div>
       {filtersOpen || embedSearch ? (
@@ -387,7 +387,9 @@ function StationList({ stations }: { stations: Station[] }) {
                   </div>
                   <p className="mt-0.5 truncate text-[13px] leading-snug text-muted">{s.address || s.name}</p>
                   <p className="truncate text-[12px] leading-snug text-muted">
-                    {[s.fee ? feeLabel(s.fee) : null, typeLabel(s.type)].filter(Boolean).join(" · ")}
+                    {[s.fee ? feeLabel(s.fee) : null, typeLabel(s.type), s.hours === "24h" ? "24h" : null]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </p>
                 </div>
                 <div className="flex w-[4.75rem] shrink-0 flex-col items-center justify-center gap-1">
@@ -396,7 +398,6 @@ function StationList({ stations }: { stations: Station[] }) {
                     <circle cx="12" cy="19.2" r="3.2" fill="#ffffff" />
                   </svg>
                   {km != null ? <span className="text-[15px] font-semibold tabular-nums leading-none text-fg">{formatKm(km)}</span> : null}
-                  {s.hours === "24h" ? <span className="text-[11px] leading-none text-muted">24h</span> : null}
                 </div>
               </button>
             </li>
@@ -841,18 +842,18 @@ export function LocateButton({ iconOnly, floating }: { iconOnly?: boolean; float
       data-bl-keep-clear
       className={cn(
         "inline-flex items-center justify-center bg-black/80 text-white ring-1 ring-white/15",
-        floating ? "size-10 shrink-0 rounded-[10px]" : "h-11 shrink-0 rounded-full",
+        floating ? "size-11 shrink-0 rounded-full" : "h-11 shrink-0 rounded-full",
         iconOnly || floating ? "w-11" : "px-3",
       )}
       aria-label={t("locate")}
     >
-      <LocateFixed className="size-5" />
+      {floating ? <Compass className="size-5" /> : <LocateFixed className="size-5" />}
       {iconOnly || floating ? null : <span className="ml-1.5 text-sm">{t("locate")}</span>}
     </button>
   );
 }
 
-const fabCls = "inline-flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-black/80 text-white ring-1 ring-white/15";
+const fabCls = "inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-black/80 text-white ring-1 ring-white/15";
 
 export function ShareFab() {
   useLang();
@@ -887,7 +888,7 @@ export function MapRoundButtons() {
   const query = useAppStore((s) => s.query);
   const selectedId = useAppStore((s) => s.selectedId);
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-3">
       <button
         type="button"
         className={fabCls}
@@ -918,24 +919,6 @@ export function MapRoundButtons() {
         onClick={() => setSheet(sheet === "peek" ? "mid" : "peek")}
       >
         <List className="size-5" />
-      </button>
-      <button
-        type="button"
-        className={cn(fabCls, "hidden size-8 opacity-70 md:inline-flex")}
-        aria-label={t("alongRoute")}
-        onClick={() => {
-          const st = useAppStore.getState();
-          if (st.routePath?.coords.length) {
-            st.setListSort("along");
-            st.setSheet("mid");
-            st.setPanel("list");
-          } else {
-            st.setPanel("route");
-            st.setSheet("mid");
-          }
-        }}
-      >
-        <Route className="size-4" />
       </button>
     </div>
   );

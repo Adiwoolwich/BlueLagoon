@@ -91,10 +91,9 @@ let lastReverseAt = 0;
 const JUNK_ROAD = /^(unnamed|unbenannt|ohne namen|unknown)/i;
 
 function nominatimZoom(mapZoom: number): number {
-  if (mapZoom >= 17) return 18;
-  if (mapZoom >= 15) return 16;
-  if (mapZoom >= 12) return 14;
-  return 10;
+  if (mapZoom >= 14) return 18;
+  if (mapZoom >= 12) return 16;
+  return 14;
 }
 
 export function formatReverseLabel(
@@ -110,8 +109,9 @@ export function formatReverseLabel(
   const street = road ? (addr.house_number ? `${road} ${addr.house_number}` : road) : "";
   const place =
     addr.village || addr.hamlet || addr.suburb || addr.town || addr.city || addr.municipality || "";
-  if (mapZoom >= 13 && street) return street;
-  return place || street || fallback;
+  void mapZoom;
+  if (street) return street;
+  return place || fallback;
 }
 
 export async function reverseNominatim(lat: number, lng: number, mapZoom: number): Promise<string> {

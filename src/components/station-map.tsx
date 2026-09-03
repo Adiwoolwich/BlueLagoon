@@ -46,16 +46,18 @@ function pinIcon(color: string, selected: boolean) {
   return icon;
 }
 
-function locIcon() {
-  const hit = iconCache.get("loc");
+function locIcon(heading: number | null) {
+  const deg = heading == null ? 0 : Math.round(heading / 5) * 5;
+  const key = `loc-${deg}`;
+  const hit = iconCache.get(key);
   if (hit) return hit;
   const icon = L.divIcon({
     className: "bl-marker",
-    html: `<span class="bl-loc" aria-hidden="true"><span class="bl-loc-chevron"></span><span class="bl-loc-dot"></span></span>`,
-    iconSize: [28, 34],
-    iconAnchor: [14, 22],
+    html: `<span class="bl-loc" aria-hidden="true"><span class="bl-loc-rot" style="transform:rotate(${deg}deg)"><span class="bl-loc-chevron"></span><span class="bl-loc-dot"></span></span></span>`,
+    iconSize: [28, 36],
+    iconAnchor: [14, 20],
   });
-  iconCache.set("loc", icon);
+  iconCache.set(key, icon);
   return icon;
 }
 
@@ -359,6 +361,18 @@ export function StationMap({
   initialView?: MapView;
 }) {
   const userPos = useAppStore((s) => s.userPos);
+  const [heading, setHeading] = useState<number | null>(null);
+  useEffect(() => {
+    const onOri = (e: DeviceOrientationEvent) => {
+      const w = e as DeviceOrientationEvent & { webkitCompassHeading?: number };
+      let h: number | null = null;
+      if (typeof w.webkitCompassHeading === "number") h = w.webkitCompassHeading;
+      else if (typeof e.alpha === "number") h = (360 - e.alpha) % 360;
+      if (h != null && Number.isFinite(h)) setHeading(h);
+    };
+    window.addEventListener("deviceorientation", onOri);
+    return () => window.removeEventListener("deviceorientation", onOri);
+  }, []);
   const routePath = useAppStore((s) => s.routePath);
   const placeName = useAppStore((s) => s.filters.place);
   const query = useAppStore((s) => s.query);
@@ -424,7 +438,7 @@ export function StationMap({
         />
       ) : null}
       {userPos ? (
-        <Marker position={[userPos.lat, userPos.lng]} icon={locIcon()} zIndexOffset={800} />
+        <Marker position={[userPos.lat, userPos.lng]} icon={locIcon(heading)} zIndexOffset={800} />
       ) : null}
       <ClusterLayer stations={stations} />
     </MapContainer>
