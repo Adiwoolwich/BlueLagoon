@@ -347,7 +347,7 @@ function MapApp() {
           >
             <span className="text-lg leading-none">‹</span>
           </button>
-          <div className="pointer-events-auto mx-auto min-w-0 w-full max-w-[min(46vw,18rem)]">
+          <div className="pointer-events-auto mx-auto min-w-0 w-full max-w-[min(58vw,22rem)]">
             <SearchBar overlay />
           </div>
           <span className="size-10 shrink-0" aria-hidden />

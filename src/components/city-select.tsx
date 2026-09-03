@@ -249,7 +249,7 @@ export function CitySelect({
           "flex items-center gap-2 rounded-full ring-1",
           compactMenu ? "h-10 bg-black/80 px-4 ring-white/12" : "h-11 bg-surface px-3 ring-border",
           open && "ring-2 ring-fg/25",
-          unmatched && open === false && draft.trim() && "ring-2 ring-bad/60",
+          warnUnmatched && unmatched && open === false && draft.trim() && "ring-2 ring-bad/60",
         )}
       >
         {compactMenu ? null : (
