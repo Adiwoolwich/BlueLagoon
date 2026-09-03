@@ -8,14 +8,17 @@ const NAME: ExpressionSpecification = [
   ["get", "name:latin"],
 ];
 
-const HALO = "rgba(0,0,0,0.82)";
-const INK = "#f4f4f5";
-const MUTED = "#e4e4e7";
-const WATER = "#c4d4ee";
+const HALO = "rgba(0,0,0,0.88)";
+const INK = "#ffffff";
+const MUTED = "#f4f4f5";
+const WATER = "#e8f1ff";
+
+const HALO_W = 2;
 
 /**
  * Labels-only MapLibre style over Esri satellite.
  * OpenFreeMap / OpenMapTiles, no API key. Transparent background.
+ * Tesla-near: bright ink, thick dark halo, POI + water visible on sat at z15–17.
  */
 export const SAT_LABEL_STYLE: StyleSpecification = {
   version: 8,
@@ -39,18 +42,20 @@ export const SAT_LABEL_STYLE: StyleSpecification = {
       type: "symbol",
       source: "openmaptiles",
       "source-layer": "waterway",
-      minzoom: 12,
+      minzoom: 11,
       layout: {
         "symbol-placement": "line",
         "text-field": NAME,
         "text-font": ["Noto Sans Italic"],
-        "text-size": 12,
+        "text-size": ["interpolate", ["linear"], ["zoom"], 12, 12, 16, 14, 18, 15],
         "text-max-width": 8,
+        "symbol-spacing": 160,
+        "text-padding": 1,
       },
       paint: {
         "text-color": WATER,
         "text-halo-color": HALO,
-        "text-halo-width": 1.2,
+        "text-halo-width": HALO_W,
       },
     },
     {
@@ -58,19 +63,20 @@ export const SAT_LABEL_STYLE: StyleSpecification = {
       type: "symbol",
       source: "openmaptiles",
       "source-layer": "water_name",
-      minzoom: 11,
+      minzoom: 10,
       layout: {
         "symbol-placement": "line",
         "text-field": NAME,
         "text-font": ["Noto Sans Italic"],
-        "text-size": 13,
+        "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 16, 14],
         "text-max-width": 8,
-        "symbol-spacing": 220,
+        "symbol-spacing": 180,
+        "text-padding": 1,
       },
       paint: {
         "text-color": WATER,
         "text-halo-color": HALO,
-        "text-halo-width": 1.3,
+        "text-halo-width": HALO_W,
       },
     },
     {
@@ -78,18 +84,21 @@ export const SAT_LABEL_STYLE: StyleSpecification = {
       type: "symbol",
       source: "openmaptiles",
       "source-layer": "water_name",
-      minzoom: 12,
+      minzoom: 11,
       filter: ["match", ["geometry-type"], ["Point", "MultiPoint"], true, false],
       layout: {
         "text-field": NAME,
         "text-font": ["Noto Sans Italic"],
         "text-size": 13,
         "text-max-width": 8,
+        "text-padding": 2,
+        "text-allow-overlap": false,
+        "icon-allow-overlap": true,
       },
       paint: {
         "text-color": WATER,
         "text-halo-color": HALO,
-        "text-halo-width": 1.3,
+        "text-halo-width": HALO_W,
       },
     },
     {
@@ -97,7 +106,7 @@ export const SAT_LABEL_STYLE: StyleSpecification = {
       type: "symbol",
       source: "openmaptiles",
       "source-layer": "poi",
-      minzoom: 15,
+      minzoom: 14,
       filter: [
         "any",
         ["==", ["get", "class"], "lodging"],
@@ -105,21 +114,53 @@ export const SAT_LABEL_STYLE: StyleSpecification = {
       ],
       layout: {
         "icon-image": "lodging",
-        "icon-size": 0.85,
+        "icon-size": 0.9,
         "icon-optional": true,
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
         "text-field": NAME,
         "text-font": ["Noto Sans Regular"],
         "text-size": 12,
         "text-anchor": "top",
-        "text-offset": [0, 0.7],
-        "text-optional": false,
+        "text-offset": [0, 0.75],
+        "text-optional": true,
         "text-max-width": 9,
-        "text-padding": 4,
+        "text-padding": 2,
+        "text-allow-overlap": false,
       },
       paint: {
-        "text-color": "#e9d5ff",
+        "text-color": "#f3e8ff",
         "text-halo-color": HALO,
-        "text-halo-width": 1.3,
+        "text-halo-width": HALO_W,
+        "icon-halo-color": HALO,
+        "icon-halo-width": 1.2,
+      },
+    },
+    {
+      id: "poi-park",
+      type: "symbol",
+      source: "openmaptiles",
+      "source-layer": "poi",
+      minzoom: 15,
+      filter: ["match", ["get", "class"], ["park", "cemetery", "stadium"], true, false],
+      layout: {
+        "icon-image": "park",
+        "icon-size": 0.8,
+        "icon-optional": true,
+        "icon-allow-overlap": false,
+        "text-field": NAME,
+        "text-font": ["Noto Sans Regular"],
+        "text-size": 11,
+        "text-anchor": "top",
+        "text-offset": [0, 0.7],
+        "text-optional": true,
+        "text-max-width": 8,
+        "text-padding": 2,
+      },
+      paint: {
+        "text-color": "#d9f99d",
+        "text-halo-color": HALO,
+        "text-halo-width": HALO_W,
       },
     },
     {
@@ -133,14 +174,14 @@ export const SAT_LABEL_STYLE: StyleSpecification = {
         "symbol-placement": "line",
         "text-field": NAME,
         "text-font": ["Noto Sans Regular"],
-        "text-size": ["interpolate", ["linear"], ["zoom"], 14, 11, 16, 13, 18, 15],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 14, 12, 16, 14, 18, 15],
         "text-rotation-alignment": "map",
-        "text-padding": 2,
+        "text-padding": 1,
       },
       paint: {
         "text-color": MUTED,
         "text-halo-color": HALO,
-        "text-halo-width": 1.35,
+        "text-halo-width": HALO_W,
         "text-halo-blur": 0,
       },
     },
@@ -155,13 +196,13 @@ export const SAT_LABEL_STYLE: StyleSpecification = {
         "symbol-placement": "line",
         "text-field": NAME,
         "text-font": ["Noto Sans Regular"],
-        "text-size": ["interpolate", ["linear"], ["zoom"], 11, 11, 14, 13, 16, 14],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 14, 14, 16, 15],
         "text-rotation-alignment": "map",
       },
       paint: {
         "text-color": INK,
         "text-halo-color": HALO,
-        "text-halo-width": 1.4,
+        "text-halo-width": HALO_W,
         "text-halo-blur": 0,
       },
     },
@@ -183,7 +224,7 @@ export const SAT_LABEL_STYLE: StyleSpecification = {
       paint: {
         "text-color": INK,
         "text-halo-color": HALO,
-        "text-halo-width": 1.5,
+        "text-halo-width": HALO_W,
         "text-halo-blur": 0,
       },
     },
@@ -205,7 +246,7 @@ export const SAT_LABEL_STYLE: StyleSpecification = {
       paint: {
         "text-color": INK,
         "text-halo-color": HALO,
-        "text-halo-width": 1.6,
+        "text-halo-width": HALO_W,
         "text-halo-blur": 0,
       },
     },
@@ -227,7 +268,7 @@ export const SAT_LABEL_STYLE: StyleSpecification = {
       paint: {
         "text-color": "#ffffff",
         "text-halo-color": HALO,
-        "text-halo-width": 1.7,
+        "text-halo-width": 2.1,
         "text-halo-blur": 0,
       },
     },

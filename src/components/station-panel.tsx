@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Compass, Globe, List, Loader2, LocateFixed, Plus, Share2, SlidersHorizontal, Star, X } from "lucide-react";
 import { CitySelect } from "./city-select";
 import { GoogleMapsButton } from "./google-maps-button";
@@ -891,12 +891,16 @@ export function MapRoundButtons() {
   useLang();
   const mapLabels = useAppStore((s) => s.mapLabels);
   const setMapLabels = useAppStore((s) => s.setMapLabels);
+  const satClarity = useAppStore((s) => s.satClarity);
+  const setSatClarity = useAppStore((s) => s.setSatClarity);
   const sheet = useAppStore((s) => s.sheet);
   const setSheet = useAppStore((s) => s.setSheet);
   const mapView = useAppStore((s) => s.mapView);
   const filters = useAppStore((s) => s.filters);
   const query = useAppStore((s) => s.query);
   const selectedId = useAppStore((s) => s.selectedId);
+  const hold = useRef(0);
+  const held = useRef(false);
   return (
     <div className="flex flex-col gap-3">
       <button
@@ -915,9 +919,27 @@ export function MapRoundButtons() {
       <button
         type="button"
         className={cn(fabCls, "bg-white text-black ring-white/0")}
-        aria-label={t("mapLayers")}
+        aria-label={satClarity ? t("mapClarity") : t("mapLayers")}
+        title={`${t("mapLayers")} · ${t("mapClarity")}`}
         aria-pressed={mapLabels}
-        onClick={() => setMapLabels(!mapLabels)}
+        onPointerDown={() => {
+          held.current = false;
+          window.clearTimeout(hold.current);
+          hold.current = window.setTimeout(() => {
+            held.current = true;
+            setSatClarity(!satClarity);
+          }, 480);
+        }}
+        onPointerUp={() => window.clearTimeout(hold.current)}
+        onPointerCancel={() => window.clearTimeout(hold.current)}
+        onPointerLeave={() => window.clearTimeout(hold.current)}
+        onClick={() => {
+          if (held.current) {
+            held.current = false;
+            return;
+          }
+          setMapLabels(!mapLabels);
+        }}
       >
         <Globe className="size-5" />
       </button>

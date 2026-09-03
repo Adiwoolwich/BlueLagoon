@@ -353,6 +353,9 @@ function VectorLabels() {
   return null;
 }
 
+const ESRI_WORLD = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+const ESRI_CLARITY = "https://clarity.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+
 export function StationMap({
   stations,
   initialView,
@@ -361,6 +364,7 @@ export function StationMap({
   initialView?: MapView;
 }) {
   const userPos = useAppStore((s) => s.userPos);
+  const satClarity = useAppStore((s) => s.satClarity);
   const [heading, setHeading] = useState<number | null>(null);
   useEffect(() => {
     const onOri = (e: DeviceOrientationEvent) => {
@@ -400,7 +404,7 @@ export function StationMap({
     >
       <TileLayer
         attribution='Satellit &copy; <a href="https://www.esri.com/">Esri</a>, Maxar · Straßen &copy; Esri · Namen &copy; <a href="https://openfreemap.org/">OpenFreeMap</a> / OSM'
-        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        url={satClarity ? ESRI_CLARITY : ESRI_WORLD}
         maxZoom={22}
         maxNativeZoom={19}
         detectRetina
