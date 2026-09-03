@@ -327,6 +327,61 @@ function ClusterLayer({ stations }: { stations: Station[] }) {
 }
 
 
+
+function overlayDebugOn() {
+  try {
+    return new URLSearchParams(window.location.search).get("debug") === "1";
+  } catch {
+    return false;
+  }
+}
+
+type BlDump = {
+  z: number;
+  c: { lng: number; lat: number };
+  sourceLayers: Record<string, { n: number; lodging: string[]; sample: { name?: string; class?: string; subclass?: string }[] }>;
+  rendered: Record<string, { n: number; names: string[] }>;
+};
+
+function attachOverlayDebug(gl: { getZoom: () => number; getCenter: () => { lng: number; lat: number }; querySourceFeatures: (a: string, b: { sourceLayer: string }) => { properties?: Record<string, unknown> }[]; queryRenderedFeatures: (a: { layers: string[] }) => { properties?: Record<string, unknown> }[] }) {
+  const w = window as Window & { __blGl?: unknown; __blDump?: () => BlDump };
+  w.__blGl = gl;
+  w.__blDump = () => {
+    const sourceLayers = ["poi", "poi_label", "water_name", "water", "waterway", "place", "transportation_name"];
+    const out: BlDump = { z: gl.getZoom(), c: gl.getCenter(), sourceLayers: {}, rendered: {} };
+    for (const sl of sourceLayers) {
+      try {
+        const fs = gl.querySourceFeatures("openmaptiles", { sourceLayer: sl });
+        out.sourceLayers[sl] = {
+          n: fs.length,
+          lodging: fs
+            .filter((f) => f.properties?.class === "lodging" || f.properties?.subclass === "hotel")
+            .map((f) => String(f.properties?.name ?? "")),
+          sample: fs.slice(0, 8).map((f) => ({
+            name: f.properties?.name as string | undefined,
+            class: f.properties?.class as string | undefined,
+            subclass: f.properties?.subclass as string | undefined,
+          })),
+        };
+      } catch (e) {
+        out.sourceLayers[sl] = { n: -1, lodging: [String(e)], sample: [] };
+      }
+    }
+    for (const id of ["poi-hotel", "poi-park", "water-name-point", "waterway-label", "road-major", "road-minor", "place-village"]) {
+      try {
+        const fs = gl.queryRenderedFeatures({ layers: [id] });
+        out.rendered[id] = {
+          n: fs.length,
+          names: fs.slice(0, 8).map((f) => String(f.properties?.name ?? "")),
+        };
+      } catch (e) {
+        out.rendered[id] = { n: -1, names: [String(e)] };
+      }
+    }
+    return out;
+  };
+}
+
 function VectorLabels() {
   const map = useMap();
   const mapLabels = useAppStore((s) => s.mapLabels);
@@ -349,7 +404,18 @@ function VectorLabels() {
     layer.addTo(map);
     const canvas = layer.getContainer();
     if (canvas) canvas.style.pointerEvents = "none";
+    const gl = layer.getMaplibreMap();
+    if (overlayDebugOn() && gl) {
+      const bind = () => attachOverlayDebug(gl);
+      gl.once("idle", bind);
+      if (gl.loaded()) bind();
+    }
     return () => {
+      if (overlayDebugOn()) {
+        const w = window as Window & { __blGl?: unknown; __blDump?: () => unknown };
+        delete w.__blGl;
+        delete w.__blDump;
+      }
       map.removeLayer(layer);
     };
   }, [map, mapLabels]);
