@@ -214,7 +214,7 @@ function SheetHandle({
       role="button"
       tabIndex={0}
       aria-label={label}
-      className="flex h-12 shrink-0 touch-none select-none items-center justify-center md:hidden"
+      className="flex h-10 shrink-0 touch-none select-none items-center justify-center md:h-8"
       style={{ touchAction: "none" }}
       onPointerDown={(e) => {
         e.preventDefault();
@@ -337,7 +337,7 @@ function MapApp() {
         <MapHost stations={stations.length ? stations : STATIONS} initialView={initial} />
         <div
           data-bl-keep-clear
-          className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start gap-2 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]"
+          className="pointer-events-none absolute top-0 z-30 flex items-start gap-2 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))] left-0 right-0 md:left-[calc(24.5rem+1.35rem)]"
         >
           <button
             type="button"
@@ -347,10 +347,10 @@ function MapApp() {
           >
             <span className="text-lg leading-none">‹</span>
           </button>
-          <div className="pointer-events-auto min-w-0 flex-1">
+          <div className="pointer-events-auto min-w-0 max-w-[22rem] flex-1">
             <SearchBar overlay />
           </div>
-          <div className="pointer-events-auto">
+          <div className="pointer-events-auto ml-auto">
             <MapRoundButtons />
           </div>
         </div>
@@ -360,11 +360,11 @@ function MapApp() {
         className={cn(
           "absolute z-20 flex min-h-0 flex-col bg-black shadow-panel",
           "inset-x-0 bottom-0 rounded-t-[1.35rem] transition-[height] duration-200 ease-out",
-          "md:inset-auto md:top-3 md:bottom-3 md:left-3 md:w-[24.5rem] md:rounded-2xl md:transition-none",
-          sheet === "peek" && "h-[11.25rem] md:h-auto",
-          sheet === "mid" && "h-[min(52dvh,32rem)] md:h-auto",
+          "md:inset-x-auto md:left-3 md:w-[24.5rem] md:rounded-2xl",
+          sheet === "peek" && "h-[11.25rem]",
+          sheet === "mid" && "h-[min(52dvh,32rem)]",
           sheet === "full" &&
-            "top-[calc(max(0.75rem,env(safe-area-inset-top))+3.25rem)] h-auto bottom-0 md:top-3 md:h-auto",
+            "top-[calc(max(0.75rem,env(safe-area-inset-top))+3.25rem)] h-auto bottom-0 md:top-3 md:bottom-3",
         )}
       >
         <SheetHandle

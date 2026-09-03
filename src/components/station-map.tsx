@@ -45,15 +45,17 @@ function pinIcon(color: string, selected: boolean) {
 }
 
 function clusterIcon(count: number) {
-  const key = `c-${count}`;
+  const key = `cdrop-${count}`;
   const hit = iconCache.get(key);
   if (hit) return hit;
-  const size = count >= 100 ? 44 : count >= 20 ? 38 : 32;
+  const w = count >= 100 ? 36 : count >= 20 ? 30 : 26;
+  const h = Math.round((w * 32) / 24);
+  const fs = count >= 100 ? 8 : 10;
   const icon = L.divIcon({
     className: "bl-marker bl-cluster",
-    html: `<span class="bl-cluster-dot" style="width:${size}px;height:${size}px">${count}</span>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    html: `<span class="bl-drop"><svg viewBox="0 0 24 32" width="${w}" height="${h}" aria-hidden="true"><path fill="#e11d2e" stroke="#ffffff" stroke-width="1.7" stroke-linejoin="round" d="M12 1.5C12 1.5 3.5 12.2 3.5 19.2a8.5 8.5 0 0 0 17 0C20.5 12.2 12 1.5 12 1.5z"/><text x="12" y="21.2" text-anchor="middle" fill="#ffffff" font-size="${fs}" font-weight="700" font-family="Inter,system-ui,sans-serif">${count}</text></svg></span>`,
+    iconSize: [w, h],
+    iconAnchor: [w / 2, h - 2],
   });
   iconCache.set(key, icon);
   return icon;
@@ -341,7 +343,7 @@ export function StationMap({
       attributionControl
     >
       <TileLayer
-        attribution='Satellit &copy; <a href="https://www.esri.com/">Esri</a>, Maxar · Straßen &copy; Esri · Namen &copy; <a href="https://carto.com/">CARTO</a>'
+        attribution='Satellit &copy; <a href="https://www.esri.com/">Esri</a>, Maxar · Straßen &copy; Esri · Namen &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> DE'
         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         maxZoom={19}
         maxNativeZoom={19}
@@ -353,11 +355,11 @@ export function StationMap({
       />
       {mapLabels ? (
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
-          subdomains="abcd"
-          maxZoom={20}
+          url="https://tile.openstreetmap.de/{z}/{x}/{y}.png"
+          maxZoom={19}
           opacity={1}
           className="bl-map-labels"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> DE'
         />
       ) : null}
       <MapChrome stations={stations} initialView={initialView} />

@@ -1,7 +1,7 @@
 import type { MapBounds } from "./geo";
 import type { MapView } from "./store";
 
-export const TILE_CACHE = "bl-tiles-v1";
+export const TILE_CACHE = "bl-tiles-v2";
 export const OFFLINE_META_KEY = "bl-offline-meta";
 const MAX_TILES = 2400;
 const Z_MIN = 7;
@@ -33,17 +33,12 @@ function lat2y(lat: number, z: number) {
   return y;
 }
 
-function cartoHost(x: number, y: number) {
-  return "abcd"[(Math.abs(x + y) % 4) as 0 | 1 | 2 | 3];
-}
-
 export function imageryUrl(z: number, x: number, y: number) {
   return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
 }
 
-export function labelsUrl(z: number, x: number, y: number, retina = false) {
-  const r = retina ? "@2x" : "";
-  return `https://${cartoHost(x, y)}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/${z}/${x}/${y}${r}.png`;
+export function labelsUrl(z: number, x: number, y: number, _retina = false) {
+  return `https://tile.openstreetmap.de/${z}/${x}/${y}.png`;
 }
 
 export function boundsFromView(view: MapView): MapBounds {

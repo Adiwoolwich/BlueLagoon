@@ -5,7 +5,7 @@ import { GoogleMapsButton } from "./google-maps-button";
 import { AddStationForm } from "./add-station-form";
 import { HoursTable } from "./hours-table";
 import { StatusBadge, STATUS_COLOR } from "./status-badge";
-import { alongRouteKm, formatKm, haversineKm, inBounds } from "../lib/geo";
+import { alongRouteKm, centerOfBounds, formatKm, haversineKm, inBounds } from "../lib/geo";
 import { downloadGpx, downloadStationGpx } from "../lib/gpx";
 import { fetchDrivingRoute } from "../lib/osrm";
 import { canNavigateTo, deriveStatus, findCity, hasPreciseCoords, isHttpPhotoUrl, type Station } from "../lib/stations";
@@ -323,6 +323,7 @@ function StationList({ stations }: { stations: Station[] }) {
   const routePath = useAppStore((s) => s.routePath);
   const reports = useAppStore((s) => s.reports);
   const serverReports = useAppStore((s) => s.serverReports);
+  const origin = userPos ?? (bounds ? centerOfBounds(bounds) : null);
   const visible = useMemo(() => {
     const inView = bounds
       ? stations.filter((s) => hasPreciseCoords(s) && inBounds(s, bounds))
@@ -333,10 +334,10 @@ function StationList({ stations }: { stations: Station[] }) {
       if (listSort === "along" && routePath?.coords.length) {
         return alongRouteKm(a, routePath.coords) - alongRouteKm(b, routePath.coords);
       }
-      if (userPos) return haversineKm(userPos, a) - haversineKm(userPos, b);
+      if (origin) return haversineKm(origin, a) - haversineKm(origin, b);
       return a.name.localeCompare(b.name);
     });
-  }, [stations, userPos, bounds, listSort, routePath]);
+  }, [stations, origin, bounds, listSort, routePath]);
 
   if (visible.length === 0) {
     return (
@@ -359,7 +360,7 @@ function StationList({ stations }: { stations: Station[] }) {
       </div>
       <ul className="bl-scroll divide-y divide-border/50">
         {visible.map((s) => {
-          const km = userPos && hasPreciseCoords(s) ? haversineKm(userPos, s) : null;
+          const km = origin && hasPreciseCoords(s) ? haversineKm(origin, s) : null;
           const fav = favorites.includes(s.id);
           return (
             <li key={s.id}>
@@ -583,7 +584,9 @@ function Detail({ station }: { station: Station }) {
   const [copied, setCopied] = useState(false);
   const [reportBusy, setReportBusy] = useState(false);
   const [reportMsg, setReportMsg] = useState<string | null>(null);
-  const km = userPos && hasPreciseCoords(station) ? haversineKm(userPos, station) : null;
+  const bounds = useAppStore((s) => s.bounds);
+  const origin = userPos ?? (bounds ? centerOfBounds(bounds) : null);
+  const km = origin && hasPreciseCoords(station) ? haversineKm(origin, station) : null;
   const fav = favorites.includes(station.id);
   const canDelete = extra.some((s) => s.id === station.id);
   const navOk = canNavigateTo(station);
