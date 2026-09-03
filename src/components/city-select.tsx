@@ -246,12 +246,13 @@ export function CitySelect({
       ) : null}
       <div
         className={cn(
-          "flex h-11 items-center gap-2 rounded-lg bg-surface px-3 ring-1 ring-border",
+          "flex h-11 items-center gap-2 rounded-full px-3 ring-1",
+          compactMenu ? "bg-black/92 ring-white/15" : "bg-surface ring-border",
           open && "ring-2 ring-fg/25",
           unmatched && open === false && draft.trim() && "ring-2 ring-bad/60",
         )}
       >
-        <MapPin className="size-4 shrink-0 text-primary" />
+        <MapPin className={cn("size-4 shrink-0", compactMenu ? "text-white" : "text-muted")} />
         <input
           ref={inputRef}
           id={id}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapHost } from "./components/map-host";
 import {
-  LocateButton,
+  MapRoundButtons,
   SearchAndFilters,
   SearchBar,
   StationPanel,
@@ -9,7 +9,6 @@ import {
 import { SiteFooter } from "./components/site-footer";
 import { DatenschutzPage, ImpressumPage } from "./components/legal-pages";
 import { FeedbackPage } from "./components/feedback-form";
-import { OfflineButton } from "./components/offline-panel";
 import { DUMP_STATIONS, hasPreciseCoords, STATIONS } from "./lib/stations";
 import { allStations, applyFilters, useAppStore } from "./lib/store";
 import { inBounds } from "./lib/geo";
@@ -74,13 +73,13 @@ function Landing({ onDone }: { onDone: () => void }) {
       <svg className="bl-waves" viewBox="0 0 1440 320" preserveAspectRatio="none" aria-hidden>
         <path
           className="bl-wave-a"
-          fill="#1498a3"
+          fill="#2c2c2e"
           fillOpacity="0.22"
           d="M0,192L80,176C160,160 320,128 480,133C640,139 800,181 960,181C1120,181 1280,139 1360,128L1440,117L1440,320L0,320Z"
         />
         <path
           className="bl-wave-b"
-          fill="#0b7d86"
+          fill="#1c1c1e"
           fillOpacity="0.18"
           d="M0,256L80,245C160,235 320,213 480,208C640,203 800,213 960,218C1120,224 1280,229 1360,232L1440,235L1440,320L0,320Z"
         />
@@ -249,7 +248,7 @@ function SheetHandle({
         }
       }}
     >
-      <span className="h-1.5 w-14 rounded-full bg-border-strong" />
+      <span className="h-1 w-10 rounded-full bg-zinc-600" />
     </div>
   );
 }
@@ -338,25 +337,30 @@ function MapApp() {
         <MapHost stations={stations.length ? stations : STATIONS} initialView={initial} />
         <div
           data-bl-keep-clear
-          className="absolute inset-x-0 top-0 z-30 flex items-start gap-2 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))] md:hidden"
+          className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start gap-2 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]"
         >
-          <div className="min-w-0 flex-1">
+          <button
+            type="button"
+            className="pointer-events-auto size-11 shrink-0 rounded-xl bg-black text-white shadow-panel"
+            aria-label={t("back")}
+            onClick={() => setShowLanding(true)}
+          >
+            <span className="text-lg leading-none">‹</span>
+          </button>
+          <div className="pointer-events-auto min-w-0 flex-1">
             <SearchBar overlay />
           </div>
-          <LocateButton floating />
-          <OfflineButton floating />
-        </div>
-        <div className="absolute right-3 bottom-6 z-10 hidden md:flex md:flex-col md:gap-2">
-          <LocateButton floating />
-          <OfflineButton floating />
+          <div className="pointer-events-auto">
+            <MapRoundButtons />
+          </div>
         </div>
       </main>
 
       <aside
         className={cn(
-          "absolute z-20 flex min-h-0 flex-col bg-bg-elevated shadow-panel ring-1 ring-border",
-          "inset-x-0 bottom-0 rounded-t-2xl transition-[height] duration-200 ease-out",
-          "md:inset-auto md:top-3 md:bottom-3 md:left-3 md:w-[24rem] md:rounded-2xl md:transition-none",
+          "absolute z-20 flex min-h-0 flex-col bg-black shadow-panel",
+          "inset-x-0 bottom-0 rounded-t-[1.35rem] transition-[height] duration-200 ease-out",
+          "md:inset-auto md:top-3 md:bottom-3 md:left-3 md:w-[24.5rem] md:rounded-2xl md:transition-none",
           sheet === "peek" && "h-[11.25rem] md:h-auto",
           sheet === "mid" && "h-[min(52dvh,32rem)] md:h-auto",
           sheet === "full" &&
@@ -374,11 +378,9 @@ function MapApp() {
           {routePath?.source === "straight" && panel === "list" && sheet !== "peek" ? (
             <p className="shrink-0 rounded-lg bg-stale/10 px-2.5 py-1.5 text-xs text-stale">{t("routeAir")}</p>
           ) : null}
-          {sheet === "peek" && panel === "list" ? null : (
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <StationPanel stations={stations} />
-            </div>
-          )}
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <StationPanel stations={stations} />
+          </div>
           <SiteFooter className="justify-start pt-1" onGuide={() => setGuide(true)} />
         </div>
       </aside>

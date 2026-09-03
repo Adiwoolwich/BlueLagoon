@@ -94,6 +94,9 @@ type AppState = {
   panel: "list" | "detail" | "saved" | "route" | "add";
   extraStations: Station[];
   sheet: "peek" | "mid" | "full";
+  mapLabels: boolean;
+  listSort: "distance" | "name" | "verified";
+  filtersOpen: boolean;
   serverReports: Record<string, ServerReport>;
   setQuery: (q: string) => void;
   setFilters: (p: Partial<Filters>) => void;
@@ -111,6 +114,9 @@ type AppState = {
   setMapView: (v: MapView) => void;
   setPanel: (p: AppState["panel"]) => void;
   setSheet: (s: AppState["sheet"]) => void;
+  setMapLabels: (on: boolean) => void;
+  setListSort: (s: AppState["listSort"]) => void;
+  setFiltersOpen: (on: boolean) => void;
   setExtraStations: (list: Station[]) => void;
   addStation: (station: Station) => void;
   removeExtraStation: (id: string) => void;
@@ -139,6 +145,9 @@ export const useAppStore = create<AppState>()(
       panel: "list",
       extraStations: [],
       sheet: "mid",
+      mapLabels: true,
+      listSort: "distance",
+      filtersOpen: false,
       serverReports: {},
       setQuery: (query) => set({ query }),
       setFilters: (p) => set({ filters: { ...get().filters, ...p } }),
@@ -179,6 +188,9 @@ export const useAppStore = create<AppState>()(
           selectedId: panel === "list" ? get().selectedId : get().selectedId,
         }),
       setSheet: (sheet) => set({ sheet }),
+      setMapLabels: (mapLabels) => set({ mapLabels }),
+      setListSort: (listSort) => set({ listSort }),
+      setFiltersOpen: (filtersOpen) => set({ filtersOpen }),
       setExtraStations: (extraStations) => set({ extraStations }),
       addStation: (station) => {
         const list = get().extraStations.filter((s) => s.id !== station.id);

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { LocateFixed, Plus, Share2, Star } from "lucide-react";
+import { Globe, LocateFixed, Plus, Share2, SlidersHorizontal, Star, X } from "lucide-react";
 import { CitySelect } from "./city-select";
 import { GoogleMapsButton } from "./google-maps-button";
 import { AddStationForm } from "./add-station-form";
@@ -14,6 +14,7 @@ import {
   CORRIDOR_OPTIONS,
   RADIUS_OPTIONS,
   serverToLocal,
+  stationCountry,
   useAppStore,
   type Filters,
 } from "../lib/store";
@@ -89,23 +90,25 @@ export function SearchBar({ overlay }: { overlay?: boolean }) {
           compactMenu={overlay}
         />
       </div>
-      <label className="relative block w-[4.6rem] shrink-0 self-end">
-        <span className="sr-only">{t("radius")}</span>
-        <select
-          value={filters.radiusKm}
-          disabled={!hasOrigin}
-          onChange={(e) => setFilters({ radiusKm: Number(e.target.value) })}
-          className="h-11 w-full appearance-none rounded-xl bg-surface py-0 pr-6 pl-2 text-sm text-fg ring-1 ring-border outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
-          aria-label={t("radius")}
-        >
-          {RADIUS_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.value === 0 ? t("radiusPlace") : o.label}
-            </option>
-          ))}
-        </select>
-        <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 border-x-4 border-t-[5px] border-x-transparent border-t-muted" />
-      </label>
+      {overlay ? null : (
+        <label className="relative block w-[4.6rem] shrink-0 self-end">
+          <span className="sr-only">{t("radius")}</span>
+          <select
+            value={filters.radiusKm}
+            disabled={!hasOrigin}
+            onChange={(e) => setFilters({ radiusKm: Number(e.target.value) })}
+            className="h-11 w-full appearance-none rounded-full bg-surface py-0 pr-6 pl-2 text-sm text-fg ring-1 ring-border outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+            aria-label={t("radius")}
+          >
+            {RADIUS_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.value === 0 ? t("radiusPlace") : o.label}
+              </option>
+            ))}
+          </select>
+          <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 border-x-4 border-t-[5px] border-x-transparent border-t-muted" />
+        </label>
+      )}
     </div>
   );
 }
@@ -235,35 +238,72 @@ export function SearchAndFilters({
   useLang();
   const setSheet = useAppStore((s) => s.setSheet);
   const setPanel = useAppStore((s) => s.setPanel);
-  if (compact) {
-    return (
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => setSheet("mid")}
-          className="flex h-11 min-w-0 flex-1 items-center justify-between rounded-xl bg-surface px-3 text-sm text-fg ring-1 ring-border"
-        >
-          <span className="tabular-nums">{t("stationsN", { n: count })}</span>
-          <span className="text-primary">{t("list")}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setPanel("add")}
-          className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-fg"
-          aria-label={t("addPlace")}
-        >
-          <Plus className="size-5" />
-        </button>
-      </div>
-    );
-  }
+  const filters = useAppStore((s) => s.filters);
+  const setFilters = useAppStore((s) => s.setFilters);
+  const listSort = useAppStore((s) => s.listSort);
+  const setListSort = useAppStore((s) => s.setListSort);
+  const filtersOpen = useAppStore((s) => s.filtersOpen);
+  const setFiltersOpen = useAppStore((s) => s.setFiltersOpen);
   return (
     <div className="shrink-0 space-y-2">
-      <div className={embedSearch ? "block" : "hidden md:block"}>
-        <SearchBar />
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="truncate text-[17px] font-semibold tracking-tight">{t("nearbyStations")}</h2>
+        <button
+          type="button"
+          onClick={() => setSheet(compact ? "mid" : "peek")}
+          className="inline-flex size-8 items-center justify-center rounded-full text-fg"
+          aria-label={t("close")}
+        >
+          <X className="size-5" />
+        </button>
       </div>
-      <FilterChips />
-      <ListToolbar count={count} />
+      <div className="flex items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <button
+          type="button"
+          onClick={() => setFiltersOpen(!filtersOpen)}
+          className={cn(
+            "inline-flex size-9 shrink-0 items-center justify-center rounded-full ring-1 ring-border",
+            filtersOpen ? "bg-surface-2" : "bg-transparent",
+          )}
+          aria-label={t("filterToggle")}
+        >
+          <SlidersHorizontal className="size-4" />
+        </button>
+        <label className="relative shrink-0">
+          <span className="sr-only">{t("sortBy")}</span>
+          <select
+            value={listSort}
+            onChange={(e) => setListSort(e.target.value as "distance" | "name" | "verified")}
+            className="h-9 appearance-none rounded-full bg-transparent py-0 pr-7 pl-3 text-xs text-fg ring-1 ring-border"
+          >
+            <option value="distance">{t("sortBy")}: {t("sortDistance")}</option>
+            <option value="name">{t("sortBy")}: {t("sortName")}</option>
+            <option value="verified">{t("sortBy")}: {t("sortVerified")}</option>
+          </select>
+        </label>
+        <Chip active={filters.cassette} onClick={() => setFilters({ cassette: !filters.cassette })} label={t("ariaCassette")}>
+          {t("chipCassette")}
+        </Chip>
+        <Chip active={filters.camperclean} onClick={() => setFilters({ camperclean: !filters.camperclean })} label={t("ariaCc")}>
+          {t("chipCc")}
+        </Chip>
+      </div>
+      {filtersOpen || embedSearch ? (
+        <>
+          <div className={embedSearch ? "block" : "hidden md:block"}>
+            {embedSearch ? <SearchBar /> : null}
+          </div>
+          <FilterChips />
+          <ListToolbar count={count} />
+        </>
+      ) : (
+        <p className="text-[11px] text-muted tabular-nums">{t("inView", { n: count })}</p>
+      )}
+      {compact ? (
+        <button type="button" onClick={() => setPanel("add")} className="sr-only">
+          {t("addPlace")}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -271,21 +311,22 @@ export function SearchAndFilters({
 function StationList({ stations }: { stations: Station[] }) {
   useLang();
   const userPos = useAppStore((s) => s.userPos);
-  const reports = useAppStore((s) => s.reports);
-  const serverReports = useAppStore((s) => s.serverReports);
   const select = useAppStore((s) => s.select);
   const selectedId = useAppStore((s) => s.selectedId);
   const favorites = useAppStore((s) => s.favorites);
   const bounds = useAppStore((s) => s.bounds);
+  const listSort = useAppStore((s) => s.listSort);
   const visible = useMemo(() => {
     const inView = bounds
       ? stations.filter((s) => hasPreciseCoords(s) && inBounds(s, bounds))
       : stations.filter(hasPreciseCoords);
     return [...inView].sort((a, b) => {
+      if (listSort === "name") return a.city.localeCompare(b.city) || a.name.localeCompare(b.name);
+      if (listSort === "verified") return b.lastVerified.localeCompare(a.lastVerified);
       if (userPos) return haversineKm(userPos, a) - haversineKm(userPos, b);
       return a.name.localeCompare(b.name);
     });
-  }, [stations, userPos, bounds]);
+  }, [stations, userPos, bounds, listSort]);
 
   if (visible.length === 0) {
     return (
@@ -322,17 +363,24 @@ function StationList({ stations }: { stations: Station[] }) {
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="truncate text-[15px] font-semibold text-fg">{s.name}</span>
-                    {fav ? <Star className="size-3.5 shrink-0 fill-primary text-primary" /> : null}
+                    <span className="truncate text-[15px] font-semibold text-fg">
+                      {s.city}, {stationCountry(s) === "nl" ? t("countryNL") : t("countryDE")}
+                    </span>
+                    {fav ? <Star className="size-3.5 shrink-0 fill-white text-white" /> : null}
                   </div>
-                  <p className="mt-0.5 truncate text-xs text-muted">
-                    {s.city} · {typeLabel(s.type)}
-                    {s.fee ? ` · ${feeLabel(s.fee)}` : ""}
-                  </p>
+                  <p className="mt-0.5 truncate text-[13px] text-muted">{s.address || s.name}</p>
+                  {s.fee ? <p className="mt-0.5 truncate text-[13px] text-fg/90">{feeLabel(s.fee)}</p> : null}
+                  <p className="mt-0.5 truncate text-[12px] text-muted">{typeLabel(s.type)}</p>
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  {km != null ? <span className="text-xs tabular-nums text-muted">{formatKm(km)}</span> : null}
-                  <StatusBadge station={s} report={serverToLocal(s.id, serverReports[s.id], reports[s.id])} compact />
+                <div className="flex w-[4.6rem] shrink-0 flex-col items-end gap-0.5 pt-0.5">
+                  <span className="inline-flex size-8 items-center justify-center" aria-hidden>
+                    <svg viewBox="0 0 24 32" width="18" height="24">
+                      <path fill="#e11d2e" stroke="#ffffff" strokeWidth="1.4" strokeLinejoin="round" d="M12 1.5C12 1.5 3.5 12.2 3.5 19.2a8.5 8.5 0 0 0 17 0C20.5 12.2 12 1.5 12 1.5z" />
+                      <circle cx="12" cy="19.2" r="3.1" fill="#ffffff" />
+                    </svg>
+                  </span>
+                  {km != null ? <span className="text-[13px] font-medium tabular-nums text-fg">{formatKm(km)}</span> : null}
+                  <span className="text-[10px] text-muted">{s.hours === "24h" ? "24h" : typeLabel(s.type)}</span>
                 </div>
               </button>
             </li>
@@ -774,8 +822,8 @@ export function LocateButton({ iconOnly, floating }: { iconOnly?: boolean; float
       }}
       data-bl-keep-clear
       className={cn(
-        "inline-flex items-center justify-center bg-bg-elevated text-fg ring-1 ring-border",
-        floating ? "size-11 shrink-0 rounded-full shadow-panel" : "h-11 shrink-0 rounded-xl",
+        "inline-flex items-center justify-center bg-black text-white shadow-panel",
+        floating ? "size-11 shrink-0 rounded-full" : "h-11 shrink-0 rounded-full",
         iconOnly || floating ? "w-11" : "px-3",
       )}
       aria-label={t("locate")}
@@ -783,5 +831,56 @@ export function LocateButton({ iconOnly, floating }: { iconOnly?: boolean; float
       <LocateFixed className="size-5" />
       {iconOnly || floating ? null : <span className="ml-1.5 text-sm">{t("locate")}</span>}
     </button>
+  );
+}
+
+export function MapRoundButtons() {
+  useLang();
+  const mapLabels = useAppStore((s) => s.mapLabels);
+  const setMapLabels = useAppStore((s) => s.setMapLabels);
+  const filtersOpen = useAppStore((s) => s.filtersOpen);
+  const setFiltersOpen = useAppStore((s) => s.setFiltersOpen);
+  const mapView = useAppStore((s) => s.mapView);
+  const filters = useAppStore((s) => s.filters);
+  const query = useAppStore((s) => s.query);
+  const selectedId = useAppStore((s) => s.selectedId);
+  const fab = "inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-black text-white shadow-panel";
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        className={fab}
+        aria-label={t("shareMap")}
+        onClick={() => {
+          const url = shareUrl({ ...mapView, id: selectedId, filters, query });
+          if (navigator.share) void navigator.share({ url, title: "Blue Lagune" }).catch(() => copyShareUrl());
+          else void copyShareUrl();
+        }}
+      >
+        <Share2 className="size-5" />
+      </button>
+      <LocateButton floating />
+      <button
+        type="button"
+        className={fab}
+        aria-label={t("mapLayers")}
+        aria-pressed={mapLabels}
+        onClick={() => setMapLabels(!mapLabels)}
+      >
+        <Globe className="size-5" />
+      </button>
+      <button
+        type="button"
+        className={fab}
+        aria-label={t("filterToggle")}
+        aria-pressed={filtersOpen}
+        onClick={() => {
+          setFiltersOpen(!filtersOpen);
+          useAppStore.getState().setSheet("mid");
+        }}
+      >
+        <SlidersHorizontal className="size-5" />
+      </button>
+    </div>
   );
 }
