@@ -72,3 +72,25 @@ export function isFiniteLatLng(lat: unknown, lng: unknown): lat is number {
     !(lat === 0 && lng === 0)
   );
 }
+
+/** Distance along a polyline to the nearest vertex (km from start). */
+export function alongRouteKm(p: LatLng, line: LatLng[]): number {
+  if (line.length === 0) return Number.POSITIVE_INFINITY;
+  if (line.length === 1) return 0;
+  const prefix: number[] = [0];
+  let acc = 0;
+  for (let i = 1; i < line.length; i++) {
+    acc += haversineKm(line[i - 1]!, line[i]!);
+    prefix.push(acc);
+  }
+  let bestI = 0;
+  let bestD = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < line.length; i++) {
+    const d = haversineKm(p, line[i]!);
+    if (d < bestD) {
+      bestD = d;
+      bestI = i;
+    }
+  }
+  return prefix[bestI] ?? 0;
+}

@@ -95,7 +95,7 @@ type AppState = {
   extraStations: Station[];
   sheet: "peek" | "mid" | "full";
   mapLabels: boolean;
-  listSort: "distance" | "name" | "verified";
+  listSort: "distance" | "name" | "verified" | "along";
   filtersOpen: boolean;
   serverReports: Record<string, ServerReport>;
   setQuery: (q: string) => void;
