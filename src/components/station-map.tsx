@@ -341,8 +341,8 @@ function VectorLabels() {
       style: SAT_LABEL_STYLE,
       interactive: false,
       attributionControl: false,
+      pane: "bl-labels",
     });
-    layer.options.pane = "bl-labels";
     layer.addTo(map);
     const canvas = layer.getContainer();
     if (canvas) canvas.style.pointerEvents = "none";
