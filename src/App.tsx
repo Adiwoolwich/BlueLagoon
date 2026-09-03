@@ -362,7 +362,7 @@ function MapApp() {
           "absolute inset-x-0 bottom-0 z-20 flex min-h-0 flex-col bg-black",
           "rounded-t-[1.25rem] transition-[height] duration-200 ease-out",
           sheet === "peek" && "h-[24dvh]",
-          sheet === "mid" && "h-[36.5dvh]",
+          sheet === "mid" && "h-[42dvh]",
           sheet === "full" && "h-[90dvh]",
         )}
       >

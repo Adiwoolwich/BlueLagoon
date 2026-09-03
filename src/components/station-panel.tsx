@@ -389,6 +389,7 @@ function StationList({ stations }: { stations: Station[] }) {
                     <circle cx="12" cy="19.2" r="3.2" fill="#ffffff" />
                   </svg>
                   {km != null ? <span className="text-[15px] font-semibold tabular-nums leading-none text-fg">{formatKm(km)}</span> : null}
+                  {s.hours === "24h" ? <span className="text-[11px] leading-none text-muted">24h</span> : null}
                 </div>
               </button>
             </li>
@@ -904,7 +905,7 @@ export function MapRoundButtons() {
       </button>
       <button
         type="button"
-        className={fabCls}
+        className={cn(fabCls, sheet !== "peek" && "bg-white text-black ring-white/0")}
         aria-label={t("nearbyStations")}
         aria-pressed={sheet !== "peek"}
         onClick={() => setSheet(sheet === "peek" ? "mid" : "peek")}
