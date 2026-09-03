@@ -349,17 +349,6 @@ function VectorLabels() {
     layer.addTo(map);
     const canvas = layer.getContainer();
     if (canvas) canvas.style.pointerEvents = "none";
-    const gl = layer.getMaplibreMap();
-    if (gl && new URLSearchParams(window.location.search).get("debug") === "1") {
-      const dump = () => console.info("[bl-overlay]", {
-        srcPoi: gl.querySourceFeatures("openmaptiles", { sourceLayer: "poi" }).length,
-        srcRoad: gl.querySourceFeatures("openmaptiles", { sourceLayer: "transportation_name" }).length,
-        rndHotel: gl.queryRenderedFeatures({ layers: ["poi-hotel"] }).length,
-        rndRoad: gl.queryRenderedFeatures({ layers: ["road-major"] }).length,
-      });
-      dump();
-      gl.on("idle", dump);
-    }
     return () => {
       map.removeLayer(layer);
     };
