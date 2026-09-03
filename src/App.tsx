@@ -341,7 +341,7 @@ function MapApp() {
         >
           <button
             type="button"
-            className="pointer-events-auto size-11 shrink-0 rounded-xl bg-black text-white shadow-panel"
+            className="pointer-events-auto size-11 shrink-0 rounded-xl bg-black text-white ring-1 ring-white/20"
             aria-label={t("back")}
             onClick={() => setShowLanding(true)}
           >
@@ -358,7 +358,7 @@ function MapApp() {
 
       <aside
         className={cn(
-          "absolute z-20 flex min-h-0 flex-col bg-black shadow-panel",
+          "absolute z-20 flex min-h-0 flex-col bg-black ring-1 ring-white/15",
           "inset-x-0 bottom-0 rounded-t-[1.35rem] transition-[height] duration-200 ease-out",
           "md:inset-x-auto md:left-3 md:w-[24.5rem] md:rounded-2xl",
           sheet === "peek" && "h-[11.25rem]",

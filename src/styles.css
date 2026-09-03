@@ -19,8 +19,8 @@
   --color-bad: #e11d2e;
   --color-auto: #3b82f6;
 
-  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
-  --font-display: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   --shadow-border: 0 0 0 1px #27272a;
   --shadow-panel: 0 12px 40px rgb(0 0 0 / 0.55);
@@ -35,8 +35,7 @@
     background: var(--color-bg);
     color: var(--color-fg);
     font-family: var(--font-sans);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    letter-spacing: -0.011em;
+    letter-spacing: 0;
   }
   h1, h2, h3 {
     font-family: var(--font-sans);
@@ -76,10 +75,12 @@
 .leaflet-control-attribution a { color: #ffffff !important; }
 
 .leaflet-layer.bl-map-labels {
-  /* OSM-DE full tiles as German-toponym overlay on satellite */
-  filter: grayscale(1) invert(1) contrast(1.2) brightness(1.15);
-  mix-blend-mode: screen;
   pointer-events: none;
+}
+.leaflet-tile-pane img.leaflet-tile,
+.leaflet-layer.bl-map-labels img.leaflet-tile {
+  filter: none !important;
+  image-rendering: auto;
 }
 
 .leaflet-bar {

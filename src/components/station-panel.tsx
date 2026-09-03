@@ -835,7 +835,7 @@ export function LocateButton({ iconOnly, floating }: { iconOnly?: boolean; float
       }}
       data-bl-keep-clear
       className={cn(
-        "inline-flex items-center justify-center bg-black text-white shadow-panel",
+        "inline-flex items-center justify-center bg-black text-white ring-1 ring-white/20",
         floating ? "size-11 shrink-0 rounded-full" : "h-11 shrink-0 rounded-full",
         iconOnly || floating ? "w-11" : "px-3",
       )}
@@ -857,7 +857,7 @@ export function MapRoundButtons() {
   const filters = useAppStore((s) => s.filters);
   const query = useAppStore((s) => s.query);
   const selectedId = useAppStore((s) => s.selectedId);
-  const fab = "inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-black text-white shadow-panel";
+  const fab = "inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-black text-white ring-1 ring-white/20";
   return (
     <div className="flex flex-col gap-2">
       <button

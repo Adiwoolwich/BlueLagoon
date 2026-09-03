@@ -343,23 +343,29 @@ export function StationMap({
       attributionControl
     >
       <TileLayer
-        attribution='Satellit &copy; <a href="https://www.esri.com/">Esri</a>, Maxar · Straßen &copy; Esri · Namen &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> DE'
+        attribution='Satellit &copy; <a href="https://www.esri.com/">Esri</a>, Maxar · Straßen &copy; Esri · Namen &copy; <a href="https://carto.com/">CARTO</a>'
         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-        maxZoom={19}
+        maxZoom={22}
         maxNativeZoom={19}
+        tileSize={512}
+        zoomOffset={-1}
       />
       <TileLayer
         url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}"
-        maxZoom={19}
-        opacity={0.95}
+        maxZoom={22}
+        maxNativeZoom={19}
+        tileSize={512}
+        zoomOffset={-1}
+        opacity={0.88}
       />
       {mapLabels ? (
         <TileLayer
-          url="https://tile.openstreetmap.de/{z}/{x}/{y}.png"
-          maxZoom={19}
-          opacity={1}
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
+          subdomains="abcd"
+          maxZoom={22}
+          maxNativeZoom={20}
+          detectRetina
           className="bl-map-labels"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> DE'
         />
       ) : null}
       <MapChrome stations={stations} initialView={initialView} />
