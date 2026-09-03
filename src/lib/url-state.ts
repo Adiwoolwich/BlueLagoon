@@ -132,8 +132,9 @@ export function replaceUrl(view: {
   if (typeof window === "undefined") return;
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   if (path !== "/") return;
-  const qs = buildSearchParams(view);
-  const next = `/?${qs}`;
+  const p = new URLSearchParams(buildSearchParams(view));
+  if (new URLSearchParams(window.location.search).get("debug") === "1") p.set("debug", "1");
+  const next = `/?${p.toString()}`;
   if (`${window.location.pathname}${window.location.search}` === next) return;
   window.history.replaceState(null, "", next);
 }

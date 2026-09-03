@@ -328,12 +328,15 @@ function ClusterLayer({ stations }: { stations: Station[] }) {
 
 
 
+let overlayDebugCached: boolean | null = null;
 function overlayDebugOn() {
+  if (overlayDebugCached != null) return overlayDebugCached;
   try {
-    return new URLSearchParams(window.location.search).get("debug") === "1";
+    overlayDebugCached = new URLSearchParams(window.location.search).get("debug") === "1";
   } catch {
-    return false;
+    overlayDebugCached = false;
   }
+  return overlayDebugCached;
 }
 
 type BlDump = {
@@ -406,9 +409,8 @@ function VectorLabels() {
     if (canvas) canvas.style.pointerEvents = "none";
     const gl = layer.getMaplibreMap();
     if (overlayDebugOn() && gl) {
-      const bind = () => attachOverlayDebug(gl);
-      gl.once("idle", bind);
-      if (gl.loaded()) bind();
+      attachOverlayDebug(gl);
+      gl.on("idle", () => attachOverlayDebug(gl));
     }
     return () => {
       if (overlayDebugOn()) {
