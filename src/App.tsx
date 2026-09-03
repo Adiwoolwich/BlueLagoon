@@ -4,6 +4,7 @@ import {
   MapRoundButtons,
   SearchAndFilters,
   SearchBar,
+  ShareFab,
   StationPanel,
 } from "./components/station-panel";
 import { SiteFooter } from "./components/site-footer";
@@ -214,7 +215,7 @@ function SheetHandle({
       role="button"
       tabIndex={0}
       aria-label={label}
-      className="flex h-10 shrink-0 touch-none select-none items-center justify-center md:h-8"
+      className="flex h-5 shrink-0 touch-none select-none items-center justify-center"
       style={{ touchAction: "none" }}
       onPointerDown={(e) => {
         e.preventDefault();
@@ -248,7 +249,7 @@ function SheetHandle({
         }
       }}
     >
-      <span className="h-1 w-10 rounded-full bg-zinc-600" />
+      <span className="h-1 w-9 rounded-full bg-zinc-500" />
     </div>
   );
 }
@@ -337,34 +338,33 @@ function MapApp() {
         <MapHost stations={stations.length ? stations : STATIONS} initialView={initial} />
         <div
           data-bl-keep-clear
-          className="pointer-events-none absolute top-0 z-30 flex items-start gap-2 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))] left-0 right-0 md:left-[calc(24.5rem+1.35rem)]"
+          className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center gap-2 px-3 pb-2 pt-[max(0.7rem,env(safe-area-inset-top))]"
         >
           <button
             type="button"
-            className="pointer-events-auto size-11 shrink-0 rounded-xl bg-black text-white ring-1 ring-white/20"
+            className="pointer-events-auto size-10 shrink-0 rounded-[10px] bg-black/80 text-white ring-1 ring-white/15"
             aria-label={t("back")}
             onClick={() => setShowLanding(true)}
           >
             <span className="text-lg leading-none">‹</span>
           </button>
-          <div className="pointer-events-auto min-w-0 max-w-[22rem] flex-1">
+          <div className="pointer-events-auto min-w-0 flex-1">
             <SearchBar overlay />
           </div>
-          <div className="pointer-events-auto ml-auto">
-            <MapRoundButtons />
-          </div>
+          <ShareFab />
+        </div>
+        <div className="pointer-events-auto absolute right-3 top-[calc(max(0.7rem,env(safe-area-inset-top))+3.15rem)] z-30">
+          <MapRoundButtons />
         </div>
       </main>
 
       <aside
         className={cn(
-          "absolute z-20 flex min-h-0 flex-col bg-black ring-1 ring-white/15",
-          "inset-x-0 bottom-0 rounded-t-[1.35rem] transition-[height] duration-200 ease-out",
-          "md:inset-x-auto md:left-3 md:w-[24.5rem] md:rounded-2xl",
-          sheet === "peek" && "h-[11.25rem]",
-          sheet === "mid" && "h-[min(52dvh,32rem)]",
-          sheet === "full" &&
-            "top-[calc(max(0.75rem,env(safe-area-inset-top))+3.25rem)] h-auto bottom-0 md:top-3 md:bottom-3",
+          "absolute inset-x-0 bottom-0 z-20 flex min-h-0 flex-col bg-black",
+          "rounded-t-[1.25rem] transition-[height] duration-200 ease-out",
+          sheet === "peek" && "h-[9.75rem]",
+          sheet === "mid" && "h-[min(46dvh,23rem)]",
+          sheet === "full" && "top-[calc(max(0.7rem,env(safe-area-inset-top))+3.4rem)] h-auto bottom-0",
         )}
       >
         <SheetHandle
@@ -373,7 +373,7 @@ function MapApp() {
           onSwipeUp={() => stepSheet("up")}
           onSwipeDown={() => stepSheet("down")}
         />
-        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] md:p-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {panel === "list" ? <SearchAndFilters count={inViewCount} compact={sheet === "peek"} /> : null}
           {routePath?.source === "straight" && panel === "list" && sheet !== "peek" ? (
             <p className="shrink-0 rounded-lg bg-stale/10 px-2.5 py-1.5 text-xs text-stale">{t("routeAir")}</p>
@@ -381,7 +381,6 @@ function MapApp() {
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <StationPanel stations={stations} />
           </div>
-          <SiteFooter className="justify-start pt-1" onGuide={() => setGuide(true)} />
         </div>
       </aside>
 

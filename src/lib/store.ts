@@ -158,12 +158,11 @@ export const useAppStore = create<AppState>()(
           return;
         }
         const recent = [id, ...get().recent.filter((x) => x !== id)].slice(0, 12);
-        const mobile = typeof window !== "undefined" && window.innerWidth < 768;
         set({
           selectedId: id,
           recent,
           panel: "detail",
-          sheet: mobile ? "mid" : "full",
+          sheet: "mid",
         });
       },
       toggleFavorite: (id) => {
@@ -184,7 +183,7 @@ export const useAppStore = create<AppState>()(
       setPanel: (panel) =>
         set({
           panel,
-          sheet: panel === "list" ? "mid" : "full",
+          sheet: "mid",
           selectedId: panel === "list" ? get().selectedId : get().selectedId,
         }),
       setSheet: (sheet) => set({ sheet }),

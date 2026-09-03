@@ -246,13 +246,15 @@ export function CitySelect({
       ) : null}
       <div
         className={cn(
-          "flex h-11 items-center gap-2 rounded-full px-3 ring-1",
-          compactMenu ? "bg-black/92 ring-white/15" : "bg-surface ring-border",
+          "flex items-center gap-2 rounded-full ring-1",
+          compactMenu ? "h-10 bg-black/80 px-4 ring-white/12" : "h-11 bg-surface px-3 ring-border",
           open && "ring-2 ring-fg/25",
           unmatched && open === false && draft.trim() && "ring-2 ring-bad/60",
         )}
       >
-        <MapPin className={cn("size-4 shrink-0", compactMenu ? "text-white" : "text-muted")} />
+        {compactMenu ? null : (
+          <MapPin className="size-4 shrink-0 text-muted" />
+        )}
         <input
           ref={inputRef}
           id={id}
@@ -293,9 +295,9 @@ export function CitySelect({
               setOpen(false);
             }
           }}
-          className="min-w-0 flex-1 bg-transparent text-base text-fg outline-none placeholder:text-subtle md:text-sm"
+          className={cn("min-w-0 flex-1 bg-transparent text-fg outline-none", compactMenu ? "text-center text-[15px] font-medium placeholder:text-fg/90" : "text-base placeholder:text-subtle md:text-sm")}
         />
-        {allowEmpty && (value || draft) ? (
+        {allowEmpty && !compactMenu && (value || draft) ? (
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
@@ -306,6 +308,7 @@ export function CitySelect({
             <X className="size-3.5" />
           </button>
         ) : null}
+        {compactMenu ? null : (
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
@@ -318,6 +321,7 @@ export function CitySelect({
         >
           <ChevronDown className={cn("size-4 transition-transform duration-150", open && "rotate-180")} />
         </button>
+        )}
       </div>
       {warnUnmatched && unmatched && !open ? (
         <p className="mt-1 text-xs text-bad">{t("noCity")}</p>
