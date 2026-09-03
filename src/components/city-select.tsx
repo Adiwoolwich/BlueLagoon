@@ -247,7 +247,7 @@ export function CitySelect({
       <div
         className={cn(
           "flex items-center gap-2 rounded-full ring-1",
-          compactMenu ? "h-10 bg-black/80 px-4 ring-white/12" : "h-11 bg-surface px-3 ring-border",
+          compactMenu ? "bl-tap h-11 bg-black/80 px-4 ring-white/12" : "h-11 bg-surface px-3 ring-border",
           open && "ring-2 ring-fg/25",
           warnUnmatched && unmatched && open === false && draft.trim() && "ring-2 ring-bad/60",
         )}
@@ -303,7 +303,7 @@ export function CitySelect({
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={clear}
-            className="grid size-7 place-items-center rounded-md text-muted hover:text-fg"
+            className="bl-tap grid size-11 place-items-center rounded-md text-muted hover:text-fg"
             aria-label={t("clearPlace")}
           >
             <X className="size-3.5" />
@@ -317,7 +317,7 @@ export function CitySelect({
             setOpen((o) => !o);
             inputRef.current?.focus();
           }}
-          className="grid size-8 place-items-center rounded-md bg-surface-2 text-muted hover:text-fg"
+          className="bl-tap grid size-11 place-items-center rounded-md bg-surface-2 text-muted hover:text-fg"
           aria-label={t("showCities")}
         >
           <ChevronDown className={cn("size-4 transition-transform duration-150", open && "rotate-180")} />

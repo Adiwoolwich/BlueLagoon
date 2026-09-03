@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Compass, Globe, List, LocateFixed, Plus, Share2, SlidersHorizontal, Star, X } from "lucide-react";
+import { Compass, Globe, List, Loader2, LocateFixed, Plus, Share2, SlidersHorizontal, Star, X } from "lucide-react";
 import { CitySelect } from "./city-select";
 import { GoogleMapsButton } from "./google-maps-button";
 import { AddStationForm } from "./add-station-form";
@@ -43,7 +43,7 @@ function Chip({
       aria-label={label}
       title={label}
       className={cn(
-        "inline-flex h-8 shrink-0 items-center rounded-full px-2.5 text-[13px] font-medium",
+        "bl-tap inline-flex h-11 min-h-11 shrink-0 items-center rounded-full px-2.5 text-[13px] font-medium",
         active ? "bg-primary text-primary-fg" : "bg-surface text-fg ring-1 ring-border hover:ring-border-strong",
       )}
     >
@@ -270,7 +270,7 @@ export function SearchAndFilters({
         <button
           type="button"
           onClick={() => setSheet(compact ? "mid" : "peek")}
-          className="inline-flex size-8 items-center justify-center text-fg"
+          className="bl-tap inline-flex size-11 items-center justify-center text-fg"
           aria-label={t("close")}
         >
           <X className="size-5" />
@@ -281,7 +281,7 @@ export function SearchAndFilters({
           type="button"
           onClick={() => setFiltersOpen(!filtersOpen)}
           className={cn(
-            "inline-flex size-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-white/15",
+            "bl-tap inline-flex size-11 shrink-0 items-center justify-center rounded-lg ring-1 ring-white/15",
             filtersOpen ? "bg-surface-2" : "bg-transparent",
           )}
           aria-label={t("filterToggle")}
@@ -293,7 +293,7 @@ export function SearchAndFilters({
           <select
             value={listSort}
             onChange={(e) => setListSort(e.target.value as "distance" | "name" | "verified")}
-            className="h-8 appearance-none rounded-lg bg-transparent py-0 pr-6 pl-2.5 text-[13px] text-fg ring-1 ring-white/15"
+            className="bl-tap h-11 appearance-none rounded-lg bg-transparent py-0 pr-6 pl-2.5 text-[13px] text-fg ring-1 ring-white/15"
           >
             <option value="distance">{t("sortBy")}</option>
             <option value="name">{t("sortName")}</option>
@@ -374,7 +374,7 @@ function StationList({ stations }: { stations: Station[] }) {
                 type="button"
                 onClick={() => select(s.id)}
                 className={cn(
-                  "flex min-h-[72px] w-full items-center gap-3 py-3 text-left",
+                  "bl-tap-row flex min-h-[72px] w-full items-center gap-3 py-3 text-left",
                   selectedId === s.id ? "bg-white/5" : "",
                 )}
               >
@@ -824,36 +824,46 @@ export function LocateButton({ iconOnly, floating }: { iconOnly?: boolean; float
   const setUserPos = useAppStore((s) => s.setUserPos);
   const setFilters = useAppStore((s) => s.setFilters);
   const setQuery = useAppStore((s) => s.setQuery);
+  const [busy, setBusy] = useState(false);
   return (
     <button
       type="button"
       onClick={() => {
-        if (!navigator.geolocation) return;
+        if (!navigator.geolocation || busy) return;
+        setBusy(true);
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude });
             setFilters({ place: "" });
             setQuery("");
+            setBusy(false);
           },
-          () => {},
+          () => setBusy(false),
           { enableHighAccuracy: true, timeout: 10000 },
         );
       }}
       data-bl-keep-clear
       className={cn(
-        "inline-flex items-center justify-center bg-black/80 text-white ring-1 ring-white/15",
+        "bl-tap inline-flex items-center justify-center bg-black/80 text-white ring-1 ring-white/15",
         floating ? "size-11 shrink-0 rounded-full" : "h-11 shrink-0 rounded-full",
         iconOnly || floating ? "w-11" : "px-3",
       )}
       aria-label={t("locate")}
+      aria-busy={busy}
     >
-      {floating ? <Compass className="size-5" /> : <LocateFixed className="size-5" />}
+      {busy ? (
+        <Loader2 className="size-5 animate-spin" />
+      ) : floating ? (
+        <Compass className="size-5" />
+      ) : (
+        <LocateFixed className="size-5" />
+      )}
       {iconOnly || floating ? null : <span className="ml-1.5 text-sm">{t("locate")}</span>}
     </button>
   );
 }
 
-const fabCls = "inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-black/80 text-white ring-1 ring-white/15";
+const fabCls = "bl-tap inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-black/80 text-white ring-1 ring-white/15";
 
 export function ShareFab() {
   useLang();

@@ -16,6 +16,7 @@ import { hasMapDeepLink, parseUrl } from "./lib/url-state";
 import { fetchReports } from "./lib/reports";
 import { t, useLang } from "./lib/i18n";
 import { cn } from "./lib/utils";
+import { installTapHaptic } from "./lib/tap";
 
 const SKIP_KEY = "bl-skip-landing";
 
@@ -263,6 +264,7 @@ export function App() {
 
 function MapApp() {
   useLang();
+  useEffect(() => installTapHaptic(), []);
   const initial = useMemo(() => parseUrl(), []);
   const [showLanding, setShowLanding] = useState(() => {
     if (hasMapDeepLink()) return false;
@@ -341,7 +343,7 @@ function MapApp() {
         >
           <button
             type="button"
-            className="pointer-events-auto size-10 shrink-0 rounded-[10px] bg-black/80 text-white ring-1 ring-white/15"
+            className="bl-tap pointer-events-auto size-11 shrink-0 rounded-[10px] bg-black/80 text-white ring-1 ring-white/15"
             aria-label={t("back")}
             onClick={() => setShowLanding(true)}
           >
@@ -350,7 +352,7 @@ function MapApp() {
           <div className="pointer-events-auto mx-auto min-w-0 w-full max-w-[min(58vw,22rem)]">
             <SearchBar overlay />
           </div>
-          <span className="size-10 shrink-0" aria-hidden />
+          <span className="size-11 shrink-0" aria-hidden />
         </div>
         <div className="pointer-events-auto absolute right-3 top-[12dvh] z-30">
           <MapRoundButtons />
