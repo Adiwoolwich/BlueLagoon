@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Globe, LocateFixed, Plus, Route, Share2, SlidersHorizontal, Star, X } from "lucide-react";
+import { Globe, List, LocateFixed, Plus, Route, Share2, SlidersHorizontal, Star, X } from "lucide-react";
 import { CitySelect } from "./city-select";
 import { GoogleMapsButton } from "./google-maps-button";
 import { AddStationForm } from "./add-station-form";
@@ -73,13 +73,25 @@ export function SearchBar({ overlay }: { overlay?: boolean }) {
   const setFilters = useAppStore((s) => s.setFilters);
   const setUserPos = useAppStore((s) => s.setUserPos);
   const userPos = useAppStore((s) => s.userPos);
+  const mapView = useAppStore((s) => s.mapView);
+  const extraStations = useAppStore((s) => s.extraStations);
   const hasOrigin = Boolean(findCity(query) || findCity(filters.place) || userPos);
+  const areaLabel = useMemo(() => {
+    const origin = userPos ?? { lat: mapView.lat, lng: mapView.lng };
+    let best: { city: string; d: number } | null = null;
+    for (const s of allStations(extraStations)) {
+      if (!hasPreciseCoords(s)) continue;
+      const d = haversineKm(origin, s);
+      if (!best || d < best.d) best = { city: s.city, d };
+    }
+    return best && best.d < 40 ? best.city : "";
+  }, [extraStations, mapView, userPos]);
 
   return (
     <div className="flex gap-2">
       <div className="min-w-0 flex-1">
         <CitySelect
-          value={filters.place || query}
+          value={filters.place || query || (overlay ? areaLabel : "")}
           onChange={(place) => {
             setQuery(place);
             setFilters({ place });
@@ -355,7 +367,7 @@ function StationList({ stations }: { stations: Station[] }) {
                 type="button"
                 onClick={() => select(s.id)}
                 className={cn(
-                  "flex w-full items-center gap-3 py-3 text-left",
+                  "flex min-h-[72px] w-full items-center gap-3 py-3 text-left",
                   selectedId === s.id ? "bg-white/5" : "",
                 )}
               >
@@ -367,16 +379,16 @@ function StationList({ stations }: { stations: Station[] }) {
                     {fav ? <Star className="size-3.5 shrink-0 fill-white text-white" /> : null}
                   </div>
                   <p className="mt-0.5 truncate text-[13px] leading-snug text-muted">{s.address || s.name}</p>
-                  {s.fee ? <p className="truncate text-[13px] leading-snug text-muted">{feeLabel(s.fee)}</p> : null}
-                  <p className="truncate text-[13px] leading-snug text-muted">{typeLabel(s.type)}</p>
+                  <p className="truncate text-[12px] leading-snug text-muted">
+                    {[s.fee ? feeLabel(s.fee) : null, typeLabel(s.type)].filter(Boolean).join(" · ")}
+                  </p>
                 </div>
-                <div className="flex w-[3.6rem] shrink-0 flex-col items-center gap-0.5">
-                  <svg viewBox="0 0 24 32" width="28" height="36" aria-hidden>
+                <div className="flex w-[4.75rem] shrink-0 flex-col items-center justify-center gap-1">
+                  <svg viewBox="0 0 24 32" width="36" height="40" aria-hidden>
                     <path fill={pin} stroke="#ffffff" strokeWidth="1.5" strokeLinejoin="round" d="M12 1.5C12 1.5 3.5 12.2 3.5 19.2a8.5 8.5 0 0 0 17 0C20.5 12.2 12 1.5 12 1.5z" />
                     <circle cx="12" cy="19.2" r="3.2" fill="#ffffff" />
                   </svg>
                   {km != null ? <span className="text-[15px] font-semibold tabular-nums leading-none text-fg">{formatKm(km)}</span> : null}
-                  {s.hours === "24h" ? <span className="text-[11px] text-muted">24h</span> : null}
                 </div>
               </button>
             </li>
@@ -860,12 +872,30 @@ export function MapRoundButtons() {
   useLang();
   const mapLabels = useAppStore((s) => s.mapLabels);
   const setMapLabels = useAppStore((s) => s.setMapLabels);
+  const sheet = useAppStore((s) => s.sheet);
+  const setSheet = useAppStore((s) => s.setSheet);
+  const mapView = useAppStore((s) => s.mapView);
+  const filters = useAppStore((s) => s.filters);
+  const query = useAppStore((s) => s.query);
+  const selectedId = useAppStore((s) => s.selectedId);
   return (
-    <div className="flex flex-col gap-2">
-      <LocateButton floating />
+    <div className="flex flex-col gap-2.5">
       <button
         type="button"
         className={fabCls}
+        aria-label={t("shareMap")}
+        onClick={() => {
+          const url = shareUrl({ ...mapView, id: selectedId, filters, query });
+          if (navigator.share) void navigator.share({ url, title: "Blue Lagune" }).catch(() => copyShareUrl());
+          else void copyShareUrl();
+        }}
+      >
+        <Share2 className="size-5" />
+      </button>
+      <LocateButton floating />
+      <button
+        type="button"
+        className={cn(fabCls, "bg-white text-black ring-white/0")}
         aria-label={t("mapLayers")}
         aria-pressed={mapLabels}
         onClick={() => setMapLabels(!mapLabels)}
@@ -874,7 +904,16 @@ export function MapRoundButtons() {
       </button>
       <button
         type="button"
-        className={cn(fabCls, "size-8 opacity-70")}
+        className={fabCls}
+        aria-label={t("nearbyStations")}
+        aria-pressed={sheet !== "peek"}
+        onClick={() => setSheet(sheet === "peek" ? "mid" : "peek")}
+      >
+        <List className="size-5" />
+      </button>
+      <button
+        type="button"
+        className={cn(fabCls, "hidden size-8 opacity-70 md:inline-flex")}
         aria-label={t("alongRoute")}
         onClick={() => {
           const st = useAppStore.getState();
