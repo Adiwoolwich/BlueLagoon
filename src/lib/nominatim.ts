@@ -85,3 +85,65 @@ export async function searchNominatimDe(query: string, limit = 8): Promise<Nomin
   cache.set(key, out);
   return out;
 }
+
+const reverseCache = new Map<string, string>();
+let lastReverseAt = 0;
+const JUNK_ROAD = /^(unnamed|unbenannt|ohne namen|unknown)/i;
+
+function nominatimZoom(mapZoom: number): number {
+  if (mapZoom >= 17) return 18;
+  if (mapZoom >= 15) return 16;
+  if (mapZoom >= 12) return 14;
+  return 10;
+}
+
+export function formatReverseLabel(
+  addr: Record<string, string> | undefined,
+  displayName: string,
+  mapZoom: number,
+): string {
+  const fallback = (displayName.split(",")[0] ?? "").trim();
+  if (!addr) return fallback;
+  const road = [addr.road, addr.pedestrian, addr.residential, addr.footway].find(
+    (r) => r && !JUNK_ROAD.test(r),
+  );
+  const street = road ? (addr.house_number ? `${road} ${addr.house_number}` : road) : "";
+  const place =
+    addr.village || addr.hamlet || addr.suburb || addr.town || addr.city || addr.municipality || "";
+  if (mapZoom >= 13 && street) return street;
+  return place || street || fallback;
+}
+
+export async function reverseNominatim(lat: number, lng: number, mapZoom: number): Promise<string> {
+  const qLat = lat.toFixed(4);
+  const qLng = lng.toFixed(4);
+  const z = nominatimZoom(mapZoom);
+  const key = `${qLat},${qLng},${z}`;
+  const hit = reverseCache.get(key);
+  if (hit) return hit;
+  const wait = 1100 - (Date.now() - lastReverseAt);
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  lastReverseAt = Date.now();
+  const url = new URL("https://nominatim.openstreetmap.org/reverse");
+  url.searchParams.set("lat", qLat);
+  url.searchParams.set("lon", qLng);
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("zoom", String(z));
+  const res = await fetch(url.toString(), {
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": "de",
+    },
+  });
+  if (!res.ok) return "";
+  const raw = (await res.json()) as {
+    display_name?: string;
+    address?: Record<string, string>;
+    error?: string;
+  };
+  if (raw.error) return "";
+  const label = formatReverseLabel(raw.address, raw.display_name ?? "", mapZoom);
+  if (label) reverseCache.set(key, label);
+  return label;
+}

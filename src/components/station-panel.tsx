@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Globe, List, LocateFixed, Plus, Route, Share2, SlidersHorizontal, Star, X } from "lucide-react";
 import { CitySelect } from "./city-select";
 import { GoogleMapsButton } from "./google-maps-button";
@@ -6,6 +6,7 @@ import { AddStationForm } from "./add-station-form";
 import { HoursTable } from "./hours-table";
 import { StatusBadge, STATUS_COLOR } from "./status-badge";
 import { alongRouteKm, centerOfBounds, formatKm, haversineKm, inBounds } from "../lib/geo";
+import { reverseNominatim } from "../lib/nominatim";
 import { downloadGpx, downloadStationGpx } from "../lib/gpx";
 import { fetchDrivingRoute } from "../lib/osrm";
 import { canNavigateTo, deriveStatus, findCity, hasPreciseCoords, isHttpPhotoUrl, type Station } from "../lib/stations";
@@ -74,24 +75,30 @@ export function SearchBar({ overlay }: { overlay?: boolean }) {
   const setUserPos = useAppStore((s) => s.setUserPos);
   const userPos = useAppStore((s) => s.userPos);
   const mapView = useAppStore((s) => s.mapView);
-  const extraStations = useAppStore((s) => s.extraStations);
   const hasOrigin = Boolean(findCity(query) || findCity(filters.place) || userPos);
-  const areaLabel = useMemo(() => {
-    const origin = userPos ?? { lat: mapView.lat, lng: mapView.lng };
-    let best: { city: string; d: number } | null = null;
-    for (const s of allStations(extraStations)) {
-      if (!hasPreciseCoords(s)) continue;
-      const d = haversineKm(origin, s);
-      if (!best || d < best.d) best = { city: s.city, d };
-    }
-    return best && best.d < 40 ? best.city : "";
-  }, [extraStations, mapView, userPos]);
+  const [reverseLabel, setReverseLabel] = useState("");
+  useEffect(() => {
+    if (!overlay) return;
+    const { lat, lng, zoom } = mapView;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    let alive = true;
+    const timer = window.setTimeout(() => {
+      void reverseNominatim(lat, lng, zoom).then((label) => {
+        if (!alive || !label) return;
+        setReverseLabel(label);
+      });
+    }, 450);
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
+  }, [overlay, mapView.lat, mapView.lng, mapView.zoom]);
 
   return (
     <div className="flex gap-2">
       <div className="min-w-0 flex-1">
         <CitySelect
-          value={filters.place || query || (overlay ? areaLabel : "")}
+          value={filters.place || query || (overlay ? reverseLabel : "")}
           onChange={(place) => {
             setQuery(place);
             setFilters({ place });

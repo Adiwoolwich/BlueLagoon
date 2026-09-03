@@ -266,9 +266,10 @@ export function CitySelect({
           placeholder={ph}
           autoComplete="off"
           spellCheck={false}
-          onFocus={() => {
+          onFocus={(e) => {
             setOpen(true);
             setActive(0);
+            if (compactMenu) e.currentTarget.select();
           }}
           onBlur={() => {
             window.setTimeout(commitOrWarn, 120);
