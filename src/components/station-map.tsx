@@ -342,6 +342,9 @@ function VectorLabels() {
       interactive: false,
       attributionControl: false,
       pane: "bl-labels",
+      // MapLibre 6 default (4) splits tiles above source maxzoom 14 and
+      // fetches empty z15 OpenFreeMap 200s. 8 keeps covering at z14 overscale.
+      zoomLevelsToOverscale: 8,
     });
     layer.addTo(map);
     const canvas = layer.getContainer();
