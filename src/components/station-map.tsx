@@ -7,7 +7,6 @@ import {
   Polyline,
   TileLayer,
   Tooltip,
-  ZoomControl,
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
@@ -321,6 +320,7 @@ export function StationMap({
   const placeName = useAppStore((s) => s.filters.place);
   const query = useAppStore((s) => s.query);
   const radiusKm = useAppStore((s) => s.filters.radiusKm);
+  const mapLabels = useAppStore((s) => s.mapLabels);
   const place = findCity(placeName) ?? findCity(query) ?? null;
   const searchOrigin = place ?? userPos;
   const center: [number, number] = initialView
@@ -340,7 +340,6 @@ export function StationMap({
       zoomControl={false}
       attributionControl
     >
-      <ZoomControl position="topright" />
       <TileLayer
         attribution='Satellit &copy; <a href="https://www.esri.com/">Esri</a>, Maxar · Straßen &copy; Esri · Namen &copy; <a href="https://carto.com/">CARTO</a>'
         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -352,13 +351,15 @@ export function StationMap({
         maxZoom={19}
         opacity={0.95}
       />
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
-        subdomains="abcd"
-        maxZoom={20}
-        opacity={1}
-        className="bl-map-labels"
-      />
+      {mapLabels ? (
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
+          subdomains="abcd"
+          maxZoom={20}
+          opacity={1}
+          className="bl-map-labels"
+        />
+      ) : null}
       <MapChrome stations={stations} initialView={initialView} />
       {searchOrigin && radiusKm > 0 && !routeLine ? (
         <Circle
