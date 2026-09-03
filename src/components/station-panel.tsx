@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react";
-import { Globe, LocateFixed, Plus, Share2, SlidersHorizontal, Star, X } from "lucide-react";
+import { Globe, LocateFixed, Plus, Route, Share2, SlidersHorizontal, Star, X } from "lucide-react";
 import { CitySelect } from "./city-select";
 import { GoogleMapsButton } from "./google-maps-button";
 import { AddStationForm } from "./add-station-form";
 import { HoursTable } from "./hours-table";
-import { StatusBadge } from "./status-badge";
-import { formatKm, haversineKm, inBounds } from "../lib/geo";
+import { StatusBadge, STATUS_COLOR } from "./status-badge";
+import { alongRouteKm, formatKm, haversineKm, inBounds } from "../lib/geo";
 import { downloadGpx, downloadStationGpx } from "../lib/gpx";
 import { fetchDrivingRoute } from "../lib/osrm";
-import { canNavigateTo, findCity, hasPreciseCoords, isHttpPhotoUrl, type Station } from "../lib/stations";
+import { canNavigateTo, deriveStatus, findCity, hasPreciseCoords, isHttpPhotoUrl, type Station } from "../lib/stations";
 import {
   allStations,
   CORRIDOR_OPTIONS,
@@ -279,6 +279,7 @@ export function SearchAndFilters({
             <option value="distance">{t("sortBy")}: {t("sortDistance")}</option>
             <option value="name">{t("sortBy")}: {t("sortName")}</option>
             <option value="verified">{t("sortBy")}: {t("sortVerified")}</option>
+            <option value="along">{t("sortBy")}: {t("alongRoute")}</option>
           </select>
         </label>
         <Chip active={filters.cassette} onClick={() => setFilters({ cassette: !filters.cassette })} label={t("ariaCassette")}>
@@ -286,6 +287,9 @@ export function SearchAndFilters({
         </Chip>
         <Chip active={filters.camperclean} onClick={() => setFilters({ camperclean: !filters.camperclean })} label={t("ariaCc")}>
           {t("chipCc")}
+        </Chip>
+        <Chip active={filters.greywater} onClick={() => setFilters({ greywater: !filters.greywater })} label={t("ariaGrey")}>
+          {t("chipGrey")}
         </Chip>
       </div>
       {filtersOpen || embedSearch ? (
@@ -316,6 +320,9 @@ function StationList({ stations }: { stations: Station[] }) {
   const favorites = useAppStore((s) => s.favorites);
   const bounds = useAppStore((s) => s.bounds);
   const listSort = useAppStore((s) => s.listSort);
+  const routePath = useAppStore((s) => s.routePath);
+  const reports = useAppStore((s) => s.reports);
+  const serverReports = useAppStore((s) => s.serverReports);
   const visible = useMemo(() => {
     const inView = bounds
       ? stations.filter((s) => hasPreciseCoords(s) && inBounds(s, bounds))
@@ -323,10 +330,13 @@ function StationList({ stations }: { stations: Station[] }) {
     return [...inView].sort((a, b) => {
       if (listSort === "name") return a.city.localeCompare(b.city) || a.name.localeCompare(b.name);
       if (listSort === "verified") return b.lastVerified.localeCompare(a.lastVerified);
+      if (listSort === "along" && routePath?.coords.length) {
+        return alongRouteKm(a, routePath.coords) - alongRouteKm(b, routePath.coords);
+      }
       if (userPos) return haversineKm(userPos, a) - haversineKm(userPos, b);
       return a.name.localeCompare(b.name);
     });
-  }, [stations, userPos, bounds, listSort]);
+  }, [stations, userPos, bounds, listSort, routePath]);
 
   if (visible.length === 0) {
     return (
@@ -375,7 +385,7 @@ function StationList({ stations }: { stations: Station[] }) {
                 <div className="flex w-[4.6rem] shrink-0 flex-col items-end gap-0.5 pt-0.5">
                   <span className="inline-flex size-8 items-center justify-center" aria-hidden>
                     <svg viewBox="0 0 24 32" width="18" height="24">
-                      <path fill="#e11d2e" stroke="#ffffff" strokeWidth="1.4" strokeLinejoin="round" d="M12 1.5C12 1.5 3.5 12.2 3.5 19.2a8.5 8.5 0 0 0 17 0C20.5 12.2 12 1.5 12 1.5z" />
+                      <path fill={STATUS_COLOR[deriveStatus(s, serverToLocal(s.id, serverReports[s.id], reports[s.id]))] ?? "#e11d2e"} stroke="#ffffff" strokeWidth="1.4" strokeLinejoin="round" d="M12 1.5C12 1.5 3.5 12.2 3.5 19.2a8.5 8.5 0 0 0 17 0C20.5 12.2 12 1.5 12 1.5z" />
                       <circle cx="12" cy="19.2" r="3.1" fill="#ffffff" />
                     </svg>
                   </span>
@@ -868,6 +878,24 @@ export function MapRoundButtons() {
         onClick={() => setMapLabels(!mapLabels)}
       >
         <Globe className="size-5" />
+      </button>
+      <button
+        type="button"
+        className={fab}
+        aria-label={t("alongRoute")}
+        onClick={() => {
+          const st = useAppStore.getState();
+          if (st.routePath?.coords.length) {
+            st.setListSort("along");
+            st.setSheet("mid");
+            st.setPanel("list");
+          } else {
+            st.setPanel("route");
+            st.setSheet("mid");
+          }
+        }}
+      >
+        <Route className="size-5" />
       </button>
       <button
         type="button"
