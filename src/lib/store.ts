@@ -95,6 +95,7 @@ type AppState = {
   extraStations: Station[];
   sheet: "peek" | "mid" | "full";
   mapLabels: boolean;
+  satClarity: boolean;
   listSort: "distance" | "name" | "verified" | "along";
   filtersOpen: boolean;
   serverReports: Record<string, ServerReport>;
@@ -115,6 +116,7 @@ type AppState = {
   setPanel: (p: AppState["panel"]) => void;
   setSheet: (s: AppState["sheet"]) => void;
   setMapLabels: (on: boolean) => void;
+  setSatClarity: (on: boolean) => void;
   setListSort: (s: AppState["listSort"]) => void;
   setFiltersOpen: (on: boolean) => void;
   setExtraStations: (list: Station[]) => void;
@@ -146,6 +148,7 @@ export const useAppStore = create<AppState>()(
       extraStations: [],
       sheet: "mid",
       mapLabels: true,
+      satClarity: false,
       listSort: "distance",
       filtersOpen: false,
       serverReports: {},
@@ -188,6 +191,7 @@ export const useAppStore = create<AppState>()(
         }),
       setSheet: (sheet) => set({ sheet }),
       setMapLabels: (mapLabels) => set({ mapLabels }),
+      setSatClarity: (satClarity) => set({ satClarity }),
       setListSort: (listSort) => set({ listSort }),
       setFiltersOpen: (filtersOpen) => set({ filtersOpen }),
       setExtraStations: (extraStations) => set({ extraStations }),
