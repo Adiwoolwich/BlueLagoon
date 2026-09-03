@@ -4,7 +4,6 @@ import {
   MapRoundButtons,
   SearchAndFilters,
   SearchBar,
-  ShareFab,
   StationPanel,
 } from "./components/station-panel";
 import { SiteFooter } from "./components/site-footer";
@@ -338,7 +337,7 @@ function MapApp() {
         <MapHost stations={stations.length ? stations : STATIONS} initialView={initial} />
         <div
           data-bl-keep-clear
-          className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center gap-2 px-3 pb-2 pt-[max(0.7rem,env(safe-area-inset-top))]"
+          className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center gap-2.5 px-3 pb-2 pt-[max(0.7rem,env(safe-area-inset-top))]"
         >
           <button
             type="button"
@@ -348,12 +347,12 @@ function MapApp() {
           >
             <span className="text-lg leading-none">‹</span>
           </button>
-          <div className="pointer-events-auto min-w-0 flex-1">
+          <div className="pointer-events-auto mx-auto min-w-0 w-full max-w-[min(46vw,18rem)]">
             <SearchBar overlay />
           </div>
-          <ShareFab />
+          <span className="size-10 shrink-0" aria-hidden />
         </div>
-        <div className="pointer-events-auto absolute right-3 top-[calc(max(0.7rem,env(safe-area-inset-top))+3.15rem)] z-30">
+        <div className="pointer-events-auto absolute right-3 top-[12dvh] z-30">
           <MapRoundButtons />
         </div>
       </main>
@@ -362,9 +361,9 @@ function MapApp() {
         className={cn(
           "absolute inset-x-0 bottom-0 z-20 flex min-h-0 flex-col bg-black",
           "rounded-t-[1.25rem] transition-[height] duration-200 ease-out",
-          sheet === "peek" && "h-[9.75rem]",
-          sheet === "mid" && "h-[min(46dvh,23rem)]",
-          sheet === "full" && "top-[calc(max(0.7rem,env(safe-area-inset-top))+3.4rem)] h-auto bottom-0",
+          sheet === "peek" && "h-[24dvh]",
+          sheet === "mid" && "h-[36.5dvh]",
+          sheet === "full" && "h-[90dvh]",
         )}
       >
         <SheetHandle
