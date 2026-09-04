@@ -77,6 +77,8 @@ export function SearchBar({ overlay }: { overlay?: boolean }) {
   const mapView = useAppStore((s) => s.mapView);
   const hasOrigin = Boolean(findCity(query) || findCity(filters.place) || userPos);
   const [reverseLabel, setReverseLabel] = useState("");
+  const [pillCleared, setPillCleared] = useState(false);
+  const mapAtClear = useRef<{ lat: number; lng: number; zoom: number } | null>(null);
   useEffect(() => {
     if (!overlay) return;
     const { lat, lng, zoom } = mapView;
@@ -94,15 +96,34 @@ export function SearchBar({ overlay }: { overlay?: boolean }) {
     };
   }, [overlay, mapView.lat, mapView.lng, mapView.zoom]);
 
+  useEffect(() => {
+    if (!pillCleared || !mapAtClear.current) return;
+    const a = mapAtClear.current;
+    if (a.lat !== mapView.lat || a.lng !== mapView.lng || a.zoom !== mapView.zoom) {
+      setPillCleared(false);
+      mapAtClear.current = null;
+    }
+  }, [pillCleared, mapView.lat, mapView.lng, mapView.zoom]);
+
+  const pillValue =
+    filters.place || query || (overlay && !pillCleared ? reverseLabel : "");
+
   return (
     <div className="flex gap-2">
       <div className="min-w-0 flex-1">
         <CitySelect
-          value={filters.place || query || (overlay ? reverseLabel : "")}
+          value={pillValue}
           onChange={(place) => {
             setQuery(place);
             setFilters({ place });
-            if (place.trim()) setUserPos(null);
+            if (place.trim()) {
+              setUserPos(null);
+              setPillCleared(false);
+              mapAtClear.current = null;
+            } else {
+              setPillCleared(true);
+              mapAtClear.current = { lat: mapView.lat, lng: mapView.lng, zoom: mapView.zoom };
+            }
           }}
           placeholder={t("placePh")}
           warnUnmatched={false}

@@ -298,12 +298,15 @@ export function CitySelect({
           }}
           className={cn("min-w-0 flex-1 bg-transparent text-fg outline-none", compactMenu ? "text-center text-[15px] font-medium placeholder:text-fg/90" : "text-base placeholder:text-subtle md:text-sm")}
         />
-        {allowEmpty && !compactMenu && (value || draft) ? (
+        {allowEmpty && (value || draft) ? (
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={clear}
-            className="bl-tap grid size-11 place-items-center rounded-md text-muted hover:text-fg"
+            className={cn(
+              "bl-tap grid shrink-0 place-items-center text-muted hover:text-fg",
+              compactMenu ? "size-9 rounded-full" : "size-11 rounded-md",
+            )}
             aria-label={t("clearPlace")}
           >
             <X className="size-3.5" />
