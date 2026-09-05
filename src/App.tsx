@@ -167,25 +167,72 @@ function Landing({ onDone }: { onDone: () => void }) {
   );
 }
 
+/** Sheet snap heights in dvh (phone). Mid is lower on md+. */
+function sheetSnaps(): { peek: number; mid: number; full: number } {
+  const mid = typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches ? 36.5 : 42;
+  return { peek: 24, mid, full: 90 };
+}
+
+function sheetH(sheet: "peek" | "mid" | "full"): number {
+  return sheetSnaps()[sheet];
+}
+
+function nearestSheet(h: number, snaps: ReturnType<typeof sheetSnaps>): "peek" | "mid" | "full" {
+  const entries: ["peek" | "mid" | "full", number][] = [
+    ["peek", snaps.peek],
+    ["mid", snaps.mid],
+    ["full", snaps.full],
+  ];
+  let best: "peek" | "mid" | "full" = "mid";
+  let bestD = Infinity;
+  for (const [k, v] of entries) {
+    const d = Math.abs(h - v);
+    if (d < bestD) {
+      bestD = d;
+      best = k;
+    }
+  }
+  return best;
+}
+
+function rubber(h: number, min: number, max: number): number {
+  if (h < min) return min - (min - h) * 0.22;
+  if (h > max) return max + (h - max) * 0.22;
+  return h;
+}
+
 function SheetHandle({
   label,
+  sheet,
+  liveH,
+  onLiveH,
+  onSnap,
   onTap,
-  onSwipeUp,
-  onSwipeDown,
 }: {
   label: string;
+  sheet: "peek" | "mid" | "full";
+  liveH: number | null;
+  onLiveH: (h: number | null) => void;
+  onSnap: (s: "peek" | "mid" | "full") => void;
   onTap: () => void;
-  onSwipeUp: () => void;
-  onSwipeDown: () => void;
 }) {
   const startY = useRef<number | null>(null);
+  const startH = useRef(0);
+  const curH = useRef(0);
   const lastY = useRef(0);
+  const lastT = useRef(0);
+  const vel = useRef(0);
   const dragged = useRef(false);
 
   function begin(y: number, target?: HTMLDivElement, pointerId?: number) {
     startY.current = y;
     lastY.current = y;
+    lastT.current = performance.now();
+    vel.current = 0;
     dragged.current = false;
+    startH.current = liveH ?? sheetH(sheet);
+    curH.current = startH.current;
+    onLiveH(startH.current);
     if (target && pointerId != null) {
       try {
         target.setPointerCapture(pointerId);
@@ -197,17 +244,40 @@ function SheetHandle({
 
   function move(y: number) {
     if (startY.current == null) return;
+    const now = performance.now();
+    const dt = Math.max(1, now - lastT.current);
+    vel.current = (y - lastY.current) / dt; // px/ms; +down
     lastY.current = y;
-    if (Math.abs(y - startY.current) > 8) dragged.current = true;
+    lastT.current = now;
+    if (Math.abs(y - startY.current) > 6) dragged.current = true;
+    const snaps = sheetSnaps();
+    const vh = window.innerHeight || 1;
+    // finger up → taller sheet
+    const deltaVh = ((startY.current - y) / vh) * 100;
+    const nextH = rubber(startH.current + deltaVh, snaps.peek, snaps.full);
+    curH.current = nextH;
+    onLiveH(nextH);
   }
 
   function end() {
     if (startY.current == null) return;
-    const dy = lastY.current - startY.current;
     startY.current = null;
-    if (dy < -18) onSwipeUp();
-    else if (dy > 18) onSwipeDown();
-    else if (!dragged.current) onTap();
+    const snaps = sheetSnaps();
+    // Use ref — React state liveH is stale in the same gesture
+    const h = curH.current;
+    const v = vel.current; // +down
+    let next: "peek" | "mid" | "full";
+    // Tesla-near: low velocity threshold, clear step on flick
+    if (v < -0.45) {
+      next = h < snaps.mid - 2 ? "mid" : "full";
+    } else if (v > 0.45) {
+      next = h > snaps.mid + 2 ? "mid" : "peek";
+    } else {
+      next = nearestSheet(h, snaps);
+    }
+    onLiveH(null);
+    if (!dragged.current && Math.abs(h - startH.current) < 1.2) onTap();
+    else onSnap(next);
   }
 
   return (
@@ -215,7 +285,7 @@ function SheetHandle({
       role="button"
       tabIndex={0}
       aria-label={label}
-      className="flex h-5 shrink-0 touch-none select-none items-center justify-center"
+      className="flex h-8 shrink-0 touch-none select-none items-center justify-center pt-1"
       style={{ touchAction: "none" }}
       onPointerDown={(e) => {
         e.preventDefault();
@@ -224,32 +294,20 @@ function SheetHandle({
       onPointerMove={(e) => move(e.clientY)}
       onPointerUp={end}
       onPointerCancel={end}
-      onTouchStart={(e) => {
-        const y = e.touches[0]?.clientY;
-        if (y == null) return;
-        begin(y);
-      }}
-      onTouchMove={(e) => {
-        const y = e.touches[0]?.clientY;
-        if (y == null) return;
-        e.preventDefault();
-        move(y);
-      }}
-      onTouchEnd={end}
       onKeyDown={(e) => {
         if (e.key === "ArrowUp") {
           e.preventDefault();
-          onSwipeUp();
+          onSnap(sheet === "peek" ? "mid" : "full");
         } else if (e.key === "ArrowDown") {
           e.preventDefault();
-          onSwipeDown();
+          onSnap(sheet === "full" ? "mid" : "peek");
         } else if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onTap();
         }
       }}
     >
-      <span className="h-1 w-9 rounded-full bg-zinc-500" />
+      <span className="h-1 w-10 rounded-full bg-zinc-500" />
     </div>
   );
 }
@@ -279,6 +337,7 @@ function MapApp() {
   const panel = useAppStore((s) => s.panel);
   const sheet = useAppStore((s) => s.sheet);
   const setSheet = useAppStore((s) => s.setSheet);
+  const [liveH, setLiveH] = useState<number | null>(null);
   const [guide, setGuide] = useState(false);
   const routePath = useAppStore((s) => s.routePath);
   const bounds = useAppStore((s) => s.bounds);
@@ -311,18 +370,6 @@ function MapApp() {
     setSheet(sheet === "peek" ? "mid" : sheet === "mid" ? "full" : "peek");
   }
 
-  function stepSheet(dir: "up" | "down") {
-    if (panel !== "list") {
-      if (dir === "up") setSheet("full");
-      else setSheet("mid");
-      return;
-    }
-    if (dir === "up") {
-      if (sheet === "peek") setSheet("mid");
-      else if (sheet === "mid") setSheet("full");
-    } else if (sheet === "full") setSheet("mid");
-    else if (sheet === "mid") setSheet("peek");
-  }
 
   if (showLanding) {
     return <Landing onDone={() => setShowLanding(false)} />;
@@ -362,17 +409,24 @@ function MapApp() {
       <aside
         className={cn(
           "absolute inset-x-0 bottom-0 z-20 flex min-h-0 flex-col bg-black",
-          "rounded-t-[1.25rem] transition-[height] duration-200 ease-out",
-          sheet === "peek" && "h-[24dvh]",
-          sheet === "mid" && "h-[42dvh] md:h-[36.5dvh]",
-          sheet === "full" && "h-[90dvh]",
+          "rounded-t-[1.25rem]",
+          liveH == null && "transition-[height] duration-150 ease-out",
+          liveH == null && sheet === "peek" && "h-[24dvh]",
+          liveH == null && sheet === "mid" && "h-[42dvh] md:h-[36.5dvh]",
+          liveH == null && sheet === "full" && "h-[90dvh]",
         )}
+        style={liveH != null ? { height: `${liveH}dvh`, transition: "none" } : undefined}
       >
         <SheetHandle
           label={t("sheetResize")}
+          sheet={sheet}
+          liveH={liveH}
+          onLiveH={setLiveH}
+          onSnap={(s) => {
+            setLiveH(null);
+            setSheet(s);
+          }}
           onTap={cycleSheet}
-          onSwipeUp={() => stepSheet("up")}
-          onSwipeDown={() => stepSheet("down")}
         />
         <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {panel === "list" ? <SearchAndFilters count={inViewCount} compact={sheet === "peek"} /> : null}
