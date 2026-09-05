@@ -1,9 +1,10 @@
 /* Blue Lagune service worker: app shell + map tiles for offline use. */
 const APP = "bl-app-v2";
-const TILES = "bl-tiles-v1";
+const TILES = "bl-tiles-v4";
 const TILE_HOSTS = [
   "server.arcgisonline.com",
   "services.arcgisonline.com",
+  "clarity.maptiles.arcgis.com",
   "basemaps.cartocdn.com",
 ];
 

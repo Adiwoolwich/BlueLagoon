@@ -3,6 +3,7 @@ import { Compass, Globe, List, Loader2, LocateFixed, Plus, Share2, SlidersHorizo
 import { CitySelect } from "./city-select";
 import { GoogleMapsButton } from "./google-maps-button";
 import { AddStationForm } from "./add-station-form";
+import { OfflineButton } from "./offline-panel";
 import { HoursTable } from "./hours-table";
 import { StatusBadge, STATUS_COLOR } from "./status-badge";
 import { alongRouteKm, centerOfBounds, formatKm, haversineKm, inBounds } from "../lib/geo";
@@ -130,25 +131,39 @@ export function SearchBar({ overlay }: { overlay?: boolean }) {
           compactMenu={overlay}
         />
       </div>
-      {overlay ? null : (
-        <label className="relative block w-[4.6rem] shrink-0 self-end">
-          <span className="sr-only">{t("radius")}</span>
-          <select
-            value={filters.radiusKm}
-            disabled={!hasOrigin}
-            onChange={(e) => setFilters({ radiusKm: Number(e.target.value) })}
-            className="h-11 w-full appearance-none rounded-full bg-surface py-0 pr-6 pl-2 text-sm text-fg ring-1 ring-border outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
-            aria-label={t("radius")}
-          >
-            {RADIUS_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.value === 0 ? t("radiusPlace") : o.label}
-              </option>
-            ))}
-          </select>
-          <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 border-x-4 border-t-[5px] border-x-transparent border-t-muted" />
-        </label>
-      )}
+      <label
+        className={
+          overlay
+            ? "relative block w-[4.2rem] shrink-0 self-center"
+            : "relative block w-[4.6rem] shrink-0 self-end"
+        }
+      >
+        <span className="sr-only">{t("radius")}</span>
+        <select
+          value={filters.radiusKm}
+          disabled={!hasOrigin}
+          onChange={(e) => setFilters({ radiusKm: Number(e.target.value) })}
+          className={
+            overlay
+              ? "h-11 w-full appearance-none rounded-[10px] bg-black/80 py-0 pr-6 pl-2 text-[13px] text-white ring-1 ring-white/15 outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+              : "h-11 w-full appearance-none rounded-full bg-surface py-0 pr-6 pl-2 text-sm text-fg ring-1 ring-border outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+          }
+          aria-label={t("radius")}
+        >
+          {RADIUS_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.value === 0 ? t("radiusPlace") : o.label}
+            </option>
+          ))}
+        </select>
+        <span
+          className={
+            overlay
+              ? "pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 border-x-4 border-t-[5px] border-x-transparent border-t-white/70"
+              : "pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 border-x-4 border-t-[5px] border-x-transparent border-t-muted"
+          }
+        />
+      </label>
     </div>
   );
 }
@@ -937,6 +952,7 @@ export function MapRoundButtons() {
         <Share2 className="size-5" />
       </button>
       <LocateButton floating />
+      <OfflineButton floating />
       <button
         type="button"
         className={cn(fabCls, "bg-white text-black ring-white/0")}

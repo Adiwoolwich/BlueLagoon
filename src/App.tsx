@@ -9,7 +9,7 @@ import {
 import { SiteFooter } from "./components/site-footer";
 import { DatenschutzPage, ImpressumPage } from "./components/legal-pages";
 import { FeedbackPage } from "./components/feedback-form";
-import { DUMP_STATIONS, hasPreciseCoords, STATIONS } from "./lib/stations";
+import { DUMP_STATIONS, hasPreciseCoords } from "./lib/stations";
 import { allStations, applyFilters, useAppStore } from "./lib/store";
 import { inBounds } from "./lib/geo";
 import { hasMapDeepLink, parseUrl } from "./lib/url-state";
@@ -383,7 +383,7 @@ function MapApp() {
       </section>
 
       <main className="absolute inset-0">
-        <MapHost stations={stations.length ? stations : STATIONS} initialView={initial} />
+        <MapHost stations={stations} initialView={initial} />
         <div
           data-bl-keep-clear
           className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center gap-2.5 px-3 pb-2 pt-[max(0.7rem,env(safe-area-inset-top))]"
