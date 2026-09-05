@@ -334,7 +334,6 @@ export function applyFilters(
     }
     if (f.greywater && !s.greywater) return false;
     if (f.freshwater && !s.freshwater) return false;
-    if (s.fee === "guest" && !f.feeGuest) return false;
     if (feeOn) {
       const ok =
         (s.fee === "free" && f.feeFree) ||
